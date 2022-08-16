@@ -10,6 +10,16 @@ services:
     entrypoint: ['echo', '-- client disabled --']
     command: ''
 
+  python:
+    image: 'cowait/gowait-python'
+    build: './python'
+    depends_on:
+      - 'base'
+
+    # we never want to run the base image directly
+    entrypoint: ['echo', '-- client disabled --']
+    command: ''
+
   daemon:
     image: 'cowait/gowait-daemon'
     build: 

@@ -1,3 +1,4 @@
 .vscode/
+python/
 docker-compose.yml
 Dockerfile

@@ -11,6 +11,7 @@ type TaskDef struct {
 	Namespace string
 	Image     string
 	Upstream  string
+	Command   []string
 }
 
 func (t *TaskDef) ToEnv() (string, error) {

@@ -21,7 +21,8 @@ func createTask(cluster core.Cluster) error {
 	_, err := cluster.Spawn(context.Background(), &core.TaskDef{
 		Name:      "gowait-task",
 		Namespace: "default",
-		Image:     "cowait/gowait",
+		Image:     "cowait/gowait-python",
+		Command:   []string{"python", "hello.py"},
 	})
 	return err
 }
