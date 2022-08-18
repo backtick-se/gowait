@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"cowait/adapter/api/grpc"
+	"cowait/adapter/cluster/k8s"
 	"cowait/core"
-	"cowait/daemon"
-	"cowait/daemon/adapter/grpc"
-	"cowait/daemon/adapter/k8s"
+	"cowait/core/daemon"
 	// "go.uber.org/fx"
 )
 

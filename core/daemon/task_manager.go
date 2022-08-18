@@ -19,7 +19,8 @@ func NewTaskManager() TaskManager {
 
 type taskmgr struct{}
 
-func (t *taskmgr) Init(*msg.TaskInit) error {
+func (t *taskmgr) Init(req *msg.TaskInit) error {
+	fmt.Printf("Task init: %+v\n", req)
 	return nil
 }
 
@@ -27,7 +28,8 @@ func (t *taskmgr) Status(*msg.TaskStatus) error {
 	return nil
 }
 
-func (t *taskmgr) Complete(*msg.TaskComplete) error {
+func (t *taskmgr) Complete(req *msg.TaskComplete) error {
+	fmt.Printf("Task complete: %s\n", req.Result)
 	return nil
 }
 

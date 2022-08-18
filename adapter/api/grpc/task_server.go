@@ -2,9 +2,9 @@ package grpc
 
 import (
 	"cowait/core"
+	"cowait/core/daemon"
 	"cowait/core/msg"
 	"cowait/core/pb"
-	"cowait/daemon"
 
 	"context"
 	"encoding/json"

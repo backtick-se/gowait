@@ -1,10 +1,10 @@
-package client_test
+package executor_test
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"cowait/client"
+	"cowait/executor"
 	"io"
 )
 
@@ -15,7 +15,7 @@ var _ = Describe("Line Pump", func() {
 			[]byte("hello\nw"),
 			[]byte("orld"),
 		)
-		pump := client.NewLineReader(testread)
+		pump := executor.NewLineReader(testread)
 
 		Expect(pump.Read()).To(Equal("\n"))
 		Expect(pump.Read()).To(Equal("\n"))

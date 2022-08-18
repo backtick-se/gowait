@@ -1,7 +1,9 @@
-package client
+package executor
 
 import (
+	"context"
 	"cowait/core"
+	"cowait/core/client"
 	"encoding/json"
 	"io"
 
@@ -9,41 +11,88 @@ import (
 )
 
 type Executor interface {
-	Run() error
+	Run(context.Context) error
 }
 
 type executor struct {
-	task *core.TaskDef
+	client client.Client
+	task   *core.TaskDef
 }
 
-func ExecutorFromEnv(envdef string) (Executor, error) {
+func NewFromEnv(envdef string) (Executor, error) {
 	def, err := core.TaskDefFromEnv(envdef)
 	if err != nil {
 		return nil, err
 	}
 
+	client, err := client.New(def.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect upstream: %w", err)
+	}
+
 	return &executor{
-		task: def,
+		client: client,
+		task:   def,
 	}, nil
 }
 
-func (e *executor) Run() error {
+func (e *executor) Run(ctx context.Context) error {
 	fmt.Printf("running task: %s$%s\n", e.task.Image, e.task.Command)
+	if err := e.client.Init(ctx, e.task); err != nil {
+		// init failed
+		return err
+	}
+
+	logger, err := e.client.Log(ctx)
+	if err != nil {
+		// logging failed
+		return err
+	}
 
 	proc, err := Exec(e.task.Command[0], e.task.Command[1:]...)
 	if err != nil {
 		return err
 	}
 
-	go LinePrinter("stdout", proc.Stdout)
-	go LinePrinter("stderr", proc.Stderr)
+	go LineLogger("stdout", proc.Stdout, logger)
+	go LineLogger("stderr", proc.Stderr, logger)
 
-	go UpstreamHandler(proc.Upstream, &DownstreamWriter{proc.Downstream})
+	result := "{}"
+	{
+		var err error
+		done := make(chan string)
+		fail := make(chan error)
+		complete := make(chan error)
+		defer close(done)
+		defer close(fail)
+		go UpstreamHandler(proc.Upstream, &DownstreamWriter{proc.Downstream}, done, fail)
 
-	return proc.Wait()
+		go func() {
+			complete <- proc.Wait()
+		}()
+
+		select {
+		case result = <-done:
+			break
+		case err = <-fail:
+			break
+		case err = <-complete:
+			break
+		}
+
+		if err != nil {
+			// task error
+			e.client.Failure(ctx, err)
+			return err
+		}
+	}
+
+	logger.Close()
+
+	return e.client.Complete(ctx, result)
 }
 
-func UpstreamHandler(upstream LineReader, downstream *DownstreamWriter) {
+func UpstreamHandler(upstream LineReader, downstream *DownstreamWriter, done chan string, fail chan error) {
 	for {
 		line, err := upstream.Read()
 		if err == io.EOF {
@@ -75,6 +124,8 @@ func UpstreamHandler(upstream LineReader, downstream *DownstreamWriter) {
 
 		case MsgResult:
 			fmt.Println("RESULT:", string(msg.Body))
+			done <- string(msg.Body)
+			return
 
 		default:
 			fmt.Println("unknown upstream msg:", msg.Type)

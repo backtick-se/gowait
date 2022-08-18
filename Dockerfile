@@ -6,7 +6,7 @@ COPY go.mod go.sum /app/
 RUN go mod download
 
 COPY . /app
-RUN go build -o /bin/cowait ./cmd/client
+RUN go build -o /bin/cowait ./cmd/executor
 
 FROM alpine:latest as client
 

@@ -1,7 +1,8 @@
-package client
+package executor
 
 import (
 	"bytes"
+	"cowait/core/client"
 	"fmt"
 	"io"
 	"os"
@@ -118,6 +119,21 @@ func LinePrinter(name string, pump LineReader) {
 		if len(line) > 0 {
 			os.Stdout.Write(prefix)
 			os.Stdout.Write([]byte(line))
+		}
+	}
+}
+
+func LineLogger(name string, pump LineReader, log client.TaskLogger) {
+	for {
+		line, err := pump.Read()
+		if err != nil {
+			if err != io.EOF {
+				fmt.Println(name, "read error:", err)
+			}
+			break
+		}
+		if len(line) > 0 {
+			log.Log(name, line)
 		}
 	}
 }
