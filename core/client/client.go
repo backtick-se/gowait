@@ -12,7 +12,7 @@ import (
 )
 
 type Client interface {
-	Init(ctx context.Context, task *core.TaskDef) error
+	Init(ctx context.Context) error
 	Failure(ctx context.Context, taskErr error) error
 	Complete(ctx context.Context, result string) error
 	Log(ctx context.Context) (TaskLogger, error)
@@ -43,22 +43,15 @@ func New(taskID core.TaskID) (Client, error) {
 
 func (c *client) header() *pb.Header {
 	return &pb.Header{
-		TaskId:  string(c.taskID),
-		Version: c.version,
-		Time:    timestamppb.New(time.Now()),
+		TaskId: string(c.taskID),
+		Time:   timestamppb.New(time.Now()),
 	}
 }
 
-func (c *client) Init(ctx context.Context, task *core.TaskDef) error {
+func (c *client) Init(ctx context.Context) error {
 	_, err := c.tasks.TaskInit(ctx, &pb.TaskInitReq{
-		Header: c.header(),
-		Taskdef: &pb.TaskDef{
-			Id:      string(task.ID),
-			Name:    task.Name,
-			Image:   task.Image,
-			Command: task.Command,
-			Input:   string(task.Input),
-		},
+		Header:  c.header(),
+		Version: c.version,
 	})
 	return err
 }

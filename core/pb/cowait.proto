@@ -12,13 +12,12 @@ service Task {
 
 message Header {
     string task_id = 1;
-    string version = 2;
     google.protobuf.Timestamp time = 3;
 }
 
 message TaskInitReq {
     Header header = 1;
-    TaskDef taskdef = 3;
+    string version = 2;
 }
 
 message TaskInitReply { }
@@ -36,17 +35,6 @@ message TaskCompleteReq {
 }
 
 message TaskCompleteReply { }
-
-message TaskDef {
-    string id = 1;
-    string parent = 2;
-    string name = 3;
-    string image = 4;
-    string namespace = 5;
-    repeated string command = 6;
-    string input = 7;
-    int64 timeout = 8;
-}
 
 message LogEntry {
     Header header = 1;

@@ -7,19 +7,18 @@ import (
 )
 
 type Header struct {
-	ID      core.TaskID
-	Version string
-	Time    time.Time
+	ID   core.TaskID
+	Time time.Time
 }
 
 type TaskInit struct {
 	Header
-	Task core.TaskDef
+	Version string
 }
 
 type TaskFailure struct {
 	Header
-	Error string
+	Error error
 }
 
 type TaskComplete struct {

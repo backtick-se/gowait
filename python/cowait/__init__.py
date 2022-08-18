@@ -1,7 +1,7 @@
-from .task import inputs, exit, invoke
+from .task import inputs, exit, error
 
 __all__ = [
     'inputs',
     'exit',
-    'invoke',
+    'error',
 ]

@@ -1,6 +1,8 @@
 .vscode/
+.venv/
 python/
 kubernetes/
+__pycache__/
 
 .gitignore
 docker-compose.yml
@@ -8,3 +10,4 @@ Dockerfile
 Makefile
 *.sh
 *.md
+*.pyc

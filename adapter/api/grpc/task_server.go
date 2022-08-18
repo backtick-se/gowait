@@ -13,10 +13,10 @@ import (
 
 type taskServer struct {
 	pb.UnimplementedTaskServer
-	mgr daemon.TaskManager
+	mgr daemon.TaskServer
 }
 
-func NewTaskServer(mgr daemon.TaskManager) pb.TaskServer {
+func NewTaskServer(mgr daemon.TaskServer) pb.TaskServer {
 	return &taskServer{
 		mgr: mgr,
 	}
@@ -24,17 +24,8 @@ func NewTaskServer(mgr daemon.TaskManager) pb.TaskServer {
 
 func (t *taskServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.TaskInitReply, error) {
 	err := t.mgr.Init(&msg.TaskInit{
-		Header: pb.ParseHeader(req.Header),
-		Task: core.TaskDef{
-			ID:        core.TaskID(req.Taskdef.Id),
-			Parent:    core.TaskID(req.Taskdef.Parent),
-			Name:      req.Taskdef.Name,
-			Image:     req.Taskdef.Image,
-			Namespace: req.Taskdef.Namespace,
-			Command:   req.Taskdef.Command,
-			Input:     json.RawMessage(req.Taskdef.Input),
-			Timeout:   int(req.Taskdef.Timeout),
-		},
+		Header:  pb.ParseHeader(req.Header),
+		Version: req.Version,
 	})
 	if err != nil {
 		return nil, err
@@ -43,9 +34,10 @@ func (t *taskServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.Tas
 }
 
 func (t *taskServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq) (*pb.TaskFailureReply, error) {
+	taskErr := core.NewError(req.Error)
 	err := t.mgr.Fail(&msg.TaskFailure{
 		Header: pb.ParseHeader(req.Header),
-		Error:  req.Error,
+		Error:  taskErr,
 	})
 	if err != nil {
 		return nil, err

@@ -7,14 +7,18 @@ import (
 	"fmt"
 )
 
-type TaskManager interface {
-	Get(core.TaskID) (Instance, bool)
-	Schedule(*core.TaskDef) error
-
+type TaskServer interface {
 	Init(*msg.TaskInit) error
 	Complete(*msg.TaskComplete) error
 	Fail(*msg.TaskFailure) error
 	Log(*msg.LogEntry) error
+}
+
+type TaskManager interface {
+	TaskServer
+
+	Get(core.TaskID) (Instance, bool)
+	Schedule(*core.TaskDef) error
 }
 
 func NewTaskManager(cluster core.Cluster) TaskManager {
@@ -22,6 +26,11 @@ func NewTaskManager(cluster core.Cluster) TaskManager {
 		cluster: cluster,
 		tasks:   make(map[core.TaskID]*instance),
 	}
+}
+
+func newTaskServer(taskmgr TaskManager) TaskServer {
+	// re-export as a TaskServer
+	return taskmgr
 }
 
 type taskmgr struct {
@@ -41,16 +50,17 @@ func (t *taskmgr) Schedule(task *core.TaskDef) error {
 }
 
 func (t *taskmgr) Init(req *msg.TaskInit) error {
-	if task, ok := t.tasks[req.ID]; ok {
-		fmt.Printf("Task init: %+v\n", req)
+	fmt.Printf("Task init: %+v\n", req)
+	if task, ok := t.tasks[req.Header.ID]; ok {
 		task.on_init <- req
 		return nil
 	}
+	fmt.Println("Unknown task", req.Header.ID)
 	return core.ErrUnknownTask
 }
 
 func (t *taskmgr) Complete(req *msg.TaskComplete) error {
-	if task, ok := t.tasks[req.ID]; ok {
+	if task, ok := t.tasks[req.Header.ID]; ok {
 		fmt.Printf("Task complete: %s\n", req.Result)
 		task.on_complete <- req
 		return nil
@@ -59,7 +69,7 @@ func (t *taskmgr) Complete(req *msg.TaskComplete) error {
 }
 
 func (t *taskmgr) Fail(req *msg.TaskFailure) error {
-	if task, ok := t.tasks[req.ID]; ok {
+	if task, ok := t.tasks[req.Header.ID]; ok {
 		fmt.Printf("Task failed: %s\n", req.Error)
 		task.on_fail <- req
 		return nil
@@ -68,9 +78,9 @@ func (t *taskmgr) Fail(req *msg.TaskFailure) error {
 }
 
 func (t *taskmgr) Log(req *msg.LogEntry) error {
-	if task, ok := t.tasks[req.ID]; ok {
-		task.on_log <- req
+	if task, ok := t.tasks[req.Header.ID]; ok {
 		fmt.Printf("%s [%s] %s", req.Header.ID, req.File, req.Data)
+		task.on_log <- req
 	}
 	return core.ErrUnknownTask
 }

@@ -1,12 +1,24 @@
 import os
 import sys
 import json
-from .task_io import Upstream, Downstream
+from .client import Client
+
+_client: Client = None
+_taskdef: dict = None
 
 
-_upstream = Upstream.open()
-_downstream = Downstream.open()
-_taskdef = None
+def _excepthook(type, value, trace):
+    global _client
+    _client.failure(f'{type}: {value}')
+    sys.exit(1)
+
+
+def _init():
+    global _client, _taskdef
+    _taskdef = taskdef_from_env()
+    _client = Client(_taskdef['ID'])
+    _client.init()
+    sys.excepthook = _excepthook
 
 
 def taskdef_from_env():
@@ -22,17 +34,14 @@ def inputs() -> dict:
     return td['Input']
 
 
+def error(error: str):
+    global _client
+    _client.failure(error)
+
+
 def exit(result: dict):
-    global _upstream
-    _upstream.exit(result)
-    sys.exit(0)
+    global _client
+    _client.complete(result)
 
 
-def invoke(name, **inputs):
-    global _upstream, _downstream
-    _upstream.invoke({
-        'Name': name,
-        'Image': taskdef_from_env()['Image'],
-        'Input': json.dumps(inputs),
-    })
-    return _downstream.read_result()
+_init()

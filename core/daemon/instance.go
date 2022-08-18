@@ -103,8 +103,7 @@ func (i *instance) proc() {
 			return
 
 		case req := <-i.on_fail:
-			err := core.NewError(req.Error)
-			i.fail(err)
+			i.fail(req.Error)
 			return
 
 		case req := <-i.on_log:

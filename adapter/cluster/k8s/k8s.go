@@ -19,6 +19,7 @@ const EnvPodName = "COWAIT_K8S_POD"
 
 type kube struct {
 	*kubernetes.Clientset
+	namespace string
 }
 
 func New() core.Cluster {
@@ -43,6 +44,7 @@ func New() core.Cluster {
 	}
 	return &kube{
 		Clientset: clientset,
+		namespace: "default",
 	}
 }
 
@@ -59,6 +61,7 @@ func NewInCluster() (core.Cluster, error) {
 
 	return &kube{
 		Clientset: clients,
+		namespace: "default",
 	}, nil
 }
 
@@ -69,8 +72,8 @@ func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) (core.Task, error) 
 	}
 
 	meta := metav1.ObjectMeta{
-		Name:      def.Name,
-		Namespace: def.Namespace,
+		Name:      string(def.ID),
+		Namespace: k.namespace,
 	}
 	pod := apiv1.PodSpec{
 		RestartPolicy: apiv1.RestartPolicyNever,
@@ -97,7 +100,7 @@ func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) (core.Task, error) 
 		},
 	}
 
-	taskpod, err := k.CoreV1().Pods(def.Namespace).Create(ctx, &apiv1.Pod{
+	taskpod, err := k.CoreV1().Pods(k.namespace).Create(ctx, &apiv1.Pod{
 		ObjectMeta: meta,
 		Spec:       pod,
 	}, metav1.CreateOptions{})
@@ -112,7 +115,7 @@ func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) (core.Task, error) 
 }
 
 func (k *kube) Kill(ctx context.Context, id core.TaskID) error {
-	return k.CoreV1().Pods("").Delete(ctx, string(id), metav1.DeleteOptions{})
+	return k.CoreV1().Pods(k.namespace).Delete(ctx, string(id), metav1.DeleteOptions{})
 }
 
 func (k *kube) Poke(ctx context.Context, id core.TaskID) error {

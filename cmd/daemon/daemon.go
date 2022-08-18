@@ -22,9 +22,9 @@ func main() {
 
 func createTask(mgr daemon.TaskManager) error {
 	return mgr.Schedule(&core.TaskDef{
-		Name:      "gowait-task",
-		Namespace: "default",
-		Image:     "cowait/gowait-python",
-		Command:   []string{"python", "hello.py"},
+		ID:      "gowait-task-123",
+		Name:    "gowait-task",
+		Image:   "cowait/gowait-python",
+		Command: []string{"python", "-u", "hello.py"},
 	})
 }

@@ -7,8 +7,7 @@ import (
 
 func ParseHeader(h *Header) msg.Header {
 	return msg.Header{
-		ID:      core.TaskID(h.TaskId),
-		Version: h.Version,
-		Time:    h.Time.AsTime(),
+		ID:   core.TaskID(h.TaskId),
+		Time: h.Time.AsTime(),
 	}
 }
