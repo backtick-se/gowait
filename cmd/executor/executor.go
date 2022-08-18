@@ -21,7 +21,8 @@ func main() {
 	}
 
 	// run task
-	err = executor.Run(context.Background())
+	ctx := context.Background()
+	err = executor.Run(ctx)
 	if err != nil {
 		fmt.Println("execution failed:", err)
 		os.Exit(1)

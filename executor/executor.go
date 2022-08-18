@@ -6,6 +6,7 @@ import (
 	"cowait/core/client"
 	"encoding/json"
 	"io"
+	"time"
 
 	"fmt"
 )
@@ -38,6 +39,14 @@ func NewFromEnv(envdef string) (Executor, error) {
 
 func (e *executor) Run(ctx context.Context) error {
 	fmt.Printf("running task: %s$%s\n", e.task.Image, e.task.Command)
+
+	// apply timeout if set
+	if e.task.Timeout > 0 {
+		deadline, cancel := context.WithTimeout(ctx, time.Duration(e.task.Timeout)*time.Second)
+		defer cancel()
+		ctx = deadline
+	}
+
 	if err := e.client.Init(ctx, e.task); err != nil {
 		// init failed
 		return err
@@ -77,6 +86,9 @@ func (e *executor) Run(ctx context.Context) error {
 		case err = <-fail:
 			break
 		case err = <-complete:
+			break
+		case <-ctx.Done():
+			err = fmt.Errorf("deadline exceeded")
 			break
 		}
 

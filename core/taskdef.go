@@ -13,6 +13,7 @@ type TaskDef struct {
 	Image     string
 	Command   []string
 	Input     json.RawMessage
+	Timeout   int
 }
 
 func (t *TaskDef) ToEnv() (string, error) {
