@@ -9,7 +9,9 @@ cat << EOF
     "Namespace": "default",
     "Image": "cowait/gowait-python", 
     "Command":["python", "-u", "hello.py"],
-    "Input": "{\"value\":2}"
+    "Input": {
+        "value": 2
+    }
 } 
 EOF
 )

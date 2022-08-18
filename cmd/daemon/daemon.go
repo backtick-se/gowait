@@ -4,15 +4,18 @@ import (
 	"context"
 	"cowait/core"
 	"cowait/daemon"
+	"cowait/daemon/adapter/grpc"
 	"cowait/daemon/adapter/k8s"
-
-	"go.uber.org/fx"
+	// "go.uber.org/fx"
 )
 
 func main() {
 	cowaitd := daemon.New(
 		k8s.Module,
-		fx.Invoke(createTask),
+
+		grpc.Module,
+
+		// fx.Invoke(createTask),
 	)
 	cowaitd.Run()
 }

@@ -7,11 +7,12 @@ import (
 const EnvTaskdef = "COWAIT_TASK"
 
 type TaskDef struct {
+	ID        TaskID
 	Name      string
 	Namespace string
 	Image     string
-	Upstream  string
 	Command   []string
+	Input     json.RawMessage
 }
 
 func (t *TaskDef) ToEnv() (string, error) {

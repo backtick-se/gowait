@@ -8,6 +8,27 @@ import (
 	"io"
 )
 
+var _ = Describe("Line Pump", func() {
+	It("correctly buffers lines", func() {
+		testread := NewTestReader(
+			[]byte("\n\n"),
+			[]byte("hello\nw"),
+			[]byte("orld"),
+		)
+		pump := client.NewLineReader(testread)
+
+		Expect(pump.Read()).To(Equal("\n"))
+		Expect(pump.Read()).To(Equal("\n"))
+		Expect(pump.Read()).To(Equal("hello\n"))
+		Expect(pump.Read()).To(Equal("world"))
+
+		_, err := pump.Read()
+		Expect(err).To(MatchError(io.EOF))
+
+		Expect(pump.Wait()).ToNot(HaveOccurred())
+	})
+})
+
 type testreader struct {
 	reads [][]byte
 	pos   int
@@ -32,23 +53,3 @@ func (t *testreader) Read(buf []byte) (int, error) {
 func (t *testreader) Close() error {
 	return nil
 }
-
-var _ = Describe("Reader Pump", func() {
-	It("correctly buffers lines", func() {
-		testread := NewTestReader(
-			[]byte("hello\nwo"),
-			[]byte("rld"),
-			[]byte("\n\n"),
-		)
-		output := make(chan string)
-		go client.ReaderPump(testread, output)
-
-		Expect(<-output).To(Equal("hello\n"))
-		Expect(<-output).To(Equal("world\n"))
-		Expect(<-output).To(Equal("\n"))
-		Expect(<-output).To(Equal("\n"))
-		_, ok := <-output
-		Expect(ok).To(BeFalse())
-		Expect(output).To(BeClosed())
-	})
-})

@@ -1,0 +1,65 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "cowait/core/pb";
+
+service Task {
+    rpc TaskInit(TaskInitReq) returns (TaskInitReply) {}
+    rpc TaskStatus(TaskStatusReq) returns (TaskStatusReply) {}
+    rpc TaskFailure(TaskFailureReq) returns (TaskFailureReply) {}
+    rpc TaskComplete(TaskCompleteReq) returns (TaskCompleteReply) {}
+
+    rpc TaskLog(stream LogEntry) returns (LogSummary) {}
+}
+
+message Header {
+    string task_id = 1;
+    string version = 2;
+    google.protobuf.Timestamp time = 3;
+}
+
+message TaskInitReq {
+    Header header = 1;
+    TaskDef taskdef = 3;
+}
+
+message TaskInitReply { }
+
+message TaskStatusReq {
+    Header header = 1;
+    string status = 2;
+}
+
+message TaskStatusReply { }
+
+message TaskFailureReq {
+    Header header = 1;
+    string error = 2;
+}
+
+message TaskFailureReply { }
+
+message TaskCompleteReq {
+    Header header = 1;
+    string result = 2;
+}
+
+message TaskCompleteReply { }
+
+message TaskDef {
+    string id = 1;
+    string name = 2;
+    string image = 3;
+    repeated string command = 4;
+    string input = 5;
+}
+
+message LogEntry {
+    Header header = 1;
+    string file = 2;
+    string data = 3;
+}
+
+message LogSummary {
+    int64 records = 1;
+}
