@@ -8,9 +8,10 @@ const EnvTaskdef = "COWAIT_TASK"
 
 type TaskDef struct {
 	ID        TaskID
+	Parent    TaskID
 	Name      string
-	Namespace string
 	Image     string
+	Namespace string
 	Command   []string
 	Input     json.RawMessage
 	Timeout   int

@@ -7,7 +7,6 @@ import (
 
 	"context"
 
-	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -69,13 +68,17 @@ func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) (core.Task, error) 
 		return nil, err
 	}
 
+	meta := metav1.ObjectMeta{
+		Name:      def.Name,
+		Namespace: def.Namespace,
+	}
 	pod := apiv1.PodSpec{
 		RestartPolicy: apiv1.RestartPolicyNever,
 		Containers: []apiv1.Container{
 			{
 				Name:            "task",
 				Image:           def.Image,
-				ImagePullPolicy: apiv1.PullIfNotPresent,
+				ImagePullPolicy: apiv1.PullAlways,
 				Env: []apiv1.EnvVar{
 					{
 						Name:  core.EnvTaskdef,
@@ -94,35 +97,24 @@ func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) (core.Task, error) 
 		},
 	}
 
-	completions := int32(1)
-	var deadline *int64
+	taskpod, err := k.CoreV1().Pods(def.Namespace).Create(ctx, &apiv1.Pod{
+		ObjectMeta: meta,
+		Spec:       pod,
+	}, metav1.CreateOptions{})
 
-	job := batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      def.Name,
-			Namespace: def.Namespace,
-		},
-		Spec: batchv1.JobSpec{
-			Completions:           &completions,
-			ActiveDeadlineSeconds: deadline,
-			Template: apiv1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: def.Namespace,
-				},
-				Spec: pod,
-			},
-		},
-	}
-
-	// create kubernetes job
-	taskjob, err := k.BatchV1().
-		Jobs(def.Namespace).
-		Create(ctx, &job, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	return &task{
-		job: taskjob.Name,
+		job: taskpod.Name,
 	}, nil
+}
+
+func (k *kube) Kill(ctx context.Context, id core.TaskID) error {
+	return k.CoreV1().Pods("").Delete(ctx, string(id), metav1.DeleteOptions{})
+}
+
+func (k *kube) Poke(ctx context.Context, id core.TaskID) error {
+	return nil
 }

@@ -17,11 +17,6 @@ type TaskInit struct {
 	Task core.TaskDef
 }
 
-type TaskStatus struct {
-	Header
-	Status core.TaskStatus
-}
-
 type TaskFailure struct {
 	Header
 	Error string

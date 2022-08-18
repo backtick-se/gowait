@@ -5,10 +5,8 @@ option go_package = "cowait/core/pb";
 
 service Task {
     rpc TaskInit(TaskInitReq) returns (TaskInitReply) {}
-    rpc TaskStatus(TaskStatusReq) returns (TaskStatusReply) {}
     rpc TaskFailure(TaskFailureReq) returns (TaskFailureReply) {}
     rpc TaskComplete(TaskCompleteReq) returns (TaskCompleteReply) {}
-
     rpc TaskLog(stream LogEntry) returns (LogSummary) {}
 }
 
@@ -24,13 +22,6 @@ message TaskInitReq {
 }
 
 message TaskInitReply { }
-
-message TaskStatusReq {
-    Header header = 1;
-    string status = 2;
-}
-
-message TaskStatusReply { }
 
 message TaskFailureReq {
     Header header = 1;
@@ -48,10 +39,13 @@ message TaskCompleteReply { }
 
 message TaskDef {
     string id = 1;
-    string name = 2;
-    string image = 3;
-    repeated string command = 4;
-    string input = 5;
+    string parent = 2;
+    string name = 3;
+    string image = 4;
+    string namespace = 5;
+    repeated string command = 6;
+    string input = 7;
+    int64 timeout = 8;
 }
 
 message LogEntry {

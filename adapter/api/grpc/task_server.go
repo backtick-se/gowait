@@ -26,28 +26,20 @@ func (t *taskServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.Tas
 	err := t.mgr.Init(&msg.TaskInit{
 		Header: pb.ParseHeader(req.Header),
 		Task: core.TaskDef{
+			ID:        core.TaskID(req.Taskdef.Id),
+			Parent:    core.TaskID(req.Taskdef.Parent),
 			Name:      req.Taskdef.Name,
-			Namespace: "",
 			Image:     req.Taskdef.Image,
+			Namespace: req.Taskdef.Namespace,
 			Command:   req.Taskdef.Command,
 			Input:     json.RawMessage(req.Taskdef.Input),
+			Timeout:   int(req.Taskdef.Timeout),
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &pb.TaskInitReply{}, nil
-}
-
-func (t *taskServer) TaskStatus(ctx context.Context, req *pb.TaskStatusReq) (*pb.TaskStatusReply, error) {
-	err := t.mgr.Status(&msg.TaskStatus{
-		Header: pb.ParseHeader(req.Header),
-		Status: core.TaskStatus(req.Status),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &pb.TaskStatusReply{}, nil
 }
 
 func (t *taskServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq) (*pb.TaskFailureReply, error) {

@@ -23,7 +23,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TaskClient interface {
 	TaskInit(ctx context.Context, in *TaskInitReq, opts ...grpc.CallOption) (*TaskInitReply, error)
-	TaskStatus(ctx context.Context, in *TaskStatusReq, opts ...grpc.CallOption) (*TaskStatusReply, error)
 	TaskFailure(ctx context.Context, in *TaskFailureReq, opts ...grpc.CallOption) (*TaskFailureReply, error)
 	TaskComplete(ctx context.Context, in *TaskCompleteReq, opts ...grpc.CallOption) (*TaskCompleteReply, error)
 	TaskLog(ctx context.Context, opts ...grpc.CallOption) (Task_TaskLogClient, error)
@@ -40,15 +39,6 @@ func NewTaskClient(cc grpc.ClientConnInterface) TaskClient {
 func (c *taskClient) TaskInit(ctx context.Context, in *TaskInitReq, opts ...grpc.CallOption) (*TaskInitReply, error) {
 	out := new(TaskInitReply)
 	err := c.cc.Invoke(ctx, "/Task/TaskInit", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *taskClient) TaskStatus(ctx context.Context, in *TaskStatusReq, opts ...grpc.CallOption) (*TaskStatusReply, error) {
-	out := new(TaskStatusReply)
-	err := c.cc.Invoke(ctx, "/Task/TaskStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +102,6 @@ func (x *taskTaskLogClient) CloseAndRecv() (*LogSummary, error) {
 // for forward compatibility
 type TaskServer interface {
 	TaskInit(context.Context, *TaskInitReq) (*TaskInitReply, error)
-	TaskStatus(context.Context, *TaskStatusReq) (*TaskStatusReply, error)
 	TaskFailure(context.Context, *TaskFailureReq) (*TaskFailureReply, error)
 	TaskComplete(context.Context, *TaskCompleteReq) (*TaskCompleteReply, error)
 	TaskLog(Task_TaskLogServer) error
@@ -125,9 +114,6 @@ type UnimplementedTaskServer struct {
 
 func (UnimplementedTaskServer) TaskInit(context.Context, *TaskInitReq) (*TaskInitReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskInit not implemented")
-}
-func (UnimplementedTaskServer) TaskStatus(context.Context, *TaskStatusReq) (*TaskStatusReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TaskStatus not implemented")
 }
 func (UnimplementedTaskServer) TaskFailure(context.Context, *TaskFailureReq) (*TaskFailureReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskFailure not implemented")
@@ -165,24 +151,6 @@ func _Task_TaskInit_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TaskServer).TaskInit(ctx, req.(*TaskInitReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Task_TaskStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TaskStatusReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TaskServer).TaskStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Task/TaskStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServer).TaskStatus(ctx, req.(*TaskStatusReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -259,10 +227,6 @@ var Task_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TaskInit",
 			Handler:    _Task_TaskInit_Handler,
-		},
-		{
-			MethodName: "TaskStatus",
-			Handler:    _Task_TaskStatus_Handler,
 		},
 		{
 			MethodName: "TaskFailure",

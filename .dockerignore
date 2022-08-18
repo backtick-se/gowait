@@ -1,4 +1,10 @@
 .vscode/
 python/
+kubernetes/
+
+.gitignore
 docker-compose.yml
 Dockerfile
+Makefile
+*.sh
+*.md

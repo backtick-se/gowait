@@ -4,5 +4,5 @@ import "go.uber.org/fx"
 
 var Module = fx.Module(
 	"adapter:cluster:kubernetes",
-	fx.Provide(New),
+	fx.Provide(NewInCluster),
 )

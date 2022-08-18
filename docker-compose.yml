@@ -4,7 +4,7 @@ services:
     image: 'cowait/gowait'
     build: 
       context: '.'
-      target: 'client'
+      target: 'executor'
 
     # we never want to run the base image directly
     entrypoint: ['echo', '-- client disabled --']
@@ -21,7 +21,7 @@ services:
     command: ''
 
   daemon:
-    image: 'cowait/gowait-daemon'
+    image: 'cowait/cowaitd'
     build: 
       context: '.'
       target: 'daemon'

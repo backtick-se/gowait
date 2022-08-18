@@ -26,7 +26,7 @@ type client struct {
 }
 
 func New(taskID core.TaskID) (Client, error) {
-	conn, err := grpc.Dial("localhost:1337", grpc.WithInsecure())
+	conn, err := grpc.Dial("cowaitd.default.svc.cluster.local:1337", grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
@@ -88,27 +88,4 @@ func (c *client) Log(ctx context.Context) (TaskLogger, error) {
 		client: c,
 		stream: stream,
 	}, nil
-}
-
-type TaskLogger interface {
-	Log(file, data string) error
-	Close() error
-}
-
-type taskLog struct {
-	client *client
-	stream pb.Task_TaskLogClient
-}
-
-func (t *taskLog) Log(file, data string) error {
-	return t.stream.Send(&pb.LogEntry{
-		Header: t.client.header(),
-		File:   file,
-		Data:   data,
-	})
-}
-
-func (t *taskLog) Close() error {
-	_, err := t.stream.CloseAndRecv()
-	return err
 }

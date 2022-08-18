@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cowaitd
+  labels:
+    app: cowaitd
+spec:
+  containers:
+  - name: cowaitd
+    image: cowait/cowaitd
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    ports:
+      - containerPort: 1337
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cowaitd
+spec:
+  selector:
+    app: cowaitd
+  ports:
+  - port: 1337
+    targetPort: 1337

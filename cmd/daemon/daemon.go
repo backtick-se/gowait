@@ -1,12 +1,12 @@
 package main
 
 import (
-	"context"
 	"cowait/adapter/api/grpc"
 	"cowait/adapter/cluster/k8s"
 	"cowait/core"
 	"cowait/core/daemon"
-	// "go.uber.org/fx"
+
+	"go.uber.org/fx"
 )
 
 func main() {
@@ -15,17 +15,16 @@ func main() {
 
 		grpc.Module,
 
-		// fx.Invoke(createTask),
+		fx.Invoke(createTask),
 	)
 	cowaitd.Run()
 }
 
-func createTask(cluster core.Cluster) error {
-	_, err := cluster.Spawn(context.Background(), &core.TaskDef{
+func createTask(mgr daemon.TaskManager) error {
+	return mgr.Schedule(&core.TaskDef{
 		Name:      "gowait-task",
 		Namespace: "default",
 		Image:     "cowait/gowait-python",
 		Command:   []string{"python", "hello.py"},
 	})
-	return err
 }
