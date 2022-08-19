@@ -18,8 +18,8 @@ RUN go build -o /bin/cowaitd ./cmd/daemon
 
 FROM debian:stable-slim as executor
 
-COPY --from=build-executor /bin/cowait /usr/local/bin/cowait
-ENTRYPOINT ["/usr/local/bin/cowait"]
+COPY --from=build-executor /bin/cowait /bin/cowait
+ENTRYPOINT ["cowait"]
 
 FROM debian:stable-slim as daemon
 

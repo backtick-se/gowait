@@ -9,6 +9,3 @@ const (
 	StatusFail TaskStatus = "fail"
 	StatusDone TaskStatus = "done"
 )
-
-type Task interface {
-}

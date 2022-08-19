@@ -52,6 +52,7 @@ func (e *executor) Run(ctx context.Context) error {
 		e.client.Failure(ctx, err)
 		return err
 	}
+	defer server.Close()
 
 	if err := e.client.Init(ctx); err != nil {
 		// init failed

@@ -85,8 +85,7 @@ func (i *instance) proc() {
 	// this is the instance management loop
 	// at this point the task is in the "scheduled" state
 	// i suppose we start by calling cluster.Spawn() ?
-	_, err := i.cluster.Spawn(ctx, i.taskdef)
-	if err != nil {
+	if err := i.cluster.Spawn(ctx, i.taskdef); err != nil {
 		fmt.Println("failed to spawn task", i.taskdef.ID, ":", err)
 		return
 	}
@@ -119,7 +118,9 @@ func (i *instance) proc() {
 
 		case <-time.After(10 * time.Second):
 			// periodic liveness check
+			fmt.Println("poke", i.taskdef.ID)
 			if err := i.cluster.Poke(ctx, i.taskdef.ID); err != nil {
+				fmt.Println("task", i.taskdef.ID, "failed liveness check:", err)
 				i.fail(fmt.Errorf("cluster task error: %w", err))
 				return
 			}

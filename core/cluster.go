@@ -5,7 +5,7 @@ import (
 )
 
 type Cluster interface {
-	Spawn(context.Context, *TaskDef) (Task, error)
+	Spawn(context.Context, *TaskDef) error
 	Kill(context.Context, TaskID) error
 	Poke(context.Context, TaskID) error
 }

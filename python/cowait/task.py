@@ -9,8 +9,8 @@ _taskdef: dict = None
 
 def _excepthook(type, value, trace):
     global _client
-    _client.failure(f'{type}: {value}')
-    sys.exit(1)
+    sys.__excepthook__(type, value, trace)
+    _client.failure(f'{type.__name__}: {value}')
 
 
 def _init():

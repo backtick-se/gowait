@@ -4,7 +4,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from .pb.cowait_pb2_grpc import TaskStub
 from .pb.cowait_pb2 import Header, TaskCompleteReq, TaskFailureReq, TaskInitReq
 
-VERSION = 'cowait-python/1.0.0'
+VERSION = 'cowait-python/1.0'
 
 
 class Client:

@@ -24,7 +24,7 @@ func createTask(mgr daemon.TaskManager) error {
 	return mgr.Schedule(&core.TaskDef{
 		ID:      "gowait-task-123",
 		Name:    "gowait-task",
-		Image:   "cowait/gowait-python",
+		Image:   "cowait/gowait-python1233",
 		Command: []string{"python", "-u", "hello.py"},
 	})
 }

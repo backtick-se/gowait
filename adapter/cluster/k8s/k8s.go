@@ -3,6 +3,7 @@ package k8s
 import (
 	"cowait/core"
 	"flag"
+	"fmt"
 	"path/filepath"
 
 	"context"
@@ -65,10 +66,10 @@ func NewInCluster() (core.Cluster, error) {
 	}, nil
 }
 
-func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) (core.Task, error) {
+func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) error {
 	envdef, err := def.ToEnv()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	meta := metav1.ObjectMeta{
@@ -100,18 +101,11 @@ func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) (core.Task, error) 
 		},
 	}
 
-	taskpod, err := k.CoreV1().Pods(k.namespace).Create(ctx, &apiv1.Pod{
+	_, err = k.CoreV1().Pods(k.namespace).Create(ctx, &apiv1.Pod{
 		ObjectMeta: meta,
 		Spec:       pod,
 	}, metav1.CreateOptions{})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &task{
-		job: taskpod.Name,
-	}, nil
+	return err
 }
 
 func (k *kube) Kill(ctx context.Context, id core.TaskID) error {
@@ -119,5 +113,26 @@ func (k *kube) Kill(ctx context.Context, id core.TaskID) error {
 }
 
 func (k *kube) Poke(ctx context.Context, id core.TaskID) error {
+	pod, err := k.CoreV1().Pods(k.namespace).Get(ctx, string(id), metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	switch pod.Status.Phase {
+	case apiv1.PodPending:
+		// check why its pending
+		for _, cond := range pod.Status.ContainerStatuses {
+			switch cond.State.Waiting.Reason {
+			case "ErrImagePull":
+				fallthrough
+			case "ImagePullBackOff":
+				return fmt.Errorf("failed to pull container image")
+			}
+		}
+
+	case apiv1.PodFailed:
+		return fmt.Errorf("pod is in failed phase")
+	}
+
 	return nil
 }
