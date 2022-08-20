@@ -3,7 +3,6 @@ package executor
 import (
 	"cowait/core"
 	"cowait/core/client"
-	"os"
 
 	"context"
 	"fmt"
@@ -11,51 +10,42 @@ import (
 )
 
 type Executor interface {
-	Run(context.Context) error
+	Run(context.Context, core.TaskID, *core.TaskSpec) error
 }
 
 type executor struct {
-	client client.TaskClient
-	task   *core.TaskDef
+	server Server
+	client client.ExecutorClient
 }
 
-func NewFromEnv(client client.TaskClient) (Executor, error) {
-	id := core.TaskID(os.Getenv(core.EnvTaskID))
-	def, err := core.TaskDefFromEnv(os.Getenv(core.EnvTaskdef))
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("executor %s: %+v\n", id, def)
-
-	// connect to daemon
-	hostname := "cowaitd.default.svc.cluster.local:1337"
-	if err := client.Connect(hostname, id); err != nil {
-		return nil, fmt.Errorf("failed to connect upstream: %w", err)
-	}
-
+func New(client client.ExecutorClient, server Server) (Executor, error) {
 	return &executor{
+		server: server,
 		client: client,
-		task:   def,
 	}, nil
 }
 
-func (e *executor) Run(ctx context.Context) error {
-	fmt.Printf("running task: %s$%s\n", e.task.Image, e.task.Command)
+func (e *executor) Run(ctx context.Context, id core.TaskID, task *core.TaskSpec) error {
+	fmt.Printf("running task: %s$%s\n", task.Image, task.Command)
 
 	// apply timeout if set
-	if e.task.Timeout > 0 {
-		deadline, cancel := context.WithTimeout(ctx, time.Duration(e.task.Timeout)*time.Second)
+	if task.Timeout > 0 {
+		deadline, cancel := context.WithTimeout(ctx, time.Duration(task.Timeout)*time.Second)
 		defer cancel()
 		ctx = deadline
 	}
 
-	server, err := newServer()
-	if err != nil {
+	// connect to daemon
+	hostname := "cowaitd.default.svc.cluster.local:1337"
+	if err := e.client.Connect(hostname, id); err != nil {
+		return fmt.Errorf("failed to connect upstream: %w", err)
+	}
+
+	// start sdk rpc server
+	if err := e.server.Listen(1337); err != nil {
 		e.client.Failure(ctx, err)
 		return err
 	}
-	defer server.Close()
 
 	if err := e.client.Init(ctx); err != nil {
 		// init failed
@@ -68,37 +58,32 @@ func (e *executor) Run(ctx context.Context) error {
 		return err
 	}
 
-	proc, err := Exec(e.task.Command[0], e.task.Command[1:]...)
+	proc, err := Exec(task.Command[0], task.Command[1:]...)
 	if err != nil {
+		logger.Close()
+		e.client.Failure(ctx, err)
 		return err
 	}
 
-	go LineLogger("stdout", proc.Stdout, logger)
-	go LineLogger("stderr", proc.Stderr, logger)
-
-	exited := make(chan error)
-	defer close(exited)
-
-	go func() {
-		exited <- proc.Wait()
-	}()
+	go LineLogger("stdout", proc.Stdout(), logger)
+	go LineLogger("stderr", proc.Stderr(), logger)
 
 	select {
-	case req := <-server.completed:
+	case req := <-e.server.Completed():
 		logger.Close()
 		e.client.Complete(ctx, string(req.Result))
 		break
 
-	case req := <-server.failed:
+	case req := <-e.server.Failed():
 		logger.Close()
 		e.client.Failure(ctx, req.Error)
 		break
 
-	case req := <-server.log:
+	case req := <-e.server.Logs():
 		logger.Log(req.File, req.Data)
 		break
 
-	case err := <-exited:
+	case err := <-proc.Done():
 		logger.Close()
 		if err == nil {
 			// completed without any result?

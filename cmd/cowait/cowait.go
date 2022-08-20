@@ -30,7 +30,7 @@ func run(ctrl fx.Shutdowner, cli client.Client) error {
 	}
 
 	ctx := context.Background()
-	id, err := cli.CreateTask(ctx, &core.TaskDef{
+	id, err := cli.CreateTask(ctx, core.None, &core.TaskSpec{
 		Cluster: "kubernetes",
 		Name:    "client-task",
 		Image:   "cowait/gowait-python",

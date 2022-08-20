@@ -18,75 +18,75 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// TaskClient is the client API for Task service.
+// ExecutorClient is the client API for Executor service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type TaskClient interface {
+type ExecutorClient interface {
 	TaskInit(ctx context.Context, in *TaskInitReq, opts ...grpc.CallOption) (*TaskInitReply, error)
 	TaskFailure(ctx context.Context, in *TaskFailureReq, opts ...grpc.CallOption) (*TaskFailureReply, error)
 	TaskComplete(ctx context.Context, in *TaskCompleteReq, opts ...grpc.CallOption) (*TaskCompleteReply, error)
-	TaskLog(ctx context.Context, opts ...grpc.CallOption) (Task_TaskLogClient, error)
+	TaskLog(ctx context.Context, opts ...grpc.CallOption) (Executor_TaskLogClient, error)
 }
 
-type taskClient struct {
+type executorClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewTaskClient(cc grpc.ClientConnInterface) TaskClient {
-	return &taskClient{cc}
+func NewExecutorClient(cc grpc.ClientConnInterface) ExecutorClient {
+	return &executorClient{cc}
 }
 
-func (c *taskClient) TaskInit(ctx context.Context, in *TaskInitReq, opts ...grpc.CallOption) (*TaskInitReply, error) {
+func (c *executorClient) TaskInit(ctx context.Context, in *TaskInitReq, opts ...grpc.CallOption) (*TaskInitReply, error) {
 	out := new(TaskInitReply)
-	err := c.cc.Invoke(ctx, "/Task/TaskInit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/Executor/TaskInit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *taskClient) TaskFailure(ctx context.Context, in *TaskFailureReq, opts ...grpc.CallOption) (*TaskFailureReply, error) {
+func (c *executorClient) TaskFailure(ctx context.Context, in *TaskFailureReq, opts ...grpc.CallOption) (*TaskFailureReply, error) {
 	out := new(TaskFailureReply)
-	err := c.cc.Invoke(ctx, "/Task/TaskFailure", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/Executor/TaskFailure", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *taskClient) TaskComplete(ctx context.Context, in *TaskCompleteReq, opts ...grpc.CallOption) (*TaskCompleteReply, error) {
+func (c *executorClient) TaskComplete(ctx context.Context, in *TaskCompleteReq, opts ...grpc.CallOption) (*TaskCompleteReply, error) {
 	out := new(TaskCompleteReply)
-	err := c.cc.Invoke(ctx, "/Task/TaskComplete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/Executor/TaskComplete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *taskClient) TaskLog(ctx context.Context, opts ...grpc.CallOption) (Task_TaskLogClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Task_ServiceDesc.Streams[0], "/Task/TaskLog", opts...)
+func (c *executorClient) TaskLog(ctx context.Context, opts ...grpc.CallOption) (Executor_TaskLogClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Executor_ServiceDesc.Streams[0], "/Executor/TaskLog", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &taskTaskLogClient{stream}
+	x := &executorTaskLogClient{stream}
 	return x, nil
 }
 
-type Task_TaskLogClient interface {
+type Executor_TaskLogClient interface {
 	Send(*LogEntry) error
 	CloseAndRecv() (*LogSummary, error)
 	grpc.ClientStream
 }
 
-type taskTaskLogClient struct {
+type executorTaskLogClient struct {
 	grpc.ClientStream
 }
 
-func (x *taskTaskLogClient) Send(m *LogEntry) error {
+func (x *executorTaskLogClient) Send(m *LogEntry) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *taskTaskLogClient) CloseAndRecv() (*LogSummary, error) {
+func (x *executorTaskLogClient) CloseAndRecv() (*LogSummary, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -97,119 +97,119 @@ func (x *taskTaskLogClient) CloseAndRecv() (*LogSummary, error) {
 	return m, nil
 }
 
-// TaskServer is the server API for Task service.
-// All implementations must embed UnimplementedTaskServer
+// ExecutorServer is the server API for Executor service.
+// All implementations must embed UnimplementedExecutorServer
 // for forward compatibility
-type TaskServer interface {
+type ExecutorServer interface {
 	TaskInit(context.Context, *TaskInitReq) (*TaskInitReply, error)
 	TaskFailure(context.Context, *TaskFailureReq) (*TaskFailureReply, error)
 	TaskComplete(context.Context, *TaskCompleteReq) (*TaskCompleteReply, error)
-	TaskLog(Task_TaskLogServer) error
-	mustEmbedUnimplementedTaskServer()
+	TaskLog(Executor_TaskLogServer) error
+	mustEmbedUnimplementedExecutorServer()
 }
 
-// UnimplementedTaskServer must be embedded to have forward compatible implementations.
-type UnimplementedTaskServer struct {
+// UnimplementedExecutorServer must be embedded to have forward compatible implementations.
+type UnimplementedExecutorServer struct {
 }
 
-func (UnimplementedTaskServer) TaskInit(context.Context, *TaskInitReq) (*TaskInitReply, error) {
+func (UnimplementedExecutorServer) TaskInit(context.Context, *TaskInitReq) (*TaskInitReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskInit not implemented")
 }
-func (UnimplementedTaskServer) TaskFailure(context.Context, *TaskFailureReq) (*TaskFailureReply, error) {
+func (UnimplementedExecutorServer) TaskFailure(context.Context, *TaskFailureReq) (*TaskFailureReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskFailure not implemented")
 }
-func (UnimplementedTaskServer) TaskComplete(context.Context, *TaskCompleteReq) (*TaskCompleteReply, error) {
+func (UnimplementedExecutorServer) TaskComplete(context.Context, *TaskCompleteReq) (*TaskCompleteReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskComplete not implemented")
 }
-func (UnimplementedTaskServer) TaskLog(Task_TaskLogServer) error {
+func (UnimplementedExecutorServer) TaskLog(Executor_TaskLogServer) error {
 	return status.Errorf(codes.Unimplemented, "method TaskLog not implemented")
 }
-func (UnimplementedTaskServer) mustEmbedUnimplementedTaskServer() {}
+func (UnimplementedExecutorServer) mustEmbedUnimplementedExecutorServer() {}
 
-// UnsafeTaskServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to TaskServer will
+// UnsafeExecutorServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ExecutorServer will
 // result in compilation errors.
-type UnsafeTaskServer interface {
-	mustEmbedUnimplementedTaskServer()
+type UnsafeExecutorServer interface {
+	mustEmbedUnimplementedExecutorServer()
 }
 
-func RegisterTaskServer(s grpc.ServiceRegistrar, srv TaskServer) {
-	s.RegisterService(&Task_ServiceDesc, srv)
+func RegisterExecutorServer(s grpc.ServiceRegistrar, srv ExecutorServer) {
+	s.RegisterService(&Executor_ServiceDesc, srv)
 }
 
-func _Task_TaskInit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Executor_TaskInit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TaskInitReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TaskServer).TaskInit(ctx, in)
+		return srv.(ExecutorServer).TaskInit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Task/TaskInit",
+		FullMethod: "/Executor/TaskInit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServer).TaskInit(ctx, req.(*TaskInitReq))
+		return srv.(ExecutorServer).TaskInit(ctx, req.(*TaskInitReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Task_TaskFailure_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Executor_TaskFailure_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TaskFailureReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TaskServer).TaskFailure(ctx, in)
+		return srv.(ExecutorServer).TaskFailure(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Task/TaskFailure",
+		FullMethod: "/Executor/TaskFailure",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServer).TaskFailure(ctx, req.(*TaskFailureReq))
+		return srv.(ExecutorServer).TaskFailure(ctx, req.(*TaskFailureReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Task_TaskComplete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Executor_TaskComplete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TaskCompleteReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TaskServer).TaskComplete(ctx, in)
+		return srv.(ExecutorServer).TaskComplete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Task/TaskComplete",
+		FullMethod: "/Executor/TaskComplete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServer).TaskComplete(ctx, req.(*TaskCompleteReq))
+		return srv.(ExecutorServer).TaskComplete(ctx, req.(*TaskCompleteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Task_TaskLog_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(TaskServer).TaskLog(&taskTaskLogServer{stream})
+func _Executor_TaskLog_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ExecutorServer).TaskLog(&executorTaskLogServer{stream})
 }
 
-type Task_TaskLogServer interface {
+type Executor_TaskLogServer interface {
 	SendAndClose(*LogSummary) error
 	Recv() (*LogEntry, error)
 	grpc.ServerStream
 }
 
-type taskTaskLogServer struct {
+type executorTaskLogServer struct {
 	grpc.ServerStream
 }
 
-func (x *taskTaskLogServer) SendAndClose(m *LogSummary) error {
+func (x *executorTaskLogServer) SendAndClose(m *LogSummary) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *taskTaskLogServer) Recv() (*LogEntry, error) {
+func (x *executorTaskLogServer) Recv() (*LogEntry, error) {
 	m := new(LogEntry)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -217,30 +217,30 @@ func (x *taskTaskLogServer) Recv() (*LogEntry, error) {
 	return m, nil
 }
 
-// Task_ServiceDesc is the grpc.ServiceDesc for Task service.
+// Executor_ServiceDesc is the grpc.ServiceDesc for Executor service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Task_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "Task",
-	HandlerType: (*TaskServer)(nil),
+var Executor_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Executor",
+	HandlerType: (*ExecutorServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "TaskInit",
-			Handler:    _Task_TaskInit_Handler,
+			Handler:    _Executor_TaskInit_Handler,
 		},
 		{
 			MethodName: "TaskFailure",
-			Handler:    _Task_TaskFailure_Handler,
+			Handler:    _Executor_TaskFailure_Handler,
 		},
 		{
 			MethodName: "TaskComplete",
-			Handler:    _Task_TaskComplete_Handler,
+			Handler:    _Executor_TaskComplete_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "TaskLog",
-			Handler:       _Task_TaskLog_Handler,
+			Handler:       _Executor_TaskLog_Handler,
 			ClientStreams: true,
 		},
 	},

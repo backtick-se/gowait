@@ -13,13 +13,13 @@ import (
 
 func NewServer(
 	lc fx.Lifecycle,
-	taskServer pb.TaskServer,
+	taskServer pb.ExecutorServer,
 	cowaitServer pb.CowaitServer,
 ) {
 	port := 1337
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterTaskServer(grpcServer, taskServer)
+	pb.RegisterExecutorServer(grpcServer, taskServer)
 	pb.RegisterCowaitServer(grpcServer, cowaitServer)
 
 	lc.Append(fx.Hook{

@@ -5,7 +5,7 @@ import grpc
 from . import cowait_pb2 as cowait__pb2
 
 
-class TaskStub(object):
+class ExecutorStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,28 +15,28 @@ class TaskStub(object):
             channel: A grpc.Channel.
         """
         self.TaskInit = channel.unary_unary(
-                '/Task/TaskInit',
+                '/Executor/TaskInit',
                 request_serializer=cowait__pb2.TaskInitReq.SerializeToString,
                 response_deserializer=cowait__pb2.TaskInitReply.FromString,
                 )
         self.TaskFailure = channel.unary_unary(
-                '/Task/TaskFailure',
+                '/Executor/TaskFailure',
                 request_serializer=cowait__pb2.TaskFailureReq.SerializeToString,
                 response_deserializer=cowait__pb2.TaskFailureReply.FromString,
                 )
         self.TaskComplete = channel.unary_unary(
-                '/Task/TaskComplete',
+                '/Executor/TaskComplete',
                 request_serializer=cowait__pb2.TaskCompleteReq.SerializeToString,
                 response_deserializer=cowait__pb2.TaskCompleteReply.FromString,
                 )
         self.TaskLog = channel.stream_unary(
-                '/Task/TaskLog',
+                '/Executor/TaskLog',
                 request_serializer=cowait__pb2.LogEntry.SerializeToString,
                 response_deserializer=cowait__pb2.LogSummary.FromString,
                 )
 
 
-class TaskServicer(object):
+class ExecutorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def TaskInit(self, request, context):
@@ -64,7 +64,7 @@ class TaskServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_TaskServicer_to_server(servicer, server):
+def add_ExecutorServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'TaskInit': grpc.unary_unary_rpc_method_handler(
                     servicer.TaskInit,
@@ -88,12 +88,12 @@ def add_TaskServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Task', rpc_method_handlers)
+            'Executor', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class Task(object):
+class Executor(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -107,7 +107,7 @@ class Task(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Task/TaskInit',
+        return grpc.experimental.unary_unary(request, target, '/Executor/TaskInit',
             cowait__pb2.TaskInitReq.SerializeToString,
             cowait__pb2.TaskInitReply.FromString,
             options, channel_credentials,
@@ -124,7 +124,7 @@ class Task(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Task/TaskFailure',
+        return grpc.experimental.unary_unary(request, target, '/Executor/TaskFailure',
             cowait__pb2.TaskFailureReq.SerializeToString,
             cowait__pb2.TaskFailureReply.FromString,
             options, channel_credentials,
@@ -141,7 +141,7 @@ class Task(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Task/TaskComplete',
+        return grpc.experimental.unary_unary(request, target, '/Executor/TaskComplete',
             cowait__pb2.TaskCompleteReq.SerializeToString,
             cowait__pb2.TaskCompleteReply.FromString,
             options, channel_credentials,
@@ -158,7 +158,7 @@ class Task(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_unary(request_iterator, target, '/Task/TaskLog',
+        return grpc.experimental.stream_unary(request_iterator, target, '/Executor/TaskLog',
             cowait__pb2.LogEntry.SerializeToString,
             cowait__pb2.LogSummary.FromString,
             options, channel_credentials,

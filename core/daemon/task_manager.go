@@ -17,8 +17,8 @@ type TaskServer interface {
 type TaskManager interface {
 	TaskServer
 
-	Get(core.TaskID) (Instance, bool)
-	Schedule(*core.TaskDef) (Instance, error)
+	Get(core.TaskID) (Task, bool)
+	Schedule(core.TaskID, *core.TaskSpec) (Task, error)
 }
 
 func NewTaskManager(cluster core.Cluster) TaskManager {
@@ -38,13 +38,16 @@ type taskmgr struct {
 	tasks   map[core.TaskID]*instance
 }
 
-func (t *taskmgr) Get(id core.TaskID) (i Instance, ok bool) {
+func (t *taskmgr) Get(id core.TaskID) (i Task, ok bool) {
 	i, ok = t.tasks[id]
 	return
 }
 
-func (t *taskmgr) Schedule(task *core.TaskDef) (Instance, error) {
-	instance := newInstance(t.cluster, task)
+func (t *taskmgr) Schedule(id core.TaskID, task *core.TaskSpec) (Task, error) {
+	if id == core.None {
+		id = core.GenerateTaskID(task.Name)
+	}
+	instance := newInstance(t.cluster, id, task)
 	t.tasks[instance.ID()] = instance
 	fmt.Printf("Scheduled task: %+v\n", task)
 	return instance, nil

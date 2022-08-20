@@ -3,7 +3,6 @@ package daemon
 import (
 	"cowait/core"
 	"cowait/core/msg"
-	"cowait/util"
 
 	"context"
 	"encoding/json"
@@ -11,9 +10,9 @@ import (
 	"time"
 )
 
-type Instance interface {
+type Task interface {
 	ID() core.TaskID
-	Task() *core.TaskDef
+	Spec() *core.TaskSpec
 	Status() core.TaskStatus
 	Scheduled() time.Time
 	Started() time.Time
@@ -24,16 +23,10 @@ type Instance interface {
 }
 
 type instance struct {
-	id        core.TaskID
-	cluster   core.Cluster
-	taskdef   *core.TaskDef
-	status    core.TaskStatus
-	scheduled time.Time
-	started   time.Time
-	completed time.Time
-	result    json.RawMessage
-	err       error
-	logs      map[string][]string
+	id      core.TaskID
+	cluster core.Cluster
+	state   core.TaskState
+	logs    map[string][]string
 
 	on_init     chan *msg.TaskInit
 	on_fail     chan *msg.TaskFailure
@@ -41,15 +34,16 @@ type instance struct {
 	on_log      chan *msg.LogEntry
 }
 
-func newInstance(cluster core.Cluster, taskdef *core.TaskDef) *instance {
-	id := core.TaskID(taskdef.Name + "-" + util.RandomString(6))
+func newInstance(cluster core.Cluster, id core.TaskID, spec *core.TaskSpec) *instance {
 	i := &instance{
-		id:        id,
-		cluster:   cluster,
-		taskdef:   taskdef,
-		status:    core.StatusWait,
-		scheduled: time.Now(),
-		logs:      make(map[string][]string),
+		id:      id,
+		cluster: cluster,
+		state: core.TaskState{
+			Spec:      spec,
+			Status:    core.StatusWait,
+			Scheduled: time.Now(),
+		},
+		logs: make(map[string][]string),
 
 		on_init:     make(chan *msg.TaskInit),
 		on_fail:     make(chan *msg.TaskFailure),
@@ -61,13 +55,13 @@ func newInstance(cluster core.Cluster, taskdef *core.TaskDef) *instance {
 }
 
 func (i *instance) ID() core.TaskID         { return i.id }
-func (i *instance) Task() *core.TaskDef     { return i.taskdef }
-func (i *instance) Status() core.TaskStatus { return i.status }
-func (i *instance) Scheduled() time.Time    { return i.scheduled }
-func (i *instance) Started() time.Time      { return i.started }
-func (i *instance) Completed() time.Time    { return i.completed }
-func (i *instance) Result() json.RawMessage { return i.result }
-func (i *instance) Err() error              { return i.err }
+func (i *instance) Spec() *core.TaskSpec    { return i.state.Spec }
+func (i *instance) Status() core.TaskStatus { return i.state.Status }
+func (i *instance) Scheduled() time.Time    { return i.state.Scheduled }
+func (i *instance) Started() time.Time      { return i.state.Started }
+func (i *instance) Completed() time.Time    { return i.state.Completed }
+func (i *instance) Result() json.RawMessage { return i.state.Result }
+func (i *instance) Err() error              { return i.state.Err }
 
 func (i *instance) Logs(file string) []string {
 	if logs, ok := i.logs[file]; ok {
@@ -82,8 +76,8 @@ func (i *instance) proc() {
 	// a specific context for each task allows us to set per-task deadlines etc
 	ctx := context.Background()
 
-	if i.taskdef.Timeout > 0 {
-		deadline, cancel := context.WithTimeout(ctx, time.Duration(i.taskdef.Timeout)*time.Second)
+	if i.state.Spec.Timeout > 0 {
+		deadline, cancel := context.WithTimeout(ctx, time.Duration(i.state.Spec.Timeout)*time.Second)
 		defer cancel()
 		ctx = deadline
 	}
@@ -91,7 +85,7 @@ func (i *instance) proc() {
 	// this is the instance management loop
 	// at this point the task is in the "scheduled" state
 	// i suppose we start by calling cluster.Spawn() ?
-	if err := i.cluster.Spawn(ctx, i.id, i.taskdef); err != nil {
+	if err := i.cluster.Spawn(ctx, i.id, i.state.Spec); err != nil {
 		fmt.Println("failed to spawn task", i.id, ":", err)
 		return
 	}
@@ -101,14 +95,14 @@ func (i *instance) proc() {
 	for {
 		select {
 		case <-i.on_init:
-			i.init()
+			i.state.Init()
 
 		case req := <-i.on_complete:
-			i.complete(req.Result)
+			i.state.Complete(req.Result)
 			return
 
 		case req := <-i.on_fail:
-			i.fail(req.Error)
+			i.state.Fail(req.Error)
 			return
 
 		case req := <-i.on_log:
@@ -119,7 +113,7 @@ func (i *instance) proc() {
 			i.logs[req.File] = append(log, req.Data)
 
 		case <-ctx.Done():
-			i.fail(fmt.Errorf("killed by task manager: timeout exceeded"))
+			i.state.Fail(fmt.Errorf("killed by task manager: timeout exceeded"))
 			return
 
 		case <-time.After(10 * time.Second):
@@ -127,7 +121,7 @@ func (i *instance) proc() {
 			fmt.Println("poke", i.id)
 			if err := i.cluster.Poke(ctx, i.id); err != nil {
 				fmt.Println("task", i.id, "failed liveness check:", err)
-				i.fail(fmt.Errorf("cluster task error: %w", err))
+				i.state.Fail(fmt.Errorf("cluster task error: %w", err))
 				return
 			}
 		}
@@ -150,21 +144,4 @@ func (i *instance) cleanup() {
 		// log error
 		fmt.Println("failed to kill", i, ":", err)
 	}
-}
-
-func (i *instance) init() {
-	i.status = core.StatusExec
-	i.started = time.Now()
-}
-
-func (i *instance) complete(result json.RawMessage) {
-	i.result = result
-	i.status = core.StatusDone
-	i.completed = time.Now()
-}
-
-func (i *instance) fail(err error) {
-	i.err = err
-	i.status = core.StatusFail
-	i.completed = time.Now()
 }

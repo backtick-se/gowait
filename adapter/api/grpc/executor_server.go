@@ -12,11 +12,11 @@ import (
 )
 
 type taskServer struct {
-	pb.UnimplementedTaskServer
+	pb.UnimplementedExecutorServer
 	mgr daemon.TaskServer
 }
 
-func NewTaskServer(mgr daemon.TaskServer) pb.TaskServer {
+func NewExecutorServer(mgr daemon.TaskServer) pb.ExecutorServer {
 	return &taskServer{
 		mgr: mgr,
 	}
@@ -56,7 +56,7 @@ func (t *taskServer) TaskComplete(ctx context.Context, req *pb.TaskCompleteReq) 
 	return &pb.TaskCompleteReply{}, nil
 }
 
-func (t *taskServer) TaskLog(stream pb.Task_TaskLogServer) error {
+func (t *taskServer) TaskLog(stream pb.Executor_TaskLogServer) error {
 	records := 0
 	for {
 		entry, err := stream.Recv()

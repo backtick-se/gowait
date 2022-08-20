@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x63owait.proto\x1a\x1fgoogle/protobuf/timestamp.proto\">\n\x06Header\x12\n\n\x02id\x18\x01 \x01(\t\x12(\n\x04time\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"7\n\x0bTaskInitReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0f\n\x07version\x18\x02 \x01(\t\"\x0f\n\rTaskInitReply\"8\n\x0eTaskFailureReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"\x12\n\x10TaskFailureReply\":\n\x0fTaskCompleteReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0e\n\x06result\x18\x02 \x01(\t\"\x13\n\x11TaskCompleteReply\"?\n\x08LogEntry\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0c\n\x04\x66ile\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"\x1d\n\nLogSummary\x12\x0f\n\x07records\x18\x01 \x01(\x03\"h\n\x07TaskDef\x12\x0f\n\x07\x63luster\x18\x01 \x01(\t\x12\r\n\x05image\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0f\n\x07\x63ommand\x18\x04 \x03(\t\x12\r\n\x05input\x18\x05 \x01(\t\x12\x0f\n\x07timeout\x18\x06 \x01(\x03\"m\n\x08Instance\x12\n\n\x02id\x18\x01 \x01(\t\x12\x16\n\x04task\x18\x02 \x01(\x0b\x32\x08.TaskDef\x12\x0e\n\x06status\x18\x03 \x01(\t\x12-\n\tscheduled\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\'\n\rCreateTaskReq\x12\x16\n\x04task\x18\x01 \x01(\x0b\x32\x08.TaskDef\".\n\x0f\x43reateTaskReply\x12\x1b\n\x08instance\x18\x01 \x01(\x0b\x32\t.Instance\"\x0f\n\rQueryTasksReq\"+\n\x0fQueryTasksReply\x12\x18\n\x05tasks\x18\x01 \x03(\x0b\x32\t.Instance\"\x19\n\x0bKillTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\"\x0f\n\rKillTaskReply\"\x17\n\x07\x43luster\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x12\n\x10QueryClustersReq\"0\n\x12QueryClustersReply\x12\x1a\n\x08\x63lusters\x18\x01 \x03(\x0b\x32\x08.Cluster\"\x1a\n\x0c\x41waitTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\"@\n\x0e\x41waitTaskReply\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06result\x18\x02 \x01(\t\x12\r\n\x05\x65rror\x18\x03 \x01(\t2\xc6\x01\n\x04Task\x12*\n\x08TaskInit\x12\x0c.TaskInitReq\x1a\x0e.TaskInitReply\"\x00\x12\x33\n\x0bTaskFailure\x12\x0f.TaskFailureReq\x1a\x11.TaskFailureReply\"\x00\x12\x36\n\x0cTaskComplete\x12\x10.TaskCompleteReq\x1a\x12.TaskCompleteReply\"\x00\x12%\n\x07TaskLog\x12\t.LogEntry\x1a\x0b.LogSummary\"\x00(\x01\x32\x84\x02\n\x06\x43owait\x12\x39\n\rQueryClusters\x12\x11.QueryClustersReq\x1a\x13.QueryClustersReply\"\x00\x12\x30\n\nCreateTask\x12\x0e.CreateTaskReq\x1a\x10.CreateTaskReply\"\x00\x12\x30\n\nQueryTasks\x12\x0e.QueryTasksReq\x1a\x10.QueryTasksReply\"\x00\x12*\n\x08KillTask\x12\x0c.KillTaskReq\x1a\x0e.KillTaskReply\"\x00\x12/\n\tAwaitTask\x12\r.AwaitTaskReq\x1a\x0f.AwaitTaskReply\"\x00\x30\x01\x42\x10Z\x0e\x63owait/core/pbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x63owait.proto\x1a\x1fgoogle/protobuf/timestamp.proto\">\n\x06Header\x12\n\n\x02id\x18\x01 \x01(\t\x12(\n\x04time\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"7\n\x0bTaskInitReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0f\n\x07version\x18\x02 \x01(\t\"\x0f\n\rTaskInitReply\"8\n\x0eTaskFailureReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"\x12\n\x10TaskFailureReply\":\n\x0fTaskCompleteReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0e\n\x06result\x18\x02 \x01(\t\"\x13\n\x11TaskCompleteReply\"?\n\x08LogEntry\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0c\n\x04\x66ile\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"\x1d\n\nLogSummary\x12\x0f\n\x07records\x18\x01 \x01(\x03\"\xf5\x01\n\x04Task\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0e\n\x06parent\x18\x02 \x01(\t\x12\x0e\n\x06status\x18\x03 \x01(\t\x12\x17\n\x04spec\x18\x04 \x01(\x0b\x32\t.TaskSpec\x12-\n\tscheduled\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12+\n\x07started\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12-\n\tcompleted\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0e\n\x06result\x18\x08 \x01(\t\x12\r\n\x05\x65rror\x18\t \x01(\t\"i\n\x08TaskSpec\x12\x0f\n\x07\x63luster\x18\x01 \x01(\t\x12\r\n\x05image\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0f\n\x07\x63ommand\x18\x04 \x03(\t\x12\r\n\x05input\x18\x05 \x01(\t\x12\x0f\n\x07timeout\x18\x06 \x01(\x03\"4\n\rCreateTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\x12\x17\n\x04spec\x18\x02 \x01(\x0b\x32\t.TaskSpec\"*\n\x0f\x43reateTaskReply\x12\x17\n\x08instance\x18\x01 \x01(\x0b\x32\x05.Task\"\x1b\n\rQueryTasksReq\x12\n\n\x02id\x18\x01 \x01(\t\"\'\n\x0fQueryTasksReply\x12\x14\n\x05tasks\x18\x01 \x03(\x0b\x32\x05.Task\"\x19\n\x0bKillTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\"\x0f\n\rKillTaskReply\"\x17\n\x07\x43luster\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x12\n\x10QueryClustersReq\"0\n\x12QueryClustersReply\x12\x1a\n\x08\x63lusters\x18\x01 \x03(\x0b\x32\x08.Cluster\"\x1a\n\x0c\x41waitTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\"%\n\x0e\x41waitTaskReply\x12\x13\n\x04task\x18\x01 \x01(\x0b\x32\x05.Task2\xca\x01\n\x08\x45xecutor\x12*\n\x08TaskInit\x12\x0c.TaskInitReq\x1a\x0e.TaskInitReply\"\x00\x12\x33\n\x0bTaskFailure\x12\x0f.TaskFailureReq\x1a\x11.TaskFailureReply\"\x00\x12\x36\n\x0cTaskComplete\x12\x10.TaskCompleteReq\x1a\x12.TaskCompleteReply\"\x00\x12%\n\x07TaskLog\x12\t.LogEntry\x1a\x0b.LogSummary\"\x00(\x01\x32\x84\x02\n\x06\x43owait\x12\x39\n\rQueryClusters\x12\x11.QueryClustersReq\x1a\x13.QueryClustersReply\"\x00\x12\x30\n\nCreateTask\x12\x0e.CreateTaskReq\x1a\x10.CreateTaskReply\"\x00\x12\x30\n\nQueryTasks\x12\x0e.QueryTasksReq\x1a\x10.QueryTasksReply\"\x00\x12*\n\x08KillTask\x12\x0c.KillTaskReq\x1a\x0e.KillTaskReply\"\x00\x12/\n\tAwaitTask\x12\r.AwaitTaskReq\x1a\x0f.AwaitTaskReply\"\x00\x30\x01\x42\x10Z\x0e\x63owait/core/pbb\x06proto3')
 
 
 
@@ -28,8 +28,8 @@ _TASKCOMPLETEREQ = DESCRIPTOR.message_types_by_name['TaskCompleteReq']
 _TASKCOMPLETEREPLY = DESCRIPTOR.message_types_by_name['TaskCompleteReply']
 _LOGENTRY = DESCRIPTOR.message_types_by_name['LogEntry']
 _LOGSUMMARY = DESCRIPTOR.message_types_by_name['LogSummary']
-_TASKDEF = DESCRIPTOR.message_types_by_name['TaskDef']
-_INSTANCE = DESCRIPTOR.message_types_by_name['Instance']
+_TASK = DESCRIPTOR.message_types_by_name['Task']
+_TASKSPEC = DESCRIPTOR.message_types_by_name['TaskSpec']
 _CREATETASKREQ = DESCRIPTOR.message_types_by_name['CreateTaskReq']
 _CREATETASKREPLY = DESCRIPTOR.message_types_by_name['CreateTaskReply']
 _QUERYTASKSREQ = DESCRIPTOR.message_types_by_name['QueryTasksReq']
@@ -104,19 +104,19 @@ LogSummary = _reflection.GeneratedProtocolMessageType('LogSummary', (_message.Me
   })
 _sym_db.RegisterMessage(LogSummary)
 
-TaskDef = _reflection.GeneratedProtocolMessageType('TaskDef', (_message.Message,), {
-  'DESCRIPTOR' : _TASKDEF,
+Task = _reflection.GeneratedProtocolMessageType('Task', (_message.Message,), {
+  'DESCRIPTOR' : _TASK,
   '__module__' : 'cowait_pb2'
-  # @@protoc_insertion_point(class_scope:TaskDef)
+  # @@protoc_insertion_point(class_scope:Task)
   })
-_sym_db.RegisterMessage(TaskDef)
+_sym_db.RegisterMessage(Task)
 
-Instance = _reflection.GeneratedProtocolMessageType('Instance', (_message.Message,), {
-  'DESCRIPTOR' : _INSTANCE,
+TaskSpec = _reflection.GeneratedProtocolMessageType('TaskSpec', (_message.Message,), {
+  'DESCRIPTOR' : _TASKSPEC,
   '__module__' : 'cowait_pb2'
-  # @@protoc_insertion_point(class_scope:Instance)
+  # @@protoc_insertion_point(class_scope:TaskSpec)
   })
-_sym_db.RegisterMessage(Instance)
+_sym_db.RegisterMessage(TaskSpec)
 
 CreateTaskReq = _reflection.GeneratedProtocolMessageType('CreateTaskReq', (_message.Message,), {
   'DESCRIPTOR' : _CREATETASKREQ,
@@ -195,7 +195,7 @@ AwaitTaskReply = _reflection.GeneratedProtocolMessageType('AwaitTaskReply', (_me
   })
 _sym_db.RegisterMessage(AwaitTaskReply)
 
-_TASK = DESCRIPTOR.services_by_name['Task']
+_EXECUTOR = DESCRIPTOR.services_by_name['Executor']
 _COWAIT = DESCRIPTOR.services_by_name['Cowait']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
@@ -219,34 +219,34 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _LOGENTRY._serialized_end=409
   _LOGSUMMARY._serialized_start=411
   _LOGSUMMARY._serialized_end=440
-  _TASKDEF._serialized_start=442
-  _TASKDEF._serialized_end=546
-  _INSTANCE._serialized_start=548
-  _INSTANCE._serialized_end=657
-  _CREATETASKREQ._serialized_start=659
-  _CREATETASKREQ._serialized_end=698
-  _CREATETASKREPLY._serialized_start=700
-  _CREATETASKREPLY._serialized_end=746
-  _QUERYTASKSREQ._serialized_start=748
-  _QUERYTASKSREQ._serialized_end=763
-  _QUERYTASKSREPLY._serialized_start=765
-  _QUERYTASKSREPLY._serialized_end=808
-  _KILLTASKREQ._serialized_start=810
-  _KILLTASKREQ._serialized_end=835
-  _KILLTASKREPLY._serialized_start=837
-  _KILLTASKREPLY._serialized_end=852
-  _CLUSTER._serialized_start=854
-  _CLUSTER._serialized_end=877
-  _QUERYCLUSTERSREQ._serialized_start=879
-  _QUERYCLUSTERSREQ._serialized_end=897
-  _QUERYCLUSTERSREPLY._serialized_start=899
-  _QUERYCLUSTERSREPLY._serialized_end=947
-  _AWAITTASKREQ._serialized_start=949
-  _AWAITTASKREQ._serialized_end=975
-  _AWAITTASKREPLY._serialized_start=977
-  _AWAITTASKREPLY._serialized_end=1041
-  _TASK._serialized_start=1044
-  _TASK._serialized_end=1242
-  _COWAIT._serialized_start=1245
-  _COWAIT._serialized_end=1505
+  _TASK._serialized_start=443
+  _TASK._serialized_end=688
+  _TASKSPEC._serialized_start=690
+  _TASKSPEC._serialized_end=795
+  _CREATETASKREQ._serialized_start=797
+  _CREATETASKREQ._serialized_end=849
+  _CREATETASKREPLY._serialized_start=851
+  _CREATETASKREPLY._serialized_end=893
+  _QUERYTASKSREQ._serialized_start=895
+  _QUERYTASKSREQ._serialized_end=922
+  _QUERYTASKSREPLY._serialized_start=924
+  _QUERYTASKSREPLY._serialized_end=963
+  _KILLTASKREQ._serialized_start=965
+  _KILLTASKREQ._serialized_end=990
+  _KILLTASKREPLY._serialized_start=992
+  _KILLTASKREPLY._serialized_end=1007
+  _CLUSTER._serialized_start=1009
+  _CLUSTER._serialized_end=1032
+  _QUERYCLUSTERSREQ._serialized_start=1034
+  _QUERYCLUSTERSREQ._serialized_end=1052
+  _QUERYCLUSTERSREPLY._serialized_start=1054
+  _QUERYCLUSTERSREPLY._serialized_end=1102
+  _AWAITTASKREQ._serialized_start=1104
+  _AWAITTASKREQ._serialized_end=1130
+  _AWAITTASKREPLY._serialized_start=1132
+  _AWAITTASKREPLY._serialized_end=1169
+  _EXECUTOR._serialized_start=1172
+  _EXECUTOR._serialized_end=1374
+  _COWAIT._serialized_start=1377
+  _COWAIT._serialized_end=1637
 # @@protoc_insertion_point(module_scope)

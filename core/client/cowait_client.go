@@ -10,7 +10,7 @@ import (
 
 type Client interface {
 	Connect(hostname string) error
-	CreateTask(context.Context, *core.TaskDef) (core.TaskID, error)
+	CreateTask(context.Context, core.TaskID, *core.TaskSpec) (*core.TaskState, error)
 }
 
 type client struct {
@@ -33,16 +33,24 @@ func (c *client) Connect(hostname string) error {
 	return nil
 }
 
-func (c *client) CreateTask(ctx context.Context, def *core.TaskDef) (core.TaskID, error) {
-	var empty core.TaskID
+func (c *client) CreateTask(ctx context.Context, id core.TaskID, def *core.TaskSpec) (*core.TaskState, error) {
 	if c.conn == nil {
-		return empty, ErrNotConnected
+		return nil, ErrNotConnected
 	}
 	reply, err := c.api.CreateTask(ctx, &pb.CreateTaskReq{
-		Task: pb.PackTaskdef(def),
+		Id:   string(id),
+		Spec: pb.PackTaskSpec(def),
 	})
 	if err != nil {
-		return empty, err
+		return nil, err
 	}
-	return core.TaskID(reply.Instance.Id), nil
+	return &core.TaskState{
+		ID:        core.TaskID(reply.Instance.Id),
+		Parent:    core.TaskID(reply.Instance.Parent),
+		Status:    core.TaskStatus(reply.Instance.Status),
+		Spec:      pb.UnpackTaskSpec(reply.Instance.Spec),
+		Scheduled: reply.Instance.Scheduled.AsTime(),
+		Started:   reply.Instance.Started.AsTime(),
+		Completed: reply.Instance.Completed.AsTime(),
+	}, nil
 }

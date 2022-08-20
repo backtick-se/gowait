@@ -13,8 +13,8 @@ func UnpackHeader(h *Header) msg.Header {
 	}
 }
 
-func PackTaskdef(def *core.TaskDef) *TaskDef {
-	return &TaskDef{
+func PackTaskSpec(def *core.TaskSpec) *TaskSpec {
+	return &TaskSpec{
 		Cluster: def.Cluster,
 		Name:    def.Name,
 		Image:   def.Image,
@@ -24,8 +24,8 @@ func PackTaskdef(def *core.TaskDef) *TaskDef {
 	}
 }
 
-func UnpackTaskdef(def *TaskDef) *core.TaskDef {
-	return &core.TaskDef{
+func UnpackTaskSpec(def *TaskSpec) *core.TaskSpec {
+	return &core.TaskSpec{
 		Cluster: def.Cluster,
 		Name:    def.Name,
 		Image:   def.Image,

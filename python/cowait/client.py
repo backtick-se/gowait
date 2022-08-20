@@ -1,7 +1,7 @@
 import json
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
-from .pb.cowait_pb2_grpc import TaskStub
+from .pb.cowait_pb2_grpc import ExecutorStub
 from .pb.cowait_pb2 import Header, TaskCompleteReq, TaskFailureReq, TaskInitReq
 
 VERSION = 'cowait-python/1.0'
@@ -13,7 +13,7 @@ class Client:
         self.host = host
         self.port = port
         self._channel = grpc.insecure_channel(f'{host}:{port}')
-        self._client = TaskStub(self._channel)
+        self._client = ExecutorStub(self._channel)
 
     def _header(self) -> Header:
         return Header(

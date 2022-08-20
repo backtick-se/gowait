@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"context"
 	"cowait/adapter/api/grpc"
 	"cowait/core/daemon"
 	"cowait/core/msg"
@@ -9,21 +10,29 @@ import (
 	"fmt"
 	"net"
 
+	"go.uber.org/fx"
 	grpcio "google.golang.org/grpc"
 )
 
+type Server interface {
+	Listen(port int) error
+	Close() error
+	Completed() <-chan *msg.TaskComplete
+	Failed() <-chan *msg.TaskFailure
+	Logs() <-chan *msg.LogEntry
+}
+
 type server struct {
+	grpc *grpcio.Server
+
 	completed chan *msg.TaskComplete
 	failed    chan *msg.TaskFailure
 	log       chan *msg.LogEntry
-
-	grpc *grpcio.Server
 }
 
 var _ daemon.TaskServer = &server{}
 
-func newServer() (*server, error) {
-	port := 1337
+func NewServer(lc fx.Lifecycle) Server {
 	server := &server{
 		grpc: grpcio.NewServer(),
 
@@ -32,17 +41,30 @@ func newServer() (*server, error) {
 		log:       make(chan *msg.LogEntry),
 	}
 
-	pb.RegisterTaskServer(server.grpc, grpc.NewTaskServer(server))
+	pb.RegisterExecutorServer(server.grpc, grpc.NewExecutorServer(server))
 
+	lc.Append(fx.Hook{
+		OnStop: func(context.Context) error {
+			return server.Close()
+		},
+	})
+
+	return server
+}
+
+func (s *server) Listen(port int) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
-		return nil, fmt.Errorf("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen on %d: %v", port, err)
 	}
 
-	go server.grpc.Serve(listener)
-
-	return server, nil
+	go s.grpc.Serve(listener)
+	return nil
 }
+
+func (s *server) Completed() <-chan *msg.TaskComplete { return s.completed }
+func (s *server) Failed() <-chan *msg.TaskFailure     { return s.failed }
+func (s *server) Logs() <-chan *msg.LogEntry          { return s.log }
 
 func (s *server) Close() error {
 	defer close(s.completed)

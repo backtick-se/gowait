@@ -73,7 +73,7 @@ func (k *kube) Name() string {
 	return k.name
 }
 
-func (k *kube) Spawn(ctx context.Context, id core.TaskID, def *core.TaskDef) error {
+func (k *kube) Spawn(ctx context.Context, id core.TaskID, def *core.TaskSpec) error {
 	envdef, err := def.ToEnv()
 	if err != nil {
 		return err

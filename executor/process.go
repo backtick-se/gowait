@@ -6,14 +6,21 @@ import (
 	"os/exec"
 )
 
-type Process struct {
-	Stdout LineReader
-	Stderr LineReader
-
-	command *exec.Cmd
+type Process interface {
+	Stdout() LineReader
+	Stderr() LineReader
+	Done() <-chan error
 }
 
-func Exec(command string, args ...string) (*Process, error) {
+type process struct {
+	stdout LineReader
+	stderr LineReader
+
+	command *exec.Cmd
+	done    chan error
+}
+
+func Exec(command string, args ...string) (Process, error) {
 	cmd := exec.Command(command, args...)
 
 	var err error
@@ -44,20 +51,32 @@ func Exec(command string, args ...string) (*Process, error) {
 		return nil, err
 	}
 
-	return &Process{
+	proc := &process{
 		command: cmd,
+		done:    make(chan error),
+		stdout:  NewLineReader(stdout),
+		stderr:  NewLineReader(stderr),
+	}
 
-		Stdout: NewLineReader(stdout),
-		Stderr: NewLineReader(stderr),
-	}, nil
+	go func() {
+		proc.done <- proc.wait()
+	}()
+
+	return proc, nil
 }
 
-func (p *Process) Wait() error {
+func (p *process) Stdout() LineReader { return p.stdout }
+func (p *process) Stderr() LineReader { return p.stderr }
+func (p *process) Done() <-chan error { return p.done }
+
+func (p *process) wait() error {
+	defer close(p.done)
+
 	// wait for pipes
-	if err := p.Stdout.Wait(); err != nil {
+	if err := p.stdout.Wait(); err != nil {
 		fmt.Println("error reading stdout:", err)
 	}
-	if err := p.Stderr.Wait(); err != nil {
+	if err := p.stderr.Wait(); err != nil {
 		fmt.Println("error reading stderr:", err)
 	}
 

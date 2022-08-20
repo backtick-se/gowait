@@ -9,7 +9,7 @@ type TaskLogger interface {
 
 type taskLog struct {
 	client *taskClient
-	stream pb.Task_TaskLogClient
+	stream pb.Executor_TaskLogClient
 }
 
 func (t *taskLog) Log(file, data string) error {

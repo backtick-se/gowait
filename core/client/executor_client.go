@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type TaskClient interface {
+type ExecutorClient interface {
 	Connect(hostname string, id core.TaskID) error
 	Init(ctx context.Context) error
 	Failure(ctx context.Context, taskErr error) error
@@ -22,11 +22,11 @@ type TaskClient interface {
 type taskClient struct {
 	taskID  core.TaskID
 	conn    *grpc.ClientConn
-	tasks   pb.TaskClient
+	tasks   pb.ExecutorClient
 	version string
 }
 
-func NewTaskClient() TaskClient {
+func NewTaskClient() ExecutorClient {
 	return &taskClient{
 		version: "gowait/1.0",
 	}
@@ -40,7 +40,7 @@ func (c *taskClient) Connect(hostname string, id core.TaskID) error {
 	}
 
 	c.taskID = id
-	c.tasks = pb.NewTaskClient(c.conn)
+	c.tasks = pb.NewExecutorClient(c.conn)
 	return nil
 }
 

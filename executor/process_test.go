@@ -12,8 +12,8 @@ var _ = Describe("Process", func() {
 		proc, err := executor.Exec("echo", "hello", "world")
 		Expect(err).ToNot(HaveOccurred())
 
-		proc.Stdout.Read()
+		proc.Stdout().Read()
 
-		proc.Wait()
+		<-proc.Done()
 	})
 })

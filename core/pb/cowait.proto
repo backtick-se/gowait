@@ -3,7 +3,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "cowait/core/pb";
 
-service Task {
+service Executor {
     rpc TaskInit(TaskInitReq) returns (TaskInitReply) {}
     rpc TaskFailure(TaskFailureReq) returns (TaskFailureReply) {}
     rpc TaskComplete(TaskCompleteReq) returns (TaskCompleteReply) {}
@@ -57,7 +57,19 @@ service Cowait {
     rpc AwaitTask(AwaitTaskReq) returns (stream AwaitTaskReply) {}
 }
 
-message TaskDef {
+message Task {
+    string id = 1;
+    string parent = 2;
+    string status = 3;
+    TaskSpec spec = 4;
+    google.protobuf.Timestamp scheduled = 5;
+    google.protobuf.Timestamp started = 6;
+    google.protobuf.Timestamp completed = 7;
+    string result = 8;
+    string error = 9;
+}
+
+message TaskSpec {
     string cluster = 1;
     string image = 2;
     string name = 3;
@@ -66,23 +78,20 @@ message TaskDef {
     int64 timeout = 6;
 }
 
-message Instance {
-    string id = 1;
-    TaskDef task = 2;
-    string status = 3;
-    google.protobuf.Timestamp scheduled = 4;
-}
-
 message CreateTaskReq { 
-    TaskDef task = 1;
-}
-message CreateTaskReply {
-    Instance instance = 1;
+    string id = 1;
+    TaskSpec spec = 2;
 }
 
-message QueryTasksReq { }
+message CreateTaskReply {
+    Task instance = 1;
+}
+
+message QueryTasksReq { 
+    string id = 1;
+}
 message QueryTasksReply { 
-    repeated Instance tasks = 1;
+    repeated Task tasks = 1;
 }
 
 message KillTaskReq { 
@@ -104,7 +113,5 @@ message AwaitTaskReq {
 }
 
 message AwaitTaskReply {
-    bool success = 1;
-    string result = 2;
-    string error = 3;
+    Task task = 1;
 }

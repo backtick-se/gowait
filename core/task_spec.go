@@ -8,7 +8,7 @@ const EnvTaskID = "COWAIT_ID"
 const EnvParentID = "COWAIT_PARENT"
 const EnvTaskdef = "COWAIT_TASK"
 
-type TaskDef struct {
+type TaskSpec struct {
 	Cluster string
 	Name    string
 	Image   string
@@ -17,7 +17,7 @@ type TaskDef struct {
 	Timeout int
 }
 
-func (t *TaskDef) ToEnv() (string, error) {
+func (t *TaskSpec) ToEnv() (string, error) {
 	if len(t.Input) == 0 {
 		t.Input = json.RawMessage("{}")
 	}
@@ -28,8 +28,8 @@ func (t *TaskDef) ToEnv() (string, error) {
 	return string(encoded), nil
 }
 
-func TaskDefFromEnv(env string) (*TaskDef, error) {
-	def := new(TaskDef)
+func TaskDefFromEnv(env string) (*TaskSpec, error) {
+	def := new(TaskSpec)
 	err := json.Unmarshal([]byte(env), def)
 	if err != nil {
 		return nil, err
