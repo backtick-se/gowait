@@ -20,6 +20,7 @@ const EnvPodName = "COWAIT_K8S_POD"
 
 type kube struct {
 	*kubernetes.Clientset
+	name      string
 	namespace string
 }
 
@@ -45,6 +46,7 @@ func New() core.Cluster {
 	}
 	return &kube{
 		Clientset: clientset,
+		name:      "kubernetes",
 		namespace: "default",
 	}
 }
@@ -62,18 +64,23 @@ func NewInCluster() (core.Cluster, error) {
 
 	return &kube{
 		Clientset: clients,
+		name:      "kubernetes",
 		namespace: "default",
 	}, nil
 }
 
-func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) error {
+func (k *kube) Name() string {
+	return k.name
+}
+
+func (k *kube) Spawn(ctx context.Context, id core.TaskID, def *core.TaskDef) error {
 	envdef, err := def.ToEnv()
 	if err != nil {
 		return err
 	}
 
 	meta := metav1.ObjectMeta{
-		Name:      string(def.ID),
+		Name:      string(id),
 		Namespace: k.namespace,
 	}
 	pod := apiv1.PodSpec{
@@ -89,12 +96,8 @@ func (k *kube) Spawn(ctx context.Context, def *core.TaskDef) error {
 						Value: envdef,
 					},
 					{
-						Name: EnvPodName,
-						ValueFrom: &apiv1.EnvVarSource{
-							FieldRef: &apiv1.ObjectFieldSelector{
-								FieldPath: "metadata.name",
-							},
-						},
+						Name:  core.EnvTaskID,
+						Value: string(id),
 					},
 				},
 			},

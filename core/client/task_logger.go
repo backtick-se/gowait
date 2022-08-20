@@ -8,7 +8,7 @@ type TaskLogger interface {
 }
 
 type taskLog struct {
-	client *client
+	client *taskClient
 	stream pb.Task_TaskLogClient
 }
 

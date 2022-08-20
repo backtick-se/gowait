@@ -16,7 +16,7 @@ def _excepthook(type, value, trace):
 def _init():
     global _client, _taskdef
     _taskdef = taskdef_from_env()
-    _client = Client(_taskdef['ID'])
+    _client = Client(os.getenv('COWAIT_ID'))
     _client.init()
     sys.excepthook = _excepthook
 

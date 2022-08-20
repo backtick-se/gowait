@@ -16,15 +16,16 @@ func main() {
 		grpc.Module,
 
 		fx.Invoke(createTask),
+		fx.NopLogger,
 	)
 	cowaitd.Run()
 }
 
 func createTask(mgr daemon.TaskManager) error {
-	return mgr.Schedule(&core.TaskDef{
-		ID:      "gowait-task-123",
+	_, err := mgr.Schedule(&core.TaskDef{
 		Name:    "gowait-task",
-		Image:   "cowait/gowait-python1233",
+		Image:   "cowait/gowait-python",
 		Command: []string{"python", "-u", "hello.py"},
 	})
+	return err
 }

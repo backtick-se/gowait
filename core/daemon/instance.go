@@ -3,6 +3,7 @@ package daemon
 import (
 	"cowait/core"
 	"cowait/core/msg"
+	"cowait/util"
 
 	"context"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 )
 
 type Instance interface {
+	ID() core.TaskID
 	Task() *core.TaskDef
 	Status() core.TaskStatus
 	Scheduled() time.Time
@@ -22,6 +24,7 @@ type Instance interface {
 }
 
 type instance struct {
+	id        core.TaskID
 	cluster   core.Cluster
 	taskdef   *core.TaskDef
 	status    core.TaskStatus
@@ -39,7 +42,9 @@ type instance struct {
 }
 
 func newInstance(cluster core.Cluster, taskdef *core.TaskDef) *instance {
+	id := core.TaskID(taskdef.Name + "-" + util.RandomString(6))
 	i := &instance{
+		id:        id,
 		cluster:   cluster,
 		taskdef:   taskdef,
 		status:    core.StatusWait,
@@ -55,6 +60,7 @@ func newInstance(cluster core.Cluster, taskdef *core.TaskDef) *instance {
 	return i
 }
 
+func (i *instance) ID() core.TaskID         { return i.id }
 func (i *instance) Task() *core.TaskDef     { return i.taskdef }
 func (i *instance) Status() core.TaskStatus { return i.status }
 func (i *instance) Scheduled() time.Time    { return i.scheduled }
@@ -85,8 +91,8 @@ func (i *instance) proc() {
 	// this is the instance management loop
 	// at this point the task is in the "scheduled" state
 	// i suppose we start by calling cluster.Spawn() ?
-	if err := i.cluster.Spawn(ctx, i.taskdef); err != nil {
-		fmt.Println("failed to spawn task", i.taskdef.ID, ":", err)
+	if err := i.cluster.Spawn(ctx, i.id, i.taskdef); err != nil {
+		fmt.Println("failed to spawn task", i.id, ":", err)
 		return
 	}
 
@@ -118,9 +124,9 @@ func (i *instance) proc() {
 
 		case <-time.After(10 * time.Second):
 			// periodic liveness check
-			fmt.Println("poke", i.taskdef.ID)
-			if err := i.cluster.Poke(ctx, i.taskdef.ID); err != nil {
-				fmt.Println("task", i.taskdef.ID, "failed liveness check:", err)
+			fmt.Println("poke", i.id)
+			if err := i.cluster.Poke(ctx, i.id); err != nil {
+				fmt.Println("task", i.id, "failed liveness check:", err)
 				i.fail(fmt.Errorf("cluster task error: %w", err))
 				return
 			}
@@ -134,9 +140,13 @@ func (i *instance) cleanup() {
 	defer close(i.on_fail)
 	defer close(i.on_log)
 
+	// wait a sec for any logs to arrive
+	// todo: avoid race condition here
+	time.Sleep(time.Second)
+
 	// ensure task is gone
 	ctx := context.Background()
-	if err := i.cluster.Kill(ctx, i.taskdef.ID); err != nil {
+	if err := i.cluster.Kill(ctx, i.id); err != nil {
 		// log error
 		fmt.Println("failed to kill", i, ":", err)
 	}

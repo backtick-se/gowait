@@ -11,7 +11,7 @@ service Task {
 }
 
 message Header {
-    string task_id = 1;
+    string id = 1;
     google.protobuf.Timestamp time = 3;
 }
 
@@ -44,4 +44,67 @@ message LogEntry {
 
 message LogSummary {
     int64 records = 1;
+}
+
+// Api Service
+
+service Cowait {
+    rpc QueryClusters(QueryClustersReq) returns (QueryClustersReply) {}
+
+    rpc CreateTask(CreateTaskReq) returns (CreateTaskReply) {}
+    rpc QueryTasks(QueryTasksReq) returns (QueryTasksReply) {}
+    rpc KillTask(KillTaskReq) returns (KillTaskReply) {}
+    rpc AwaitTask(AwaitTaskReq) returns (stream AwaitTaskReply) {}
+}
+
+message TaskDef {
+    string cluster = 1;
+    string image = 2;
+    string name = 3;
+    repeated string command = 4;
+    string input = 5;
+    int64 timeout = 6;
+}
+
+message Instance {
+    string id = 1;
+    TaskDef task = 2;
+    string status = 3;
+    google.protobuf.Timestamp scheduled = 4;
+}
+
+message CreateTaskReq { 
+    TaskDef task = 1;
+}
+message CreateTaskReply {
+    Instance instance = 1;
+}
+
+message QueryTasksReq { }
+message QueryTasksReply { 
+    repeated Instance tasks = 1;
+}
+
+message KillTaskReq { 
+    string id = 1;
+}
+message KillTaskReply { }
+
+message Cluster {
+    string name = 1;
+}
+
+message QueryClustersReq { }
+message QueryClustersReply {
+    repeated Cluster clusters = 1;
+}
+
+message AwaitTaskReq {
+    string id = 1;
+}
+
+message AwaitTaskReply {
+    bool success = 1;
+    string result = 2;
+    string error = 3;
 }

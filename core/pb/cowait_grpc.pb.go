@@ -246,3 +246,261 @@ var Task_ServiceDesc = grpc.ServiceDesc{
 	},
 	Metadata: "core/pb/cowait.proto",
 }
+
+// CowaitClient is the client API for Cowait service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type CowaitClient interface {
+	QueryClusters(ctx context.Context, in *QueryClustersReq, opts ...grpc.CallOption) (*QueryClustersReply, error)
+	CreateTask(ctx context.Context, in *CreateTaskReq, opts ...grpc.CallOption) (*CreateTaskReply, error)
+	QueryTasks(ctx context.Context, in *QueryTasksReq, opts ...grpc.CallOption) (*QueryTasksReply, error)
+	KillTask(ctx context.Context, in *KillTaskReq, opts ...grpc.CallOption) (*KillTaskReply, error)
+	AwaitTask(ctx context.Context, in *AwaitTaskReq, opts ...grpc.CallOption) (Cowait_AwaitTaskClient, error)
+}
+
+type cowaitClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewCowaitClient(cc grpc.ClientConnInterface) CowaitClient {
+	return &cowaitClient{cc}
+}
+
+func (c *cowaitClient) QueryClusters(ctx context.Context, in *QueryClustersReq, opts ...grpc.CallOption) (*QueryClustersReply, error) {
+	out := new(QueryClustersReply)
+	err := c.cc.Invoke(ctx, "/Cowait/QueryClusters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cowaitClient) CreateTask(ctx context.Context, in *CreateTaskReq, opts ...grpc.CallOption) (*CreateTaskReply, error) {
+	out := new(CreateTaskReply)
+	err := c.cc.Invoke(ctx, "/Cowait/CreateTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cowaitClient) QueryTasks(ctx context.Context, in *QueryTasksReq, opts ...grpc.CallOption) (*QueryTasksReply, error) {
+	out := new(QueryTasksReply)
+	err := c.cc.Invoke(ctx, "/Cowait/QueryTasks", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cowaitClient) KillTask(ctx context.Context, in *KillTaskReq, opts ...grpc.CallOption) (*KillTaskReply, error) {
+	out := new(KillTaskReply)
+	err := c.cc.Invoke(ctx, "/Cowait/KillTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cowaitClient) AwaitTask(ctx context.Context, in *AwaitTaskReq, opts ...grpc.CallOption) (Cowait_AwaitTaskClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Cowait_ServiceDesc.Streams[0], "/Cowait/AwaitTask", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &cowaitAwaitTaskClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Cowait_AwaitTaskClient interface {
+	Recv() (*AwaitTaskReply, error)
+	grpc.ClientStream
+}
+
+type cowaitAwaitTaskClient struct {
+	grpc.ClientStream
+}
+
+func (x *cowaitAwaitTaskClient) Recv() (*AwaitTaskReply, error) {
+	m := new(AwaitTaskReply)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// CowaitServer is the server API for Cowait service.
+// All implementations must embed UnimplementedCowaitServer
+// for forward compatibility
+type CowaitServer interface {
+	QueryClusters(context.Context, *QueryClustersReq) (*QueryClustersReply, error)
+	CreateTask(context.Context, *CreateTaskReq) (*CreateTaskReply, error)
+	QueryTasks(context.Context, *QueryTasksReq) (*QueryTasksReply, error)
+	KillTask(context.Context, *KillTaskReq) (*KillTaskReply, error)
+	AwaitTask(*AwaitTaskReq, Cowait_AwaitTaskServer) error
+	mustEmbedUnimplementedCowaitServer()
+}
+
+// UnimplementedCowaitServer must be embedded to have forward compatible implementations.
+type UnimplementedCowaitServer struct {
+}
+
+func (UnimplementedCowaitServer) QueryClusters(context.Context, *QueryClustersReq) (*QueryClustersReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryClusters not implemented")
+}
+func (UnimplementedCowaitServer) CreateTask(context.Context, *CreateTaskReq) (*CreateTaskReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTask not implemented")
+}
+func (UnimplementedCowaitServer) QueryTasks(context.Context, *QueryTasksReq) (*QueryTasksReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryTasks not implemented")
+}
+func (UnimplementedCowaitServer) KillTask(context.Context, *KillTaskReq) (*KillTaskReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KillTask not implemented")
+}
+func (UnimplementedCowaitServer) AwaitTask(*AwaitTaskReq, Cowait_AwaitTaskServer) error {
+	return status.Errorf(codes.Unimplemented, "method AwaitTask not implemented")
+}
+func (UnimplementedCowaitServer) mustEmbedUnimplementedCowaitServer() {}
+
+// UnsafeCowaitServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CowaitServer will
+// result in compilation errors.
+type UnsafeCowaitServer interface {
+	mustEmbedUnimplementedCowaitServer()
+}
+
+func RegisterCowaitServer(s grpc.ServiceRegistrar, srv CowaitServer) {
+	s.RegisterService(&Cowait_ServiceDesc, srv)
+}
+
+func _Cowait_QueryClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryClustersReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CowaitServer).QueryClusters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cowait/QueryClusters",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CowaitServer).QueryClusters(ctx, req.(*QueryClustersReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cowait_CreateTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTaskReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CowaitServer).CreateTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cowait/CreateTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CowaitServer).CreateTask(ctx, req.(*CreateTaskReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cowait_QueryTasks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTasksReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CowaitServer).QueryTasks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cowait/QueryTasks",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CowaitServer).QueryTasks(ctx, req.(*QueryTasksReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cowait_KillTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KillTaskReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CowaitServer).KillTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cowait/KillTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CowaitServer).KillTask(ctx, req.(*KillTaskReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cowait_AwaitTask_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AwaitTaskReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CowaitServer).AwaitTask(m, &cowaitAwaitTaskServer{stream})
+}
+
+type Cowait_AwaitTaskServer interface {
+	Send(*AwaitTaskReply) error
+	grpc.ServerStream
+}
+
+type cowaitAwaitTaskServer struct {
+	grpc.ServerStream
+}
+
+func (x *cowaitAwaitTaskServer) Send(m *AwaitTaskReply) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+// Cowait_ServiceDesc is the grpc.ServiceDesc for Cowait service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Cowait_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Cowait",
+	HandlerType: (*CowaitServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "QueryClusters",
+			Handler:    _Cowait_QueryClusters_Handler,
+		},
+		{
+			MethodName: "CreateTask",
+			Handler:    _Cowait_CreateTask_Handler,
+		},
+		{
+			MethodName: "QueryTasks",
+			Handler:    _Cowait_QueryTasks_Handler,
+		},
+		{
+			MethodName: "KillTask",
+			Handler:    _Cowait_KillTask_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "AwaitTask",
+			Handler:       _Cowait_AwaitTask_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "core/pb/cowait.proto",
+}

@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 )
 
+const EnvTaskID = "COWAIT_ID"
+const EnvParentID = "COWAIT_PARENT"
 const EnvTaskdef = "COWAIT_TASK"
 
 type TaskDef struct {
-	ID      TaskID
-	Parent  TaskID
+	Cluster string
 	Name    string
 	Image   string
 	Command []string
@@ -17,6 +18,9 @@ type TaskDef struct {
 }
 
 func (t *TaskDef) ToEnv() (string, error) {
+	if len(t.Input) == 0 {
+		t.Input = json.RawMessage("{}")
+	}
 	encoded, err := json.Marshal(t)
 	if err != nil {
 		return "", err

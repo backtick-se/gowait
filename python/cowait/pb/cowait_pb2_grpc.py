@@ -163,3 +163,202 @@ class Task(object):
             cowait__pb2.LogSummary.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+
+class CowaitStub(object):
+    """Api Service
+
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.QueryClusters = channel.unary_unary(
+                '/Cowait/QueryClusters',
+                request_serializer=cowait__pb2.QueryClustersReq.SerializeToString,
+                response_deserializer=cowait__pb2.QueryClustersReply.FromString,
+                )
+        self.CreateTask = channel.unary_unary(
+                '/Cowait/CreateTask',
+                request_serializer=cowait__pb2.CreateTaskReq.SerializeToString,
+                response_deserializer=cowait__pb2.CreateTaskReply.FromString,
+                )
+        self.QueryTasks = channel.unary_unary(
+                '/Cowait/QueryTasks',
+                request_serializer=cowait__pb2.QueryTasksReq.SerializeToString,
+                response_deserializer=cowait__pb2.QueryTasksReply.FromString,
+                )
+        self.KillTask = channel.unary_unary(
+                '/Cowait/KillTask',
+                request_serializer=cowait__pb2.KillTaskReq.SerializeToString,
+                response_deserializer=cowait__pb2.KillTaskReply.FromString,
+                )
+        self.AwaitTask = channel.unary_stream(
+                '/Cowait/AwaitTask',
+                request_serializer=cowait__pb2.AwaitTaskReq.SerializeToString,
+                response_deserializer=cowait__pb2.AwaitTaskReply.FromString,
+                )
+
+
+class CowaitServicer(object):
+    """Api Service
+
+    """
+
+    def QueryClusters(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateTask(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def QueryTasks(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def KillTask(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AwaitTask(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_CowaitServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'QueryClusters': grpc.unary_unary_rpc_method_handler(
+                    servicer.QueryClusters,
+                    request_deserializer=cowait__pb2.QueryClustersReq.FromString,
+                    response_serializer=cowait__pb2.QueryClustersReply.SerializeToString,
+            ),
+            'CreateTask': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateTask,
+                    request_deserializer=cowait__pb2.CreateTaskReq.FromString,
+                    response_serializer=cowait__pb2.CreateTaskReply.SerializeToString,
+            ),
+            'QueryTasks': grpc.unary_unary_rpc_method_handler(
+                    servicer.QueryTasks,
+                    request_deserializer=cowait__pb2.QueryTasksReq.FromString,
+                    response_serializer=cowait__pb2.QueryTasksReply.SerializeToString,
+            ),
+            'KillTask': grpc.unary_unary_rpc_method_handler(
+                    servicer.KillTask,
+                    request_deserializer=cowait__pb2.KillTaskReq.FromString,
+                    response_serializer=cowait__pb2.KillTaskReply.SerializeToString,
+            ),
+            'AwaitTask': grpc.unary_stream_rpc_method_handler(
+                    servicer.AwaitTask,
+                    request_deserializer=cowait__pb2.AwaitTaskReq.FromString,
+                    response_serializer=cowait__pb2.AwaitTaskReply.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'Cowait', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class Cowait(object):
+    """Api Service
+
+    """
+
+    @staticmethod
+    def QueryClusters(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cowait/QueryClusters',
+            cowait__pb2.QueryClustersReq.SerializeToString,
+            cowait__pb2.QueryClustersReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CreateTask(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cowait/CreateTask',
+            cowait__pb2.CreateTaskReq.SerializeToString,
+            cowait__pb2.CreateTaskReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def QueryTasks(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cowait/QueryTasks',
+            cowait__pb2.QueryTasksReq.SerializeToString,
+            cowait__pb2.QueryTasksReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def KillTask(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cowait/KillTask',
+            cowait__pb2.KillTaskReq.SerializeToString,
+            cowait__pb2.KillTaskReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def AwaitTask(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/Cowait/AwaitTask',
+            cowait__pb2.AwaitTaskReq.SerializeToString,
+            cowait__pb2.AwaitTaskReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

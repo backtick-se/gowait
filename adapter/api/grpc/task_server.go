@@ -24,7 +24,7 @@ func NewTaskServer(mgr daemon.TaskServer) pb.TaskServer {
 
 func (t *taskServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.TaskInitReply, error) {
 	err := t.mgr.Init(&msg.TaskInit{
-		Header:  pb.ParseHeader(req.Header),
+		Header:  pb.UnpackHeader(req.Header),
 		Version: req.Version,
 	})
 	if err != nil {
@@ -36,7 +36,7 @@ func (t *taskServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.Tas
 func (t *taskServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq) (*pb.TaskFailureReply, error) {
 	taskErr := core.NewError(req.Error)
 	err := t.mgr.Fail(&msg.TaskFailure{
-		Header: pb.ParseHeader(req.Header),
+		Header: pb.UnpackHeader(req.Header),
 		Error:  taskErr,
 	})
 	if err != nil {
@@ -47,7 +47,7 @@ func (t *taskServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq) (*
 
 func (t *taskServer) TaskComplete(ctx context.Context, req *pb.TaskCompleteReq) (*pb.TaskCompleteReply, error) {
 	err := t.mgr.Complete(&msg.TaskComplete{
-		Header: pb.ParseHeader(req.Header),
+		Header: pb.UnpackHeader(req.Header),
 		Result: json.RawMessage(req.Result),
 	})
 	if err != nil {
@@ -70,7 +70,7 @@ func (t *taskServer) TaskLog(stream pb.Task_TaskLogServer) error {
 		}
 		records++
 		t.mgr.Log(&msg.LogEntry{
-			Header: pb.ParseHeader(entry.Header),
+			Header: pb.UnpackHeader(entry.Header),
 			File:   entry.File,
 			Data:   entry.Data,
 		})

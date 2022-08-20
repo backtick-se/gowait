@@ -17,7 +17,7 @@ class Client:
 
     def _header(self) -> Header:
         return Header(
-            task_id=self.task_id,
+            id=self.task_id,
             time=Timestamp(),
         )
 

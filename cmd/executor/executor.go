@@ -1,30 +1,29 @@
 package main
 
 import (
-	"cowait/core"
+	"cowait/core/client"
 	"cowait/executor"
 
 	"context"
-	"fmt"
-	"os"
+
+	"go.uber.org/fx"
 )
 
 // container client / process manager
 
 func main() {
-	// create executor
-	envdef := os.Getenv(core.EnvTaskdef)
-	executor, err := executor.NewFromEnv(envdef)
-	if err != nil {
-		fmt.Println("failed to create executor:", err)
-		os.Exit(1)
-	}
+	executor := fx.New(
+		client.Module,
 
-	// run task
+		fx.Provide(executor.NewFromEnv),
+		fx.Invoke(run),
+
+		fx.NopLogger,
+	)
+	executor.Run()
+}
+
+func run(lc fx.Lifecycle, exec executor.Executor) error {
 	ctx := context.Background()
-	err = executor.Run(ctx)
-	if err != nil {
-		fmt.Println("execution failed:", err)
-		os.Exit(1)
-	}
+	return exec.Run(ctx)
 }

@@ -3,6 +3,7 @@ package executor
 import (
 	"cowait/core"
 	"cowait/core/client"
+	"os"
 
 	"context"
 	"fmt"
@@ -14,20 +15,22 @@ type Executor interface {
 }
 
 type executor struct {
-	client client.Client
+	client client.TaskClient
 	task   *core.TaskDef
 }
 
-func NewFromEnv(envdef string) (Executor, error) {
-	def, err := core.TaskDefFromEnv(envdef)
+func NewFromEnv(client client.TaskClient) (Executor, error) {
+	id := core.TaskID(os.Getenv(core.EnvTaskID))
+	def, err := core.TaskDefFromEnv(os.Getenv(core.EnvTaskdef))
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("executor: %+v\n", def)
+	fmt.Printf("executor %s: %+v\n", id, def)
 
-	client, err := client.New(def.ID)
-	if err != nil {
+	// connect to daemon
+	hostname := "cowaitd.default.svc.cluster.local:1337"
+	if err := client.Connect(hostname, id); err != nil {
 		return nil, fmt.Errorf("failed to connect upstream: %w", err)
 	}
 
