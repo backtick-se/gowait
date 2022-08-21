@@ -1,8 +1,8 @@
 package main
 
 import (
+	"cowait/adapter/api/grpc"
 	"cowait/core"
-	"cowait/core/client"
 	"cowait/core/executor"
 	"os"
 
@@ -15,7 +15,7 @@ import (
 
 func main() {
 	executor := fx.New(
-		client.Module,
+		grpc.Module,
 		executor.Module,
 
 		fx.Invoke(run),

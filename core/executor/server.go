@@ -3,9 +3,9 @@ package executor
 import (
 	"context"
 	"cowait/adapter/api/grpc"
+	"cowait/adapter/api/grpc/pb"
 	"cowait/core/daemon"
 	"cowait/core/msg"
-	"cowait/core/pb"
 
 	"fmt"
 	"net"
@@ -30,9 +30,12 @@ type server struct {
 	log       chan *msg.LogEntry
 }
 
-var _ daemon.TaskServer = &server{}
+var _ daemon.ExecutorServer = &server{}
 
 func NewServer(lc fx.Lifecycle) Server {
+	// its not really OK to import grpc stuff here.
+	// todo: extract
+
 	server := &server{
 		grpc: grpcio.NewServer(),
 

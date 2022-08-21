@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x63owait.proto\x1a\x1fgoogle/protobuf/timestamp.proto\">\n\x06Header\x12\n\n\x02id\x18\x01 \x01(\t\x12(\n\x04time\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"7\n\x0bTaskInitReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0f\n\x07version\x18\x02 \x01(\t\"\x0f\n\rTaskInitReply\"8\n\x0eTaskFailureReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"\x12\n\x10TaskFailureReply\":\n\x0fTaskCompleteReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0e\n\x06result\x18\x02 \x01(\t\"\x13\n\x11TaskCompleteReply\"?\n\x08LogEntry\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0c\n\x04\x66ile\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"\x1d\n\nLogSummary\x12\x0f\n\x07records\x18\x01 \x01(\x03\"\xfa\x01\n\x04Task\x12\x0f\n\x07task_id\x18\x01 \x01(\t\x12\x0e\n\x06parent\x18\x02 \x01(\t\x12\x0e\n\x06status\x18\x03 \x01(\t\x12\x17\n\x04spec\x18\x04 \x01(\x0b\x32\t.TaskSpec\x12-\n\tscheduled\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12+\n\x07started\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12-\n\tcompleted\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0e\n\x06result\x18\x08 \x01(\t\x12\r\n\x05\x65rror\x18\t \x01(\t\"\x82\x01\n\x08TaskSpec\x12\r\n\x05image\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07\x63ommand\x18\x03 \x03(\t\x12\r\n\x05input\x18\x04 \x01(\t\x12\x0f\n\x07timeout\x18\x05 \x01(\x03\x12(\n\x04time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"(\n\rCreateTaskReq\x12\x17\n\x04spec\x18\x01 \x01(\x0b\x32\t.TaskSpec\"&\n\x0f\x43reateTaskReply\x12\x13\n\x04task\x18\x01 \x01(\x0b\x32\x05.Task\"\x1b\n\rQueryTasksReq\x12\n\n\x02id\x18\x01 \x01(\t\"\'\n\x0fQueryTasksReply\x12\x14\n\x05tasks\x18\x01 \x03(\x0b\x32\x05.Task\"\x19\n\x0bKillTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\"\x0f\n\rKillTaskReply\"\x1a\n\x0c\x41waitTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\"%\n\x0e\x41waitTaskReply\x12\x13\n\x04task\x18\x01 \x01(\x0b\x32\x05.Task2\xca\x01\n\x08\x45xecutor\x12*\n\x08TaskInit\x12\x0c.TaskInitReq\x1a\x0e.TaskInitReply\"\x00\x12\x33\n\x0bTaskFailure\x12\x0f.TaskFailureReq\x1a\x11.TaskFailureReply\"\x00\x12\x36\n\x0cTaskComplete\x12\x10.TaskCompleteReq\x1a\x12.TaskCompleteReply\"\x00\x12%\n\x07TaskLog\x12\t.LogEntry\x1a\x0b.LogSummary\"\x00(\x01\x32\xc9\x01\n\x06\x43owait\x12\x30\n\nCreateTask\x12\x0e.CreateTaskReq\x1a\x10.CreateTaskReply\"\x00\x12\x30\n\nQueryTasks\x12\x0e.QueryTasksReq\x1a\x10.QueryTasksReply\"\x00\x12*\n\x08KillTask\x12\x0c.KillTaskReq\x1a\x0e.KillTaskReply\"\x00\x12/\n\tAwaitTask\x12\r.AwaitTaskReq\x1a\x0f.AwaitTaskReply\"\x00\x30\x01\x42\x10Z\x0e\x63owait/core/pbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x63owait.proto\x1a\x1fgoogle/protobuf/timestamp.proto\">\n\x06Header\x12\n\n\x02id\x18\x01 \x01(\t\x12(\n\x04time\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"7\n\x0bTaskInitReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0f\n\x07version\x18\x02 \x01(\t\"\x0f\n\rTaskInitReply\"8\n\x0eTaskFailureReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\r\n\x05\x65rror\x18\x02 \x01(\t\"\x12\n\x10TaskFailureReply\":\n\x0fTaskCompleteReq\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0e\n\x06result\x18\x02 \x01(\t\"\x13\n\x11TaskCompleteReply\"?\n\x08LogEntry\x12\x17\n\x06header\x18\x01 \x01(\x0b\x32\x07.Header\x12\x0c\n\x04\x66ile\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"\x1d\n\nLogSummary\x12\x0f\n\x07records\x18\x01 \x01(\x03\"\xfa\x01\n\x04Task\x12\x0f\n\x07task_id\x18\x01 \x01(\t\x12\x0e\n\x06parent\x18\x02 \x01(\t\x12\x0e\n\x06status\x18\x03 \x01(\t\x12\x17\n\x04spec\x18\x04 \x01(\x0b\x32\t.TaskSpec\x12-\n\tscheduled\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12+\n\x07started\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12-\n\tcompleted\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0e\n\x06result\x18\x08 \x01(\t\x12\r\n\x05\x65rror\x18\t \x01(\t\"\x82\x01\n\x08TaskSpec\x12\r\n\x05image\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07\x63ommand\x18\x03 \x03(\t\x12\r\n\x05input\x18\x04 \x01(\t\x12\x0f\n\x07timeout\x18\x05 \x01(\x03\x12(\n\x04time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"(\n\rCreateTaskReq\x12\x17\n\x04spec\x18\x01 \x01(\x0b\x32\t.TaskSpec\"&\n\x0f\x43reateTaskReply\x12\x13\n\x04task\x18\x01 \x01(\x0b\x32\x05.Task\"\x1b\n\rQueryTasksReq\x12\n\n\x02id\x18\x01 \x01(\t\"\'\n\x0fQueryTasksReply\x12\x14\n\x05tasks\x18\x01 \x03(\x0b\x32\x05.Task\"\x19\n\x0bKillTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\"\x0f\n\rKillTaskReply\"\x1a\n\x0c\x41waitTaskReq\x12\n\n\x02id\x18\x01 \x01(\t\"%\n\x0e\x41waitTaskReply\x12\x13\n\x04task\x18\x01 \x01(\x0b\x32\x05.Task\"\x10\n\x0e\x43lusterInfoReq\"\x12\n\x10\x43lusterInfoReply\"\x11\n\x0f\x43lusterSpawnReq\"\x13\n\x11\x43lusterSpawnReply\"\x10\n\x0e\x43lusterKillReq\"\x12\n\x10\x43lusterKillReply\"\x10\n\x0e\x43lusterPokeReq\"\x12\n\x10\x43lusterPokeReply\"\x15\n\x13\x43lusterSubscribeReq\"\x0e\n\x0c\x43lusterEvent2\xca\x01\n\x08\x45xecutor\x12*\n\x08TaskInit\x12\x0c.TaskInitReq\x1a\x0e.TaskInitReply\"\x00\x12\x33\n\x0bTaskFailure\x12\x0f.TaskFailureReq\x1a\x11.TaskFailureReply\"\x00\x12\x36\n\x0cTaskComplete\x12\x10.TaskCompleteReq\x1a\x12.TaskCompleteReply\"\x00\x12%\n\x07TaskLog\x12\t.LogEntry\x1a\x0b.LogSummary\"\x00(\x01\x32\xc9\x01\n\x06\x43owait\x12\x30\n\nCreateTask\x12\x0e.CreateTaskReq\x1a\x10.CreateTaskReply\"\x00\x12\x30\n\nQueryTasks\x12\x0e.QueryTasksReq\x1a\x10.QueryTasksReply\"\x00\x12*\n\x08KillTask\x12\x0c.KillTaskReq\x1a\x0e.KillTaskReply\"\x00\x12/\n\tAwaitTask\x12\r.AwaitTaskReq\x1a\x0f.AwaitTaskReply\"\x00\x30\x01\x32\xfa\x01\n\x07\x43luster\x12,\n\x04Info\x12\x0f.ClusterInfoReq\x1a\x11.ClusterInfoReply\"\x00\x12/\n\x05Spawn\x12\x10.ClusterSpawnReq\x1a\x12.ClusterSpawnReply\"\x00\x12,\n\x04Kill\x12\x0f.ClusterKillReq\x1a\x11.ClusterKillReply\"\x00\x12,\n\x04Poke\x12\x0f.ClusterPokeReq\x1a\x11.ClusterPokeReply\"\x00\x12\x34\n\tSubscribe\x12\x14.ClusterSubscribeReq\x1a\r.ClusterEvent\"\x00\x30\x01\x42\x1cZ\x1a\x63owait/adapter/api/grpc/pbb\x06proto3')
 
 
 
@@ -38,6 +38,16 @@ _KILLTASKREQ = DESCRIPTOR.message_types_by_name['KillTaskReq']
 _KILLTASKREPLY = DESCRIPTOR.message_types_by_name['KillTaskReply']
 _AWAITTASKREQ = DESCRIPTOR.message_types_by_name['AwaitTaskReq']
 _AWAITTASKREPLY = DESCRIPTOR.message_types_by_name['AwaitTaskReply']
+_CLUSTERINFOREQ = DESCRIPTOR.message_types_by_name['ClusterInfoReq']
+_CLUSTERINFOREPLY = DESCRIPTOR.message_types_by_name['ClusterInfoReply']
+_CLUSTERSPAWNREQ = DESCRIPTOR.message_types_by_name['ClusterSpawnReq']
+_CLUSTERSPAWNREPLY = DESCRIPTOR.message_types_by_name['ClusterSpawnReply']
+_CLUSTERKILLREQ = DESCRIPTOR.message_types_by_name['ClusterKillReq']
+_CLUSTERKILLREPLY = DESCRIPTOR.message_types_by_name['ClusterKillReply']
+_CLUSTERPOKEREQ = DESCRIPTOR.message_types_by_name['ClusterPokeReq']
+_CLUSTERPOKEREPLY = DESCRIPTOR.message_types_by_name['ClusterPokeReply']
+_CLUSTERSUBSCRIBEREQ = DESCRIPTOR.message_types_by_name['ClusterSubscribeReq']
+_CLUSTEREVENT = DESCRIPTOR.message_types_by_name['ClusterEvent']
 Header = _reflection.GeneratedProtocolMessageType('Header', (_message.Message,), {
   'DESCRIPTOR' : _HEADER,
   '__module__' : 'cowait_pb2'
@@ -171,12 +181,83 @@ AwaitTaskReply = _reflection.GeneratedProtocolMessageType('AwaitTaskReply', (_me
   })
 _sym_db.RegisterMessage(AwaitTaskReply)
 
+ClusterInfoReq = _reflection.GeneratedProtocolMessageType('ClusterInfoReq', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERINFOREQ,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterInfoReq)
+  })
+_sym_db.RegisterMessage(ClusterInfoReq)
+
+ClusterInfoReply = _reflection.GeneratedProtocolMessageType('ClusterInfoReply', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERINFOREPLY,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterInfoReply)
+  })
+_sym_db.RegisterMessage(ClusterInfoReply)
+
+ClusterSpawnReq = _reflection.GeneratedProtocolMessageType('ClusterSpawnReq', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERSPAWNREQ,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterSpawnReq)
+  })
+_sym_db.RegisterMessage(ClusterSpawnReq)
+
+ClusterSpawnReply = _reflection.GeneratedProtocolMessageType('ClusterSpawnReply', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERSPAWNREPLY,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterSpawnReply)
+  })
+_sym_db.RegisterMessage(ClusterSpawnReply)
+
+ClusterKillReq = _reflection.GeneratedProtocolMessageType('ClusterKillReq', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERKILLREQ,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterKillReq)
+  })
+_sym_db.RegisterMessage(ClusterKillReq)
+
+ClusterKillReply = _reflection.GeneratedProtocolMessageType('ClusterKillReply', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERKILLREPLY,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterKillReply)
+  })
+_sym_db.RegisterMessage(ClusterKillReply)
+
+ClusterPokeReq = _reflection.GeneratedProtocolMessageType('ClusterPokeReq', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERPOKEREQ,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterPokeReq)
+  })
+_sym_db.RegisterMessage(ClusterPokeReq)
+
+ClusterPokeReply = _reflection.GeneratedProtocolMessageType('ClusterPokeReply', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERPOKEREPLY,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterPokeReply)
+  })
+_sym_db.RegisterMessage(ClusterPokeReply)
+
+ClusterSubscribeReq = _reflection.GeneratedProtocolMessageType('ClusterSubscribeReq', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTERSUBSCRIBEREQ,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterSubscribeReq)
+  })
+_sym_db.RegisterMessage(ClusterSubscribeReq)
+
+ClusterEvent = _reflection.GeneratedProtocolMessageType('ClusterEvent', (_message.Message,), {
+  'DESCRIPTOR' : _CLUSTEREVENT,
+  '__module__' : 'cowait_pb2'
+  # @@protoc_insertion_point(class_scope:ClusterEvent)
+  })
+_sym_db.RegisterMessage(ClusterEvent)
+
 _EXECUTOR = DESCRIPTOR.services_by_name['Executor']
 _COWAIT = DESCRIPTOR.services_by_name['Cowait']
+_CLUSTER = DESCRIPTOR.services_by_name['Cluster']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\016cowait/core/pb'
+  DESCRIPTOR._serialized_options = b'Z\032cowait/adapter/api/grpc/pb'
   _HEADER._serialized_start=49
   _HEADER._serialized_end=111
   _TASKINITREQ._serialized_start=113
@@ -215,8 +296,30 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _AWAITTASKREQ._serialized_end=1050
   _AWAITTASKREPLY._serialized_start=1052
   _AWAITTASKREPLY._serialized_end=1089
-  _EXECUTOR._serialized_start=1092
-  _EXECUTOR._serialized_end=1294
-  _COWAIT._serialized_start=1297
-  _COWAIT._serialized_end=1498
+  _CLUSTERINFOREQ._serialized_start=1091
+  _CLUSTERINFOREQ._serialized_end=1107
+  _CLUSTERINFOREPLY._serialized_start=1109
+  _CLUSTERINFOREPLY._serialized_end=1127
+  _CLUSTERSPAWNREQ._serialized_start=1129
+  _CLUSTERSPAWNREQ._serialized_end=1146
+  _CLUSTERSPAWNREPLY._serialized_start=1148
+  _CLUSTERSPAWNREPLY._serialized_end=1167
+  _CLUSTERKILLREQ._serialized_start=1169
+  _CLUSTERKILLREQ._serialized_end=1185
+  _CLUSTERKILLREPLY._serialized_start=1187
+  _CLUSTERKILLREPLY._serialized_end=1205
+  _CLUSTERPOKEREQ._serialized_start=1207
+  _CLUSTERPOKEREQ._serialized_end=1223
+  _CLUSTERPOKEREPLY._serialized_start=1225
+  _CLUSTERPOKEREPLY._serialized_end=1243
+  _CLUSTERSUBSCRIBEREQ._serialized_start=1245
+  _CLUSTERSUBSCRIBEREQ._serialized_end=1266
+  _CLUSTEREVENT._serialized_start=1268
+  _CLUSTEREVENT._serialized_end=1282
+  _EXECUTOR._serialized_start=1285
+  _EXECUTOR._serialized_end=1487
+  _COWAIT._serialized_start=1490
+  _COWAIT._serialized_end=1691
+  _CLUSTER._serialized_start=1694
+  _CLUSTER._serialized_end=1944
 # @@protoc_insertion_point(module_scope)

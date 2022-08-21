@@ -1,7 +1,7 @@
 syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "cowait/core/pb";
+option go_package = "cowait/adapter/api/grpc/pb";
 
 service Executor {
     rpc TaskInit(TaskInitReq) returns (TaskInitReply) {}
@@ -103,3 +103,31 @@ message AwaitTaskReq {
 message AwaitTaskReply {
     Task task = 1;
 }
+
+//
+// Cluster Uplink
+//
+
+service Cluster {
+    rpc Info(ClusterInfoReq) returns (ClusterInfoReply) {}
+    rpc Spawn(ClusterSpawnReq) returns (ClusterSpawnReply) {}
+    rpc Kill(ClusterKillReq) returns (ClusterKillReply) {}
+    rpc Poke(ClusterPokeReq) returns (ClusterPokeReply) {}
+    
+    rpc Subscribe(ClusterSubscribeReq) returns (stream ClusterEvent) {}
+}
+
+message ClusterInfoReq {}
+message ClusterInfoReply {}
+
+message ClusterSpawnReq {}
+message ClusterSpawnReply {}
+
+message ClusterKillReq { }
+message ClusterKillReply {}
+
+message ClusterPokeReq {}
+message ClusterPokeReply {}
+
+message ClusterSubscribeReq {}
+message ClusterEvent {}

@@ -15,10 +15,10 @@ type Executor interface {
 
 type executor struct {
 	server Server
-	client client.ExecutorClient
+	client client.Executor
 }
 
-func New(client client.ExecutorClient, server Server) (Executor, error) {
+func New(client client.Executor, server Server) (Executor, error) {
 	return &executor{
 		server: server,
 		client: client,

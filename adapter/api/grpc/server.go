@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"cowait/core/pb"
+	"cowait/adapter/api/grpc/pb"
 
 	"context"
 	"fmt"

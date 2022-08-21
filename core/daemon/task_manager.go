@@ -8,18 +8,9 @@ import (
 	"fmt"
 )
 
-type TaskServer interface {
-	Init(*msg.TaskInit) error
-	Complete(*msg.TaskComplete) error
-	Fail(*msg.TaskFailure) error
-	Log(*msg.LogEntry) error
-}
-
 type TaskManager interface {
-	TaskServer
-
-	Get(core.TaskID) (core.Task, bool)
-	Schedule(*core.TaskSpec) (core.Task, error)
+	ExecutorServer
+	ClusterServer
 }
 
 func NewTaskManager(cluster core.Cluster) TaskManager {
@@ -29,8 +20,8 @@ func NewTaskManager(cluster core.Cluster) TaskManager {
 	}
 }
 
-func newTaskServer(taskmgr TaskManager) TaskServer {
-	// re-export as a TaskServer
+func newTaskServer(taskmgr TaskManager) ExecutorServer {
+	// re-export as an executor server
 	return taskmgr
 }
 

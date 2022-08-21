@@ -329,3 +329,208 @@ class Cowait(object):
             cowait__pb2.AwaitTaskReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+
+class ClusterStub(object):
+    """
+    Cluster Uplink
+
+
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Info = channel.unary_unary(
+                '/Cluster/Info',
+                request_serializer=cowait__pb2.ClusterInfoReq.SerializeToString,
+                response_deserializer=cowait__pb2.ClusterInfoReply.FromString,
+                )
+        self.Spawn = channel.unary_unary(
+                '/Cluster/Spawn',
+                request_serializer=cowait__pb2.ClusterSpawnReq.SerializeToString,
+                response_deserializer=cowait__pb2.ClusterSpawnReply.FromString,
+                )
+        self.Kill = channel.unary_unary(
+                '/Cluster/Kill',
+                request_serializer=cowait__pb2.ClusterKillReq.SerializeToString,
+                response_deserializer=cowait__pb2.ClusterKillReply.FromString,
+                )
+        self.Poke = channel.unary_unary(
+                '/Cluster/Poke',
+                request_serializer=cowait__pb2.ClusterPokeReq.SerializeToString,
+                response_deserializer=cowait__pb2.ClusterPokeReply.FromString,
+                )
+        self.Subscribe = channel.unary_stream(
+                '/Cluster/Subscribe',
+                request_serializer=cowait__pb2.ClusterSubscribeReq.SerializeToString,
+                response_deserializer=cowait__pb2.ClusterEvent.FromString,
+                )
+
+
+class ClusterServicer(object):
+    """
+    Cluster Uplink
+
+
+    """
+
+    def Info(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Spawn(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Kill(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Poke(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Subscribe(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_ClusterServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Info': grpc.unary_unary_rpc_method_handler(
+                    servicer.Info,
+                    request_deserializer=cowait__pb2.ClusterInfoReq.FromString,
+                    response_serializer=cowait__pb2.ClusterInfoReply.SerializeToString,
+            ),
+            'Spawn': grpc.unary_unary_rpc_method_handler(
+                    servicer.Spawn,
+                    request_deserializer=cowait__pb2.ClusterSpawnReq.FromString,
+                    response_serializer=cowait__pb2.ClusterSpawnReply.SerializeToString,
+            ),
+            'Kill': grpc.unary_unary_rpc_method_handler(
+                    servicer.Kill,
+                    request_deserializer=cowait__pb2.ClusterKillReq.FromString,
+                    response_serializer=cowait__pb2.ClusterKillReply.SerializeToString,
+            ),
+            'Poke': grpc.unary_unary_rpc_method_handler(
+                    servicer.Poke,
+                    request_deserializer=cowait__pb2.ClusterPokeReq.FromString,
+                    response_serializer=cowait__pb2.ClusterPokeReply.SerializeToString,
+            ),
+            'Subscribe': grpc.unary_stream_rpc_method_handler(
+                    servicer.Subscribe,
+                    request_deserializer=cowait__pb2.ClusterSubscribeReq.FromString,
+                    response_serializer=cowait__pb2.ClusterEvent.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'Cluster', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class Cluster(object):
+    """
+    Cluster Uplink
+
+
+    """
+
+    @staticmethod
+    def Info(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cluster/Info',
+            cowait__pb2.ClusterInfoReq.SerializeToString,
+            cowait__pb2.ClusterInfoReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Spawn(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cluster/Spawn',
+            cowait__pb2.ClusterSpawnReq.SerializeToString,
+            cowait__pb2.ClusterSpawnReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Kill(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cluster/Kill',
+            cowait__pb2.ClusterKillReq.SerializeToString,
+            cowait__pb2.ClusterKillReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Poke(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cluster/Poke',
+            cowait__pb2.ClusterPokeReq.SerializeToString,
+            cowait__pb2.ClusterPokeReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Subscribe(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/Cluster/Subscribe',
+            cowait__pb2.ClusterSubscribeReq.SerializeToString,
+            cowait__pb2.ClusterEvent.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

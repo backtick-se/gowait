@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.19.4
-// source: core/pb/cowait.proto
+// source: protobuf/cowait.proto
 
 package pb
 
@@ -244,7 +244,7 @@ var Executor_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "core/pb/cowait.proto",
+	Metadata: "protobuf/cowait.proto",
 }
 
 // CowaitClient is the client API for Cowait service.
@@ -466,5 +466,263 @@ var Cowait_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "core/pb/cowait.proto",
+	Metadata: "protobuf/cowait.proto",
+}
+
+// ClusterClient is the client API for Cluster service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ClusterClient interface {
+	Info(ctx context.Context, in *ClusterInfoReq, opts ...grpc.CallOption) (*ClusterInfoReply, error)
+	Spawn(ctx context.Context, in *ClusterSpawnReq, opts ...grpc.CallOption) (*ClusterSpawnReply, error)
+	Kill(ctx context.Context, in *ClusterKillReq, opts ...grpc.CallOption) (*ClusterKillReply, error)
+	Poke(ctx context.Context, in *ClusterPokeReq, opts ...grpc.CallOption) (*ClusterPokeReply, error)
+	Subscribe(ctx context.Context, in *ClusterSubscribeReq, opts ...grpc.CallOption) (Cluster_SubscribeClient, error)
+}
+
+type clusterClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewClusterClient(cc grpc.ClientConnInterface) ClusterClient {
+	return &clusterClient{cc}
+}
+
+func (c *clusterClient) Info(ctx context.Context, in *ClusterInfoReq, opts ...grpc.CallOption) (*ClusterInfoReply, error) {
+	out := new(ClusterInfoReply)
+	err := c.cc.Invoke(ctx, "/Cluster/Info", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterClient) Spawn(ctx context.Context, in *ClusterSpawnReq, opts ...grpc.CallOption) (*ClusterSpawnReply, error) {
+	out := new(ClusterSpawnReply)
+	err := c.cc.Invoke(ctx, "/Cluster/Spawn", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterClient) Kill(ctx context.Context, in *ClusterKillReq, opts ...grpc.CallOption) (*ClusterKillReply, error) {
+	out := new(ClusterKillReply)
+	err := c.cc.Invoke(ctx, "/Cluster/Kill", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterClient) Poke(ctx context.Context, in *ClusterPokeReq, opts ...grpc.CallOption) (*ClusterPokeReply, error) {
+	out := new(ClusterPokeReply)
+	err := c.cc.Invoke(ctx, "/Cluster/Poke", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterClient) Subscribe(ctx context.Context, in *ClusterSubscribeReq, opts ...grpc.CallOption) (Cluster_SubscribeClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Cluster_ServiceDesc.Streams[0], "/Cluster/Subscribe", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &clusterSubscribeClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Cluster_SubscribeClient interface {
+	Recv() (*ClusterEvent, error)
+	grpc.ClientStream
+}
+
+type clusterSubscribeClient struct {
+	grpc.ClientStream
+}
+
+func (x *clusterSubscribeClient) Recv() (*ClusterEvent, error) {
+	m := new(ClusterEvent)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// ClusterServer is the server API for Cluster service.
+// All implementations must embed UnimplementedClusterServer
+// for forward compatibility
+type ClusterServer interface {
+	Info(context.Context, *ClusterInfoReq) (*ClusterInfoReply, error)
+	Spawn(context.Context, *ClusterSpawnReq) (*ClusterSpawnReply, error)
+	Kill(context.Context, *ClusterKillReq) (*ClusterKillReply, error)
+	Poke(context.Context, *ClusterPokeReq) (*ClusterPokeReply, error)
+	Subscribe(*ClusterSubscribeReq, Cluster_SubscribeServer) error
+	mustEmbedUnimplementedClusterServer()
+}
+
+// UnimplementedClusterServer must be embedded to have forward compatible implementations.
+type UnimplementedClusterServer struct {
+}
+
+func (UnimplementedClusterServer) Info(context.Context, *ClusterInfoReq) (*ClusterInfoReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
+}
+func (UnimplementedClusterServer) Spawn(context.Context, *ClusterSpawnReq) (*ClusterSpawnReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Spawn not implemented")
+}
+func (UnimplementedClusterServer) Kill(context.Context, *ClusterKillReq) (*ClusterKillReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Kill not implemented")
+}
+func (UnimplementedClusterServer) Poke(context.Context, *ClusterPokeReq) (*ClusterPokeReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Poke not implemented")
+}
+func (UnimplementedClusterServer) Subscribe(*ClusterSubscribeReq, Cluster_SubscribeServer) error {
+	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
+}
+func (UnimplementedClusterServer) mustEmbedUnimplementedClusterServer() {}
+
+// UnsafeClusterServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ClusterServer will
+// result in compilation errors.
+type UnsafeClusterServer interface {
+	mustEmbedUnimplementedClusterServer()
+}
+
+func RegisterClusterServer(s grpc.ServiceRegistrar, srv ClusterServer) {
+	s.RegisterService(&Cluster_ServiceDesc, srv)
+}
+
+func _Cluster_Info_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClusterInfoReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterServer).Info(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cluster/Info",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterServer).Info(ctx, req.(*ClusterInfoReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cluster_Spawn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClusterSpawnReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterServer).Spawn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cluster/Spawn",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterServer).Spawn(ctx, req.(*ClusterSpawnReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cluster_Kill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClusterKillReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterServer).Kill(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cluster/Kill",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterServer).Kill(ctx, req.(*ClusterKillReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cluster_Poke_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClusterPokeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterServer).Poke(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cluster/Poke",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterServer).Poke(ctx, req.(*ClusterPokeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cluster_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ClusterSubscribeReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ClusterServer).Subscribe(m, &clusterSubscribeServer{stream})
+}
+
+type Cluster_SubscribeServer interface {
+	Send(*ClusterEvent) error
+	grpc.ServerStream
+}
+
+type clusterSubscribeServer struct {
+	grpc.ServerStream
+}
+
+func (x *clusterSubscribeServer) Send(m *ClusterEvent) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+// Cluster_ServiceDesc is the grpc.ServiceDesc for Cluster service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Cluster_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Cluster",
+	HandlerType: (*ClusterServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Info",
+			Handler:    _Cluster_Info_Handler,
+		},
+		{
+			MethodName: "Spawn",
+			Handler:    _Cluster_Spawn_Handler,
+		},
+		{
+			MethodName: "Kill",
+			Handler:    _Cluster_Kill_Handler,
+		},
+		{
+			MethodName: "Poke",
+			Handler:    _Cluster_Poke_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Subscribe",
+			Handler:       _Cluster_Subscribe_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "protobuf/cowait.proto",
 }

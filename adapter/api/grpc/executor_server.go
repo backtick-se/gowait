@@ -1,10 +1,10 @@
 package grpc
 
 import (
+	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
 	"cowait/core/daemon"
 	"cowait/core/msg"
-	"cowait/core/pb"
 
 	"context"
 	"encoding/json"
@@ -13,10 +13,10 @@ import (
 
 type taskServer struct {
 	pb.UnimplementedExecutorServer
-	mgr daemon.TaskServer
+	mgr daemon.ExecutorServer
 }
 
-func NewExecutorServer(mgr daemon.TaskServer) pb.ExecutorServer {
+func NewExecutorServer(mgr daemon.ExecutorServer) pb.ExecutorServer {
 	return &taskServer{
 		mgr: mgr,
 	}

@@ -123,7 +123,7 @@ func LinePrinter(name string, pump LineReader) {
 	}
 }
 
-func LineLogger(name string, pump LineReader, log client.TaskLogger) {
+func LineLogger(name string, pump LineReader, log client.Logger) {
 	for {
 		line, err := pump.Read()
 		if err != nil {

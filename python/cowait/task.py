@@ -27,7 +27,7 @@ def taskdef_from_env():
     if _taskdef == None:
         taskjson = os.getenv('COWAIT_TASK')
         _taskdef = json.loads(taskjson)
-        _taskdef['Time'] = datetime.strptime(_taskdef['Time'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        _taskdef['Time'] = datetime.strptime(_taskdef['Time'].split(".")[0] + "Z", "%Y-%m-%dT%H:%M:%SZ")
     return _taskdef
 
 

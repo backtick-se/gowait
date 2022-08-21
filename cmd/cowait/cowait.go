@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cowait/adapter/api/grpc"
 	"cowait/core"
 	"cowait/core/client"
 	"fmt"
@@ -14,7 +15,7 @@ import (
 
 func main() {
 	executor := fx.New(
-		client.Module,
+		grpc.Module,
 
 		fx.Invoke(run),
 
@@ -23,7 +24,7 @@ func main() {
 	executor.Run()
 }
 
-func run(ctrl fx.Shutdowner, cli client.Client) error {
+func run(ctrl fx.Shutdowner, cli client.API) error {
 	hostname := "localhost:50949"
 	if err := cli.Connect(hostname); err != nil {
 		return err

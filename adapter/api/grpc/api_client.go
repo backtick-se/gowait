@@ -1,32 +1,28 @@
-package client
+package grpc
 
 import (
 	"context"
+	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
-	"cowait/core/pb"
+	"cowait/core/client"
 
 	"google.golang.org/grpc"
 )
 
-type Client interface {
-	Connect(hostname string) error
-	CreateTask(context.Context, *core.TaskSpec) (*core.TaskState, error)
-}
-
-type client struct {
+type apiclient struct {
 	conn *grpc.ClientConn
 	api  pb.CowaitClient
 }
 
-func NewCowaitClient() Client {
-	return &client{}
+func NewApiClient() client.API {
+	return &apiclient{}
 }
 
-func (c *client) Connect(hostname string) error {
+func (c *apiclient) Connect(hostname string) error {
 	return c.dial(hostname, grpc.WithInsecure())
 }
 
-func (c *client) dial(hostname string, opts ...grpc.DialOption) error {
+func (c *apiclient) dial(hostname string, opts ...grpc.DialOption) error {
 	var err error
 	c.conn, err = grpc.Dial(hostname, opts...)
 	if err != nil {
@@ -37,9 +33,9 @@ func (c *client) dial(hostname string, opts ...grpc.DialOption) error {
 	return nil
 }
 
-func (c *client) CreateTask(ctx context.Context, def *core.TaskSpec) (*core.TaskState, error) {
+func (c *apiclient) CreateTask(ctx context.Context, def *core.TaskSpec) (*core.TaskState, error) {
 	if c.conn == nil {
-		return nil, ErrNotConnected
+		return nil, client.ErrNotConnected
 	}
 	reply, err := c.api.CreateTask(ctx, &pb.CreateTaskReq{
 		Spec: pb.PackTaskSpec(def),

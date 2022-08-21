@@ -1,9 +1,9 @@
 package grpc
 
 import (
+	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
 	"cowait/core/daemon"
-	"cowait/core/pb"
 
 	"context"
 	"fmt"
@@ -18,7 +18,7 @@ type cowaitServer struct {
 	mgr     daemon.TaskManager
 }
 
-func NewCowaitServer(cluster core.Cluster, mgr daemon.TaskManager) pb.CowaitServer {
+func NewApiServer(cluster core.Cluster, mgr daemon.TaskManager) pb.CowaitServer {
 	return &cowaitServer{
 		cluster: cluster,
 		mgr:     mgr,
