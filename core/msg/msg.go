@@ -1,13 +1,12 @@
 package msg
 
 import (
-	"cowait/core"
 	"encoding/json"
 	"time"
 )
 
 type Header struct {
-	ID   core.TaskID
+	ID   string
 	Time time.Time
 }
 

@@ -5,22 +5,9 @@ import (
 	"cowait/core/msg"
 
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 )
-
-type Task interface {
-	ID() core.TaskID
-	Spec() *core.TaskSpec
-	Status() core.TaskStatus
-	Scheduled() time.Time
-	Started() time.Time
-	Completed() time.Time
-	Result() json.RawMessage
-	Err() error
-	Logs(file string) []string
-}
 
 type instance struct {
 	id      core.TaskID
@@ -39,6 +26,7 @@ func newInstance(cluster core.Cluster, id core.TaskID, spec *core.TaskSpec) *ins
 		id:      id,
 		cluster: cluster,
 		state: core.TaskState{
+			ID:        id,
 			Spec:      spec,
 			Status:    core.StatusWait,
 			Scheduled: time.Now(),
@@ -54,14 +42,9 @@ func newInstance(cluster core.Cluster, id core.TaskID, spec *core.TaskSpec) *ins
 	return i
 }
 
-func (i *instance) ID() core.TaskID         { return i.id }
-func (i *instance) Spec() *core.TaskSpec    { return i.state.Spec }
-func (i *instance) Status() core.TaskStatus { return i.state.Status }
-func (i *instance) Scheduled() time.Time    { return i.state.Scheduled }
-func (i *instance) Started() time.Time      { return i.state.Started }
-func (i *instance) Completed() time.Time    { return i.state.Completed }
-func (i *instance) Result() json.RawMessage { return i.state.Result }
-func (i *instance) Err() error              { return i.state.Err }
+func (i *instance) ID() core.TaskID       { return i.state.ID }
+func (i *instance) Spec() *core.TaskSpec  { return i.state.Spec }
+func (i *instance) State() core.TaskState { return i.state }
 
 func (i *instance) Logs(file string) []string {
 	if logs, ok := i.logs[file]; ok {
@@ -73,11 +56,13 @@ func (i *instance) Logs(file string) []string {
 func (i *instance) proc() {
 	defer i.cleanup()
 
+	spec := i.state.Spec
+
 	// a specific context for each task allows us to set per-task deadlines etc
 	ctx := context.Background()
 
-	if i.state.Spec.Timeout > 0 {
-		deadline, cancel := context.WithTimeout(ctx, time.Duration(i.state.Spec.Timeout)*time.Second)
+	if spec.Timeout > 0 {
+		deadline, cancel := context.WithTimeout(ctx, time.Duration(spec.Timeout)*time.Second)
 		defer cancel()
 		ctx = deadline
 	}
@@ -85,7 +70,7 @@ func (i *instance) proc() {
 	// this is the instance management loop
 	// at this point the task is in the "scheduled" state
 	// i suppose we start by calling cluster.Spawn() ?
-	if err := i.cluster.Spawn(ctx, i.id, i.state.Spec); err != nil {
+	if err := i.cluster.Spawn(ctx, i.id, spec); err != nil {
 		fmt.Println("failed to spawn task", i.id, ":", err)
 		return
 	}

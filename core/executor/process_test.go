@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"cowait/executor"
+	"cowait/core/executor"
 )
 
 var _ = Describe("Process", func() {

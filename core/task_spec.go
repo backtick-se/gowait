@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"time"
 )
 
 const EnvTaskID = "COWAIT_ID"
@@ -9,12 +10,12 @@ const EnvParentID = "COWAIT_PARENT"
 const EnvTaskdef = "COWAIT_TASK"
 
 type TaskSpec struct {
-	Cluster string
 	Name    string
 	Image   string
 	Command []string
 	Input   json.RawMessage
 	Timeout int
+	Time    time.Time
 }
 
 func (t *TaskSpec) ToEnv() (string, error) {

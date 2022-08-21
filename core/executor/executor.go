@@ -26,8 +26,6 @@ func New(client client.ExecutorClient, server Server) (Executor, error) {
 }
 
 func (e *executor) Run(ctx context.Context, id core.TaskID, task *core.TaskSpec) error {
-	fmt.Printf("running task: %s$%s\n", task.Image, task.Command)
-
 	// apply timeout if set
 	if task.Timeout > 0 {
 		deadline, cancel := context.WithTimeout(ctx, time.Duration(task.Timeout)*time.Second)

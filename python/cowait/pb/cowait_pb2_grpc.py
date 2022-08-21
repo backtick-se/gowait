@@ -176,11 +176,6 @@ class CowaitStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.QueryClusters = channel.unary_unary(
-                '/Cowait/QueryClusters',
-                request_serializer=cowait__pb2.QueryClustersReq.SerializeToString,
-                response_deserializer=cowait__pb2.QueryClustersReply.FromString,
-                )
         self.CreateTask = channel.unary_unary(
                 '/Cowait/CreateTask',
                 request_serializer=cowait__pb2.CreateTaskReq.SerializeToString,
@@ -207,12 +202,6 @@ class CowaitServicer(object):
     """Api Service
 
     """
-
-    def QueryClusters(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
 
     def CreateTask(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -241,11 +230,6 @@ class CowaitServicer(object):
 
 def add_CowaitServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'QueryClusters': grpc.unary_unary_rpc_method_handler(
-                    servicer.QueryClusters,
-                    request_deserializer=cowait__pb2.QueryClustersReq.FromString,
-                    response_serializer=cowait__pb2.QueryClustersReply.SerializeToString,
-            ),
             'CreateTask': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateTask,
                     request_deserializer=cowait__pb2.CreateTaskReq.FromString,
@@ -277,23 +261,6 @@ class Cowait(object):
     """Api Service
 
     """
-
-    @staticmethod
-    def QueryClusters(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Cowait/QueryClusters',
-            cowait__pb2.QueryClustersReq.SerializeToString,
-            cowait__pb2.QueryClustersReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def CreateTask(request,

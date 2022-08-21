@@ -251,7 +251,6 @@ var Executor_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CowaitClient interface {
-	QueryClusters(ctx context.Context, in *QueryClustersReq, opts ...grpc.CallOption) (*QueryClustersReply, error)
 	CreateTask(ctx context.Context, in *CreateTaskReq, opts ...grpc.CallOption) (*CreateTaskReply, error)
 	QueryTasks(ctx context.Context, in *QueryTasksReq, opts ...grpc.CallOption) (*QueryTasksReply, error)
 	KillTask(ctx context.Context, in *KillTaskReq, opts ...grpc.CallOption) (*KillTaskReply, error)
@@ -264,15 +263,6 @@ type cowaitClient struct {
 
 func NewCowaitClient(cc grpc.ClientConnInterface) CowaitClient {
 	return &cowaitClient{cc}
-}
-
-func (c *cowaitClient) QueryClusters(ctx context.Context, in *QueryClustersReq, opts ...grpc.CallOption) (*QueryClustersReply, error) {
-	out := new(QueryClustersReply)
-	err := c.cc.Invoke(ctx, "/Cowait/QueryClusters", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *cowaitClient) CreateTask(ctx context.Context, in *CreateTaskReq, opts ...grpc.CallOption) (*CreateTaskReply, error) {
@@ -338,7 +328,6 @@ func (x *cowaitAwaitTaskClient) Recv() (*AwaitTaskReply, error) {
 // All implementations must embed UnimplementedCowaitServer
 // for forward compatibility
 type CowaitServer interface {
-	QueryClusters(context.Context, *QueryClustersReq) (*QueryClustersReply, error)
 	CreateTask(context.Context, *CreateTaskReq) (*CreateTaskReply, error)
 	QueryTasks(context.Context, *QueryTasksReq) (*QueryTasksReply, error)
 	KillTask(context.Context, *KillTaskReq) (*KillTaskReply, error)
@@ -350,9 +339,6 @@ type CowaitServer interface {
 type UnimplementedCowaitServer struct {
 }
 
-func (UnimplementedCowaitServer) QueryClusters(context.Context, *QueryClustersReq) (*QueryClustersReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryClusters not implemented")
-}
 func (UnimplementedCowaitServer) CreateTask(context.Context, *CreateTaskReq) (*CreateTaskReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTask not implemented")
 }
@@ -376,24 +362,6 @@ type UnsafeCowaitServer interface {
 
 func RegisterCowaitServer(s grpc.ServiceRegistrar, srv CowaitServer) {
 	s.RegisterService(&Cowait_ServiceDesc, srv)
-}
-
-func _Cowait_QueryClusters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryClustersReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CowaitServer).QueryClusters(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Cowait/QueryClusters",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CowaitServer).QueryClusters(ctx, req.(*QueryClustersReq))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Cowait_CreateTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -478,10 +446,6 @@ var Cowait_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "Cowait",
 	HandlerType: (*CowaitServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "QueryClusters",
-			Handler:    _Cowait_QueryClusters_Handler,
-		},
 		{
 			MethodName: "CreateTask",
 			Handler:    _Cowait_CreateTask_Handler,

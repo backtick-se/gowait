@@ -3,7 +3,7 @@ package main
 import (
 	"cowait/core"
 	"cowait/core/client"
-	"cowait/executor"
+	"cowait/core/executor"
 	"os"
 
 	"context"

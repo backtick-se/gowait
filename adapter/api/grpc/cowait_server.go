@@ -25,35 +25,22 @@ func NewCowaitServer(cluster core.Cluster, mgr daemon.TaskManager) pb.CowaitServ
 	}
 }
 
-func (s *cowaitServer) QueryClusters(context.Context, *pb.QueryClustersReq) (*pb.QueryClustersReply, error) {
-	return &pb.QueryClustersReply{
-		Clusters: []*pb.Cluster{
-			{
-				Name: s.cluster.Name(),
-			},
-		},
-	}, nil
-}
-
 func (s *cowaitServer) CreateTask(ctx context.Context, req *pb.CreateTaskReq) (*pb.CreateTaskReply, error) {
-	if req.Spec.Cluster != "" && req.Spec.Cluster != s.cluster.Name() {
-		return nil, core.ErrUnknownCluster
-	}
-
 	def := pb.UnpackTaskSpec(req.Spec)
-	instance, err := s.mgr.Schedule(core.TaskID(req.Id), def)
+	instance, err := s.mgr.Schedule(def)
 	if err != nil {
 		return nil, err
 	}
 
+	state := instance.State()
 	return &pb.CreateTaskReply{
-		Instance: &pb.Task{
-			Id:        string(instance.ID()),
+		Task: &pb.Task{
+			TaskId:    string(instance.ID()),
 			Spec:      pb.PackTaskSpec(instance.Spec()),
-			Status:    string(instance.Status()),
-			Scheduled: timestamppb.New(instance.Scheduled()),
-			Started:   timestamppb.New(instance.Started()),
-			Completed: timestamppb.New(instance.Completed()),
+			Status:    string(state.Status),
+			Scheduled: timestamppb.New(state.Scheduled),
+			Started:   timestamppb.New(state.Started),
+			Completed: timestamppb.New(state.Completed),
 		},
 	}, nil
 }

@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+from datetime import datetime
 from .client import Client
 
 _client: Client = None
@@ -26,6 +27,7 @@ def taskdef_from_env():
     if _taskdef == None:
         taskjson = os.getenv('COWAIT_TASK')
         _taskdef = json.loads(taskjson)
+        _taskdef['Time'] = datetime.strptime(_taskdef['Time'], '%Y-%m-%dT%H:%M:%S.%fZ')
     return _taskdef
 
 
@@ -42,6 +44,12 @@ def error(error: str):
 def exit(result: dict):
     global _client
     _client.complete(result)
+
+
+def time() -> datetime:
+    """ logical execution time """
+    global _taskdef
+    return _taskdef['Time']
 
 
 _init()
