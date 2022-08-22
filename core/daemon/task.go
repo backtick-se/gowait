@@ -126,9 +126,9 @@ func (i *task) cleanup() {
 	time.Sleep(time.Second)
 
 	// ensure task is gone
-	ctx := context.Background()
-	if err := i.driver.Kill(ctx, i.id); err != nil {
-		// log error
-		fmt.Println("failed to kill", i, ":", err)
-	}
+	// ctx := context.Background()
+	// if err := i.driver.Kill(ctx, i.id); err != nil {
+	// 	// log error
+	// 	fmt.Println("failed to kill", i, ":", err)
+	// }
 }

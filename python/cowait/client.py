@@ -8,7 +8,7 @@ VERSION = 'cowait-python/1.0'
 
 
 class Client:
-    def __init__(self, task_id: str, host: str = 'localhost', port: int = 1337):
+    def __init__(self, task_id: str, host: str = '0.0.0.0', port: int = 1337):
         self.task_id = task_id
         self.host = host
         self.port = port

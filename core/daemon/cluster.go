@@ -16,7 +16,7 @@ func NewCluster(driver core.Driver) core.Cluster {
 	}
 }
 
-func newExecutorServer(cluster core.Cluster) (core.ExecutorHandler, error) {
+func registerExecutorHandler(cluster core.Cluster) (core.ExecutorHandler, error) {
 	// re-export as an executor server
 	if srv, ok := cluster.(core.ExecutorHandler); ok {
 		return srv, nil

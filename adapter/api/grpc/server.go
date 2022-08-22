@@ -1,8 +1,6 @@
 package grpc
 
 import (
-	"cowait/adapter/api/grpc/pb"
-
 	"context"
 	"fmt"
 	"net"
@@ -11,16 +9,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewServer(
-	lc fx.Lifecycle,
-	taskServer pb.ExecutorServer,
-	cowaitServer pb.CowaitServer,
-) {
+func NewServer(lc fx.Lifecycle) *grpc.Server {
 	port := 1337
-
-	grpcServer := grpc.NewServer()
-	pb.RegisterExecutorServer(grpcServer, taskServer)
-	pb.RegisterCowaitServer(grpcServer, cowaitServer)
+	srv := grpc.NewServer()
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
@@ -28,9 +19,17 @@ func NewServer(
 			if err != nil {
 				return fmt.Errorf("failed to listen: %v", err)
 			}
+			fmt.Println("grpc listening on port", port)
 
-			go grpcServer.Serve(listener)
+			go srv.Serve(listener)
+			return nil
+		},
+
+		OnStop: func(context.Context) error {
+			srv.GracefulStop()
 			return nil
 		},
 	})
+
+	return srv
 }

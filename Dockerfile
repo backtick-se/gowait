@@ -17,11 +17,13 @@ FROM builder as build-daemon
 RUN go build -o /bin/cowaitd ./cmd/daemon
 
 FROM debian:stable-slim as executor
+EXPOSE 1338
 
 COPY --from=build-executor /bin/cowait /bin/cowait
 ENTRYPOINT ["cowait"]
 
 FROM debian:stable-slim as daemon
+EXPOSE 1337
 
 COPY --from=build-daemon /bin/cowaitd /bin/cowaitd
 ENTRYPOINT ["cowaitd"]

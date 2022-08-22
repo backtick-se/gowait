@@ -19,6 +19,7 @@ func main() {
 		grpc.Module,
 		executor.Module,
 
+		fx.Invoke(grpc.RegisterExecutorServer),
 		fx.Invoke(run),
 
 		// fx.NopLogger,
@@ -26,20 +27,25 @@ func main() {
 	executor.Run()
 }
 
-func run(exec executor.Executor) {
-	// read task data from environment
-	id := core.TaskID(os.Getenv(core.EnvTaskID))
-	def, err := core.TaskDefFromEnv(os.Getenv(core.EnvTaskdef))
-	if err != nil {
-		fmt.Println("failed to parse task spec:", err)
-		os.Exit(1)
-	}
+func run(lc fx.Lifecycle, exec executor.Executor) {
+	lc.Append(fx.Hook{
+		OnStart: func(context.Context) error {
+			// read task data from environment
+			id := core.TaskID(os.Getenv(core.EnvTaskID))
+			def, err := core.TaskDefFromEnv(os.Getenv(core.EnvTaskdef))
+			if err != nil {
+				fmt.Println("failed to parse task spec:", err)
+				os.Exit(1)
+			}
 
-	ctx := context.Background()
-	if err := exec.Run(ctx, id, def); err != nil {
-		fmt.Println("execution failed:", err)
-		os.Exit(1)
-	}
+			ctx := context.Background()
+			if err := exec.Run(ctx, id, def); err != nil {
+				fmt.Println("execution failed:", err)
+				os.Exit(1)
+			}
 
-	os.Exit(0)
+			os.Exit(0)
+			return nil
+		},
+	})
 }

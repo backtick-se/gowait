@@ -60,6 +60,7 @@ func Exec(command string, args ...string) (Process, error) {
 
 	go func() {
 		proc.done <- proc.wait()
+		close(proc.done)
 	}()
 
 	return proc, nil
@@ -70,8 +71,6 @@ func (p *process) Stderr() LineReader { return p.stderr }
 func (p *process) Done() <-chan error { return p.done }
 
 func (p *process) wait() error {
-	defer close(p.done)
-
 	// wait for pipes
 	if err := p.stdout.Wait(); err != nil {
 		fmt.Println("error reading stdout:", err)

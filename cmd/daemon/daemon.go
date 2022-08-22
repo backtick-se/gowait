@@ -17,6 +17,8 @@ func main() {
 
 		grpc.Module,
 
+		fx.Invoke(grpc.RegisterApiServer),
+		fx.Invoke(grpc.RegisterExecutorServer),
 		fx.Invoke(createTask),
 		// fx.NopLogger,
 	)

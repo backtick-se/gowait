@@ -39,12 +39,6 @@ func (e *executor) Run(ctx context.Context, id core.TaskID, task *core.TaskSpec)
 		return fmt.Errorf("failed to connect upstream: %w", err)
 	}
 
-	// start sdk rpc server
-	if err := e.server.Listen(1337); err != nil {
-		e.client.Failure(ctx, err)
-		return err
-	}
-
 	if err := e.client.Init(ctx); err != nil {
 		// init failed
 		return err
@@ -101,10 +95,6 @@ func (e *executor) Run(ctx context.Context, id core.TaskID, task *core.TaskSpec)
 	case req := <-e.server.OnFailure():
 		logger.Close()
 		e.client.Failure(ctx, req.Error)
-		break
-
-	case req := <-e.server.OnLog():
-		logger.Log(req.File, req.Data)
 		break
 
 	case err := <-proc.Done():

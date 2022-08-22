@@ -4,24 +4,29 @@ import (
 	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
 	"cowait/core/msg"
+	"fmt"
 
 	"context"
 	"encoding/json"
 	"io"
+
+	"go.uber.org/fx"
+	"google.golang.org/grpc"
 )
 
-type taskServer struct {
+type executorServer struct {
 	pb.UnimplementedExecutorServer
 	handler core.ExecutorHandler
 }
 
-func NewExecutorServer(srv core.ExecutorHandler) pb.ExecutorServer {
-	return &taskServer{
-		handler: srv,
-	}
+func RegisterExecutorServer(lc fx.Lifecycle, srv *grpc.Server, handler core.ExecutorHandler) {
+	pb.RegisterExecutorServer(srv, &executorServer{
+		handler: handler,
+	})
+	fmt.Println("registered grpc executor server")
 }
 
-func (t *taskServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.TaskInitReply, error) {
+func (t *executorServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.TaskInitReply, error) {
 	err := t.handler.Init(&msg.TaskInit{
 		Header:  pb.UnpackHeader(req.Header),
 		Version: req.Version,
@@ -32,7 +37,7 @@ func (t *taskServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.Tas
 	return &pb.TaskInitReply{}, nil
 }
 
-func (t *taskServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq) (*pb.TaskFailureReply, error) {
+func (t *executorServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq) (*pb.TaskFailureReply, error) {
 	taskErr := core.NewError(req.Error)
 	err := t.handler.Fail(&msg.TaskFailure{
 		Header: pb.UnpackHeader(req.Header),
@@ -44,7 +49,7 @@ func (t *taskServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq) (*
 	return &pb.TaskFailureReply{}, nil
 }
 
-func (t *taskServer) TaskComplete(ctx context.Context, req *pb.TaskCompleteReq) (*pb.TaskCompleteReply, error) {
+func (t *executorServer) TaskComplete(ctx context.Context, req *pb.TaskCompleteReq) (*pb.TaskCompleteReply, error) {
 	err := t.handler.Complete(&msg.TaskComplete{
 		Header: pb.UnpackHeader(req.Header),
 		Result: json.RawMessage(req.Result),
@@ -55,7 +60,7 @@ func (t *taskServer) TaskComplete(ctx context.Context, req *pb.TaskCompleteReq) 
 	return &pb.TaskCompleteReply{}, nil
 }
 
-func (t *taskServer) TaskLog(stream pb.Executor_TaskLogServer) error {
+func (t *executorServer) TaskLog(stream pb.Executor_TaskLogServer) error {
 	records := 0
 	for {
 		entry, err := stream.Recv()
