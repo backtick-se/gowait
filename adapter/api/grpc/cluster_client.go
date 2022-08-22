@@ -3,15 +3,13 @@ package grpc
 import (
 	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
-	"cowait/core/client"
-	"fmt"
-	"io"
 
 	"context"
+	"fmt"
+	"io"
 	"net"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
 )
 
 type clusterClient struct {
@@ -19,7 +17,7 @@ type clusterClient struct {
 	cluster pb.ClusterClient
 }
 
-func NewClusterClient() client.Cluster {
+func NewClusterClient() core.ClusterClient {
 	return &clusterClient{}
 }
 
@@ -38,8 +36,8 @@ func (c *clusterClient) Connect(conn net.Conn) error {
 	return nil
 }
 
-func (c *clusterClient) Connected() bool {
-	return c.conn.GetState() == connectivity.Ready
+func (c *clusterClient) Close() error {
+	return c.conn.Close()
 }
 
 func (c *clusterClient) Info(ctx context.Context) (*core.ClusterInfo, error) {
@@ -52,7 +50,7 @@ func (c *clusterClient) Info(ctx context.Context) (*core.ClusterInfo, error) {
 	}, nil
 }
 
-func (c *clusterClient) Subscribe(ctx context.Context) (client.ClusterEventStream, error) {
+func (c *clusterClient) Subscribe(ctx context.Context) (core.ClusterEventStream, error) {
 	stream, err := c.cluster.Subscribe(ctx, &pb.ClusterSubscribeReq{})
 	if err != nil {
 		return nil, err

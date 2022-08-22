@@ -4,7 +4,7 @@ import "go.uber.org/fx"
 
 var Module = fx.Module(
 	"cloud",
-	fx.Invoke(NewUplinkServer),
+	fx.Invoke(NewClusterManager),
 )
 
 func App(opts ...fx.Option) *fx.App {

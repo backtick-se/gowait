@@ -19,7 +19,7 @@ func main() {
 
 		fx.Invoke(grpc.RegisterApiServer),
 		fx.Invoke(grpc.RegisterExecutorServer),
-		fx.Invoke(daemon.NewUplink),
+		fx.Invoke(daemon.NewUplinkManager),
 		fx.Invoke(createTask),
 		// fx.NopLogger,
 	)
