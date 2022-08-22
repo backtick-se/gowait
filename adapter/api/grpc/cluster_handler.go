@@ -42,6 +42,7 @@ func (s *clusterHandler) Poke(context.Context, *pb.ClusterPokeReq) (*pb.ClusterP
 }
 
 func (s *clusterHandler) Subscribe(req *pb.ClusterSubscribeReq, stream pb.Cluster_SubscribeServer) error {
+	info := s.cluster.Info()
 	sub := s.cluster.Events().Subscribe()
 	for {
 		event, ok := <-sub.Next()
@@ -50,7 +51,9 @@ func (s *clusterHandler) Subscribe(req *pb.ClusterSubscribeReq, stream pb.Cluste
 			break
 		}
 		if err := stream.Send(&pb.ClusterEvent{
-			Type: event.Type,
+			ClusterId: info.ID,
+			Type:      event.Type,
+			Task:      pb.PackTaskState(&event.Task),
 		}); err != nil {
 			return err
 		}

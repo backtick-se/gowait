@@ -12,37 +12,22 @@ type Sub[T Event] interface {
 }
 
 type pub[T Event] struct {
-	in    chan T
 	subs  map[*sub[T]]bool
 	queue int
 }
 
 func New[T Event]() Pub[T] {
 	queue := 100
-	pub := &pub[T]{
-		subs:  make(map[*sub[T]]bool, queue),
-		in:    make(chan T, queue),
+	return &pub[T]{
+		subs:  make(map[*sub[T]]bool),
 		queue: queue,
-	}
-	go pub.proc()
-	return pub
-}
-
-func (p *pub[T]) proc() {
-	for {
-		ev, ok := <-p.in
-		if !ok {
-			break
-		}
-
-		for sub := range p.subs {
-			sub.out <- ev
-		}
 	}
 }
 
 func (p *pub[T]) Publish(event T) {
-	p.in <- event
+	for sub := range p.subs {
+		sub.out <- event
+	}
 }
 
 func (p *pub[T]) Subscribe() Sub[T] {

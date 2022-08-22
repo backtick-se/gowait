@@ -15,6 +15,7 @@ type task struct {
 	state  core.TaskState
 	logs   map[string][]string
 
+	publish     TaskEventFn
 	on_init     chan *msg.TaskInit
 	on_fail     chan *msg.TaskFailure
 	on_complete chan *msg.TaskComplete
@@ -23,7 +24,9 @@ type task struct {
 
 var _ core.Task = &task{}
 
-func newTask(driver core.Driver, id core.TaskID, spec *core.TaskSpec) *task {
+type TaskEventFn func(event string, state core.TaskState)
+
+func newTask(driver core.Driver, id core.TaskID, spec *core.TaskSpec, callback TaskEventFn) *task {
 	t := &task{
 		id:     id,
 		driver: driver,
@@ -35,6 +38,7 @@ func newTask(driver core.Driver, id core.TaskID, spec *core.TaskSpec) *task {
 		},
 		logs: make(map[string][]string),
 
+		publish:     callback,
 		on_init:     make(chan *msg.TaskInit),
 		on_fail:     make(chan *msg.TaskFailure),
 		on_complete: make(chan *msg.TaskComplete),
@@ -69,6 +73,8 @@ func (i *task) proc() {
 		ctx = deadline
 	}
 
+	i.publish("task/schedule", i.state)
+
 	// this is the instance management loop
 	// at this point the task is in the "scheduled" state
 	// i suppose we start by calling cluster.Spawn() ?
@@ -83,13 +89,16 @@ func (i *task) proc() {
 		select {
 		case <-i.on_init:
 			i.state.Init()
+			i.publish("task/init", i.state)
 
 		case req := <-i.on_complete:
 			i.state.Complete(req.Result)
+			i.publish("task/complete", i.state)
 			return
 
 		case req := <-i.on_fail:
 			i.state.Fail(req.Error)
+			i.publish("task/fail", i.state)
 			return
 
 		case req := <-i.on_log:
@@ -101,6 +110,7 @@ func (i *task) proc() {
 
 		case <-ctx.Done():
 			i.state.Fail(fmt.Errorf("killed by task manager: timeout exceeded"))
+			i.publish("task/fail", i.state)
 			return
 
 		case <-time.After(10 * time.Second):
@@ -109,6 +119,7 @@ func (i *task) proc() {
 			if err := i.driver.Poke(ctx, i.id); err != nil {
 				fmt.Println("task", i.id, "failed liveness check:", err)
 				i.state.Fail(fmt.Errorf("cluster task error: %w", err))
+				i.publish("task/fail", i.state)
 				return
 			}
 		}
@@ -125,10 +136,12 @@ func (i *task) cleanup() {
 	// todo: avoid race condition here
 	time.Sleep(time.Second)
 
-	// ensure task is gone
-	// ctx := context.Background()
-	// if err := i.driver.Kill(ctx, i.id); err != nil {
-	// 	// log error
-	// 	fmt.Println("failed to kill", i, ":", err)
-	// }
+	// delete completed tasks
+	if i.state.Status == core.StatusDone {
+		ctx := context.Background()
+		if err := i.driver.Kill(ctx, i.id); err != nil {
+			// log error
+			fmt.Println("failed to kill", i, ":", err)
+		}
+	}
 }

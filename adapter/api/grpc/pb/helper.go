@@ -36,3 +36,39 @@ func UnpackTaskSpec(def *TaskSpec) *core.TaskSpec {
 		Time:    def.Time.AsTime(),
 	}
 }
+
+func PackTaskState(s *core.TaskState) *Task {
+	err := ""
+	if s.Err != nil {
+		err = s.Err.Error()
+	}
+	return &Task{
+		TaskId:    string(s.ID),
+		Parent:    string(s.Parent),
+		Status:    string(s.Status),
+		Spec:      PackTaskSpec(s.Spec),
+		Scheduled: timestamppb.New(s.Scheduled),
+		Started:   timestamppb.New(s.Started),
+		Completed: timestamppb.New(s.Completed),
+		Result:    string(s.Result),
+		Error:     err,
+	}
+}
+
+func UnpackTaskState(s *Task) core.TaskState {
+	var err error
+	if s.Error != "" {
+		err = core.NewError(s.Error)
+	}
+	return core.TaskState{
+		ID:        core.TaskID(s.TaskId),
+		Parent:    core.TaskID(s.Parent),
+		Status:    core.TaskStatus(s.Status),
+		Spec:      UnpackTaskSpec(s.Spec),
+		Scheduled: s.Scheduled.AsTime(),
+		Started:   s.Started.AsTime(),
+		Completed: s.Completed.AsTime(),
+		Result:    json.RawMessage(s.Result),
+		Err:       err,
+	}
+}

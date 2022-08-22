@@ -80,6 +80,7 @@ func (c *clusterEventStream) proc() {
 		}
 		c.events <- &core.ClusterEvent{
 			Type: event.Type,
+			Task: pb.UnpackTaskState(event.Task),
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"cowait/core"
 	"cowait/core/msg"
+	"cowait/util"
 	"cowait/util/events"
 
 	"fmt"
@@ -16,7 +17,7 @@ func NewCluster(driver core.Driver) core.Cluster {
 		driver: driver,
 		tasks:  make(map[core.TaskID]*task),
 		info: core.ClusterInfo{
-			ID:   "4123",
+			ID:   util.RandomString(8),
 			Name: "test-daemon",
 		},
 	}
@@ -50,6 +51,15 @@ func (t *cluster) Get(ctx context.Context, id core.TaskID) (i core.Task, ok bool
 	return
 }
 
+func (t *cluster) publish(event string, state core.TaskState) {
+	fmt.Println(event, state.ID)
+	t.events.Publish(&core.ClusterEvent{
+		ID:   t.info.ID,
+		Type: event,
+		Task: state,
+	})
+}
+
 func (t *cluster) Create(ctx context.Context, task *core.TaskSpec) (core.Task, error) {
 	// generate task id
 	id := core.GenerateTaskID(task.Name)
@@ -59,14 +69,8 @@ func (t *cluster) Create(ctx context.Context, task *core.TaskSpec) (core.Task, e
 		task.Time = time.Now()
 	}
 
-	fmt.Printf("Create task %s: %+v\n", id, task)
-	instance := newTask(t.driver, id, task)
+	instance := newTask(t.driver, id, task, t.publish)
 	t.tasks[id] = instance
-
-	t.events.Publish(&core.ClusterEvent{
-		ID:   t.info.ID,
-		Type: "task/create",
-	})
 
 	return instance, nil
 }
@@ -81,19 +85,16 @@ func (t *cluster) Destroy(ctx context.Context, id core.TaskID) error {
 
 func (t *cluster) Init(req *msg.TaskInit) error {
 	id := core.TaskID(req.Header.ID)
-	fmt.Printf("Task init: %+v\n", req)
 	if task, ok := t.tasks[id]; ok {
 		task.on_init <- req
 		return nil
 	}
-	fmt.Println("Unknown task", req.Header.ID)
 	return core.ErrUnknownTask
 }
 
 func (t *cluster) Complete(req *msg.TaskComplete) error {
 	id := core.TaskID(req.Header.ID)
 	if task, ok := t.tasks[id]; ok {
-		fmt.Printf("Task complete: %s\n", req.Result)
 		task.on_complete <- req
 		return nil
 	}
@@ -103,7 +104,6 @@ func (t *cluster) Complete(req *msg.TaskComplete) error {
 func (t *cluster) Fail(req *msg.TaskFailure) error {
 	id := core.TaskID(req.Header.ID)
 	if task, ok := t.tasks[id]; ok {
-		fmt.Printf("Task failed: %s\n", req.Error)
 		task.on_fail <- req
 		return nil
 	}
