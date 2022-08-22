@@ -12,13 +12,13 @@ import (
 )
 
 func main() {
-	cowaitd := daemon.New(
+	cowaitd := daemon.App(
 		k8s.Module,
-
 		grpc.Module,
 
 		fx.Invoke(grpc.RegisterApiServer),
 		fx.Invoke(grpc.RegisterExecutorServer),
+		fx.Invoke(daemon.NewUplink),
 		fx.Invoke(createTask),
 		// fx.NopLogger,
 	)

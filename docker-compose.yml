@@ -25,3 +25,9 @@ services:
     build: 
       context: '.'
       target: 'daemon'
+
+  cloud:
+    image: 'cowait/cloud'
+    build: 
+      context: '.'
+      target: 'cloud'

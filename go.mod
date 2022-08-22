@@ -3,6 +3,7 @@ module cowait
 go 1.18
 
 require (
+	github.com/hashicorp/yamux v0.1.1
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
 	go.uber.org/fx v1.18.1

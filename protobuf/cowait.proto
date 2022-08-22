@@ -118,7 +118,10 @@ service Cluster {
 }
 
 message ClusterInfoReq {}
-message ClusterInfoReply {}
+message ClusterInfoReply {
+    string cluster_id = 1;
+    string name = 2;
+}
 
 message ClusterSpawnReq {}
 message ClusterSpawnReply {}
@@ -130,4 +133,6 @@ message ClusterPokeReq {}
 message ClusterPokeReply {}
 
 message ClusterSubscribeReq {}
-message ClusterEvent {}
+message ClusterEvent {
+    string type = 1;
+}

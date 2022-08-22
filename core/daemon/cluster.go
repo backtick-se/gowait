@@ -29,6 +29,10 @@ type cluster struct {
 	tasks  map[core.TaskID]*task
 }
 
+func (t *cluster) Name() string {
+	return "test-daemon"
+}
+
 func (t *cluster) Get(ctx context.Context, id core.TaskID) (i core.Task, ok bool) {
 	i, ok = t.tasks[id]
 	return

@@ -1,15 +1,18 @@
 #!/bin/bash
 
 # build and push images
-docker compose build daemon base
-docker compose build python
-docker compose push daemon base python
+docker compose build base
+docker compose build daemon cloud python
+docker compose push daemon cloud base python
 
 # delete any existing daemon pod
-kubectl delete pod cowaitd
+kubectl delete pod cowaitd cloud
 sleep 1
 
 # re-create daemon
+kubectl apply -f kubernetes/cloud.yml
+kubectl wait --for=condition=Ready pod/cloud
+
 kubectl apply -f kubernetes/daemon.yml
 
 # grab logs
@@ -17,4 +20,4 @@ kubectl wait --for=condition=Ready pod/cowaitd
 kubectl logs -f cowaitd
 
 # clean up
-kubectl delete pod cowaitd
+# kubectl delete pod cowaitd cloud

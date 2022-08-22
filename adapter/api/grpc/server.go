@@ -15,7 +15,7 @@ func NewServer(lc fx.Lifecycle) *grpc.Server {
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
+			listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 			if err != nil {
 				return fmt.Errorf("failed to listen: %v", err)
 			}
