@@ -4,6 +4,7 @@ import (
 	"cowait/adapter/api/grpc"
 	"cowait/core"
 	"cowait/core/executor"
+	"fmt"
 	"os"
 
 	"context"
@@ -20,19 +21,25 @@ func main() {
 
 		fx.Invoke(run),
 
-		fx.NopLogger,
+		// fx.NopLogger,
 	)
 	executor.Run()
 }
 
-func run(lc fx.Lifecycle, exec executor.Executor) error {
+func run(exec executor.Executor) {
 	// read task data from environment
 	id := core.TaskID(os.Getenv(core.EnvTaskID))
 	def, err := core.TaskDefFromEnv(os.Getenv(core.EnvTaskdef))
 	if err != nil {
-		return err
+		fmt.Println("failed to parse task spec:", err)
+		os.Exit(1)
 	}
 
 	ctx := context.Background()
-	return exec.Run(ctx, id, def)
+	if err := exec.Run(ctx, id, def); err != nil {
+		fmt.Println("execution failed:", err)
+		os.Exit(1)
+	}
+
+	os.Exit(0)
 }

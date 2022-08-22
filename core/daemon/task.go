@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-type instance struct {
-	id      core.TaskID
-	cluster core.Cluster
-	state   core.TaskState
-	logs    map[string][]string
+type task struct {
+	id     core.TaskID
+	driver core.Driver
+	state  core.TaskState
+	logs   map[string][]string
 
 	on_init     chan *msg.TaskInit
 	on_fail     chan *msg.TaskFailure
@@ -21,10 +21,12 @@ type instance struct {
 	on_log      chan *msg.LogEntry
 }
 
-func newInstance(cluster core.Cluster, id core.TaskID, spec *core.TaskSpec) *instance {
-	i := &instance{
-		id:      id,
-		cluster: cluster,
+var _ core.Task = &task{}
+
+func newTask(driver core.Driver, id core.TaskID, spec *core.TaskSpec) *task {
+	t := &task{
+		id:     id,
+		driver: driver,
 		state: core.TaskState{
 			ID:        id,
 			Spec:      spec,
@@ -38,22 +40,22 @@ func newInstance(cluster core.Cluster, id core.TaskID, spec *core.TaskSpec) *ins
 		on_complete: make(chan *msg.TaskComplete),
 		on_log:      make(chan *msg.LogEntry),
 	}
-	go i.proc()
-	return i
+	go t.proc()
+	return t
 }
 
-func (i *instance) ID() core.TaskID       { return i.state.ID }
-func (i *instance) Spec() *core.TaskSpec  { return i.state.Spec }
-func (i *instance) State() core.TaskState { return i.state }
+func (i *task) ID() core.TaskID       { return i.state.ID }
+func (i *task) Spec() *core.TaskSpec  { return i.state.Spec }
+func (i *task) State() core.TaskState { return i.state }
 
-func (i *instance) Logs(file string) []string {
+func (i *task) Logs(file string) []string {
 	if logs, ok := i.logs[file]; ok {
 		return logs
 	}
 	return nil
 }
 
-func (i *instance) proc() {
+func (i *task) proc() {
 	defer i.cleanup()
 
 	spec := i.state.Spec
@@ -70,7 +72,7 @@ func (i *instance) proc() {
 	// this is the instance management loop
 	// at this point the task is in the "scheduled" state
 	// i suppose we start by calling cluster.Spawn() ?
-	if err := i.cluster.Spawn(ctx, i.id, spec); err != nil {
+	if err := i.driver.Spawn(ctx, i.id, spec); err != nil {
 		fmt.Println("failed to spawn task", i.id, ":", err)
 		return
 	}
@@ -104,7 +106,7 @@ func (i *instance) proc() {
 		case <-time.After(10 * time.Second):
 			// periodic liveness check
 			fmt.Println("poke", i.id)
-			if err := i.cluster.Poke(ctx, i.id); err != nil {
+			if err := i.driver.Poke(ctx, i.id); err != nil {
 				fmt.Println("task", i.id, "failed liveness check:", err)
 				i.state.Fail(fmt.Errorf("cluster task error: %w", err))
 				return
@@ -113,7 +115,7 @@ func (i *instance) proc() {
 	}
 }
 
-func (i *instance) cleanup() {
+func (i *task) cleanup() {
 	defer close(i.on_init)
 	defer close(i.on_complete)
 	defer close(i.on_fail)
@@ -125,7 +127,7 @@ func (i *instance) cleanup() {
 
 	// ensure task is gone
 	ctx := context.Background()
-	if err := i.cluster.Kill(ctx, i.id); err != nil {
+	if err := i.driver.Kill(ctx, i.id); err != nil {
 		// log error
 		fmt.Println("failed to kill", i, ":", err)
 	}

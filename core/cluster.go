@@ -1,12 +1,9 @@
 package core
 
-import (
-	"context"
-)
+import "context"
 
 type Cluster interface {
-	Name() string
-	Spawn(context.Context, TaskID, *TaskSpec) error
-	Kill(context.Context, TaskID) error
-	Poke(context.Context, TaskID) error
+	Get(context.Context, TaskID) (Task, bool)
+	Create(context.Context, *TaskSpec) (Task, error)
+	Destroy(context.Context, TaskID) error
 }

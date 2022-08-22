@@ -3,7 +3,6 @@ package grpc
 import (
 	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
-	"cowait/core/daemon"
 
 	"context"
 	"fmt"
@@ -15,19 +14,17 @@ type cowaitServer struct {
 	pb.UnimplementedCowaitServer
 
 	cluster core.Cluster
-	mgr     daemon.TaskManager
 }
 
-func NewApiServer(cluster core.Cluster, mgr daemon.TaskManager) pb.CowaitServer {
+func NewApiServer(driver core.Driver, mgr core.Cluster) pb.CowaitServer {
 	return &cowaitServer{
-		cluster: cluster,
-		mgr:     mgr,
+		cluster: mgr,
 	}
 }
 
 func (s *cowaitServer) CreateTask(ctx context.Context, req *pb.CreateTaskReq) (*pb.CreateTaskReply, error) {
 	def := pb.UnpackTaskSpec(req.Spec)
-	instance, err := s.mgr.Schedule(def)
+	instance, err := s.cluster.Create(ctx, def)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +47,7 @@ func (s *cowaitServer) QueryTasks(ctx context.Context, req *pb.QueryTasksReq) (*
 }
 
 func (s *cowaitServer) KillTask(ctx context.Context, req *pb.KillTaskReq) (*pb.KillTaskReply, error) {
-	if err := s.cluster.Kill(ctx, core.TaskID(req.Id)); err != nil {
+	if err := s.cluster.Destroy(ctx, core.TaskID(req.Id)); err != nil {
 		return nil, err
 	}
 	return &pb.KillTaskReply{}, nil

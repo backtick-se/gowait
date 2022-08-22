@@ -24,7 +24,7 @@ type kube struct {
 	namespace string
 }
 
-func New() core.Cluster {
+func New() core.Driver {
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -51,7 +51,7 @@ func New() core.Cluster {
 	}
 }
 
-func NewInCluster() (core.Cluster, error) {
+func NewInCluster() (core.Driver, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err

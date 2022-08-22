@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"context"
 	"cowait/core"
 	"cowait/core/msg"
 	"time"
@@ -8,34 +9,32 @@ import (
 	"fmt"
 )
 
-type TaskManager interface {
-	ExecutorServer
-	ClusterServer
-}
-
-func NewTaskManager(cluster core.Cluster) TaskManager {
-	return &taskmgr{
-		cluster: cluster,
-		tasks:   make(map[core.TaskID]*instance),
+func NewCluster(driver core.Driver) core.Cluster {
+	return &cluster{
+		driver: driver,
+		tasks:  make(map[core.TaskID]*task),
 	}
 }
 
-func newTaskServer(taskmgr TaskManager) ExecutorServer {
+func newExecutorServer(cluster core.Cluster) (core.ExecutorHandler, error) {
 	// re-export as an executor server
-	return taskmgr
+	if srv, ok := cluster.(core.ExecutorHandler); ok {
+		return srv, nil
+	}
+	return nil, fmt.Errorf("expected cluster implementation to also be an executor server")
 }
 
-type taskmgr struct {
-	cluster core.Cluster
-	tasks   map[core.TaskID]*instance
+type cluster struct {
+	driver core.Driver
+	tasks  map[core.TaskID]*task
 }
 
-func (t *taskmgr) Get(id core.TaskID) (i core.Task, ok bool) {
+func (t *cluster) Get(ctx context.Context, id core.TaskID) (i core.Task, ok bool) {
 	i, ok = t.tasks[id]
 	return
 }
 
-func (t *taskmgr) Schedule(task *core.TaskSpec) (core.Task, error) {
+func (t *cluster) Create(ctx context.Context, task *core.TaskSpec) (core.Task, error) {
 	// generate task id
 	id := core.GenerateTaskID(task.Name)
 
@@ -44,13 +43,21 @@ func (t *taskmgr) Schedule(task *core.TaskSpec) (core.Task, error) {
 		task.Time = time.Now()
 	}
 
-	instance := newInstance(t.cluster, id, task)
+	instance := newTask(t.driver, id, task)
 	t.tasks[id] = instance
 	fmt.Printf("Scheduled task %s: %+v\n", id, task)
 	return instance, nil
 }
 
-func (t *taskmgr) Init(req *msg.TaskInit) error {
+func (t *cluster) Destroy(ctx context.Context, id core.TaskID) error {
+	return t.driver.Kill(ctx, id)
+}
+
+//
+// Executor Server implementation
+//
+
+func (t *cluster) Init(req *msg.TaskInit) error {
 	id := core.TaskID(req.Header.ID)
 	fmt.Printf("Task init: %+v\n", req)
 	if task, ok := t.tasks[id]; ok {
@@ -61,7 +68,7 @@ func (t *taskmgr) Init(req *msg.TaskInit) error {
 	return core.ErrUnknownTask
 }
 
-func (t *taskmgr) Complete(req *msg.TaskComplete) error {
+func (t *cluster) Complete(req *msg.TaskComplete) error {
 	id := core.TaskID(req.Header.ID)
 	if task, ok := t.tasks[id]; ok {
 		fmt.Printf("Task complete: %s\n", req.Result)
@@ -71,7 +78,7 @@ func (t *taskmgr) Complete(req *msg.TaskComplete) error {
 	return core.ErrUnknownTask
 }
 
-func (t *taskmgr) Fail(req *msg.TaskFailure) error {
+func (t *cluster) Fail(req *msg.TaskFailure) error {
 	id := core.TaskID(req.Header.ID)
 	if task, ok := t.tasks[id]; ok {
 		fmt.Printf("Task failed: %s\n", req.Error)
@@ -81,7 +88,7 @@ func (t *taskmgr) Fail(req *msg.TaskFailure) error {
 	return core.ErrUnknownTask
 }
 
-func (t *taskmgr) Log(req *msg.LogEntry) error {
+func (t *cluster) Log(req *msg.LogEntry) error {
 	id := core.TaskID(req.Header.ID)
 	if task, ok := t.tasks[id]; ok {
 		fmt.Printf("%s [%s] %s", req.Header.ID, req.File, req.Data)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"cowait/adapter/api/grpc"
 	"cowait/adapter/api/grpc/pb"
-	"cowait/core/daemon"
+	"cowait/core"
 	"cowait/core/msg"
 
 	"fmt"
@@ -17,20 +17,23 @@ import (
 type Server interface {
 	Listen(port int) error
 	Close() error
-	Completed() <-chan *msg.TaskComplete
-	Failed() <-chan *msg.TaskFailure
-	Logs() <-chan *msg.LogEntry
+
+	OnInit() <-chan *msg.TaskInit
+	OnComplete() <-chan *msg.TaskComplete
+	OnFailure() <-chan *msg.TaskFailure
+	OnLog() <-chan *msg.LogEntry
 }
 
 type server struct {
 	grpc *grpcio.Server
 
-	completed chan *msg.TaskComplete
-	failed    chan *msg.TaskFailure
-	log       chan *msg.LogEntry
+	on_init     chan *msg.TaskInit
+	on_complete chan *msg.TaskComplete
+	on_failure  chan *msg.TaskFailure
+	on_log      chan *msg.LogEntry
 }
 
-var _ daemon.ExecutorServer = &server{}
+var _ core.ExecutorHandler = &server{}
 
 func NewServer(lc fx.Lifecycle) Server {
 	// its not really OK to import grpc stuff here.
@@ -39,9 +42,10 @@ func NewServer(lc fx.Lifecycle) Server {
 	server := &server{
 		grpc: grpcio.NewServer(),
 
-		completed: make(chan *msg.TaskComplete),
-		failed:    make(chan *msg.TaskFailure),
-		log:       make(chan *msg.LogEntry),
+		on_init:     make(chan *msg.TaskInit),
+		on_complete: make(chan *msg.TaskComplete),
+		on_failure:  make(chan *msg.TaskFailure),
+		on_log:      make(chan *msg.LogEntry),
 	}
 
 	pb.RegisterExecutorServer(server.grpc, grpc.NewExecutorServer(server))
@@ -65,14 +69,16 @@ func (s *server) Listen(port int) error {
 	return nil
 }
 
-func (s *server) Completed() <-chan *msg.TaskComplete { return s.completed }
-func (s *server) Failed() <-chan *msg.TaskFailure     { return s.failed }
-func (s *server) Logs() <-chan *msg.LogEntry          { return s.log }
+func (s *server) OnInit() <-chan *msg.TaskInit         { return s.on_init }
+func (s *server) OnComplete() <-chan *msg.TaskComplete { return s.on_complete }
+func (s *server) OnFailure() <-chan *msg.TaskFailure   { return s.on_failure }
+func (s *server) OnLog() <-chan *msg.LogEntry          { return s.on_log }
 
 func (s *server) Close() error {
-	defer close(s.completed)
-	defer close(s.failed)
-	defer close(s.log)
+	defer close(s.on_init)
+	defer close(s.on_complete)
+	defer close(s.on_failure)
+	defer close(s.on_log)
 
 	s.grpc.GracefulStop()
 
@@ -80,20 +86,21 @@ func (s *server) Close() error {
 }
 
 func (t *server) Init(req *msg.TaskInit) error {
+	t.on_init <- req
 	return nil
 }
 
 func (t *server) Complete(req *msg.TaskComplete) error {
-	t.completed <- req
+	t.on_complete <- req
 	return nil
 }
 
 func (t *server) Fail(req *msg.TaskFailure) error {
-	t.failed <- req
+	t.on_failure <- req
 	return nil
 }
 
 func (t *server) Log(req *msg.LogEntry) error {
-	t.log <- req
+	t.on_log <- req
 	return nil
 }
