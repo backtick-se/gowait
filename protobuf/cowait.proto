@@ -121,6 +121,7 @@ message ClusterInfoReq {}
 message ClusterInfoReply {
     string cluster_id = 1;
     string name = 2;
+    string key = 3;
 }
 
 message ClusterSpawnReq {}
@@ -134,5 +135,6 @@ message ClusterPokeReply {}
 
 message ClusterSubscribeReq {}
 message ClusterEvent {
-    string type = 1;
+    string cluster_id = 1;
+    string type = 2;
 }

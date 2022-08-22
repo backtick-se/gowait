@@ -17,7 +17,9 @@ type uplinkSrv struct {
 }
 
 func NewUplinkServer(lc fx.Lifecycle) *uplinkSrv {
-	srv := &uplinkSrv{}
+	srv := &uplinkSrv{
+		clusters: make(map[string]client.Cluster),
+	}
 
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
@@ -91,7 +93,7 @@ func (s *uplinkSrv) handle(client client.Cluster) {
 	}
 
 	for {
-		event, ok := events.Read()
+		event, ok := <-events.Next()
 		if !ok {
 			break
 		}

@@ -4,15 +4,21 @@ import (
 	"context"
 	"cowait/core"
 	"cowait/core/msg"
-	"time"
+	"cowait/util/events"
 
 	"fmt"
+	"time"
 )
 
 func NewCluster(driver core.Driver) core.Cluster {
 	return &cluster{
+		events: events.New[*core.ClusterEvent](),
 		driver: driver,
 		tasks:  make(map[core.TaskID]*task),
+		info: core.ClusterInfo{
+			ID:   "4123",
+			Name: "test-daemon",
+		},
 	}
 }
 
@@ -25,12 +31,18 @@ func registerExecutorHandler(cluster core.Cluster) (core.ExecutorHandler, error)
 }
 
 type cluster struct {
+	info   core.ClusterInfo
 	driver core.Driver
 	tasks  map[core.TaskID]*task
+	events events.Pub[*core.ClusterEvent]
 }
 
-func (t *cluster) Name() string {
-	return "test-daemon"
+func (t *cluster) Info() core.ClusterInfo {
+	return t.info
+}
+
+func (t *cluster) Events() events.Pub[*core.ClusterEvent] {
+	return t.events
 }
 
 func (t *cluster) Get(ctx context.Context, id core.TaskID) (i core.Task, ok bool) {
@@ -47,9 +59,15 @@ func (t *cluster) Create(ctx context.Context, task *core.TaskSpec) (core.Task, e
 		task.Time = time.Now()
 	}
 
+	fmt.Printf("Create task %s: %+v\n", id, task)
 	instance := newTask(t.driver, id, task)
 	t.tasks[id] = instance
-	fmt.Printf("Scheduled task %s: %+v\n", id, task)
+
+	t.events.Publish(&core.ClusterEvent{
+		ID:   t.info.ID,
+		Type: "task/create",
+	})
+
 	return instance, nil
 }
 

@@ -2,24 +2,17 @@ package client
 
 import (
 	"context"
+	"cowait/core"
 	"net"
 )
 
 type Cluster interface {
 	Connect(net.Conn) error
 	Connected() bool
-	Info(context.Context) (*ClusterInfo, error)
+	Info(context.Context) (*core.ClusterInfo, error)
 	Subscribe(ctx context.Context) (ClusterEventStream, error)
 }
 
 type ClusterEventStream interface {
-	Read() (*ClusterEvent, bool)
-}
-
-type ClusterInfo struct {
-	Name string
-}
-
-type ClusterEvent struct {
-	Type string
+	Next() <-chan *core.ClusterEvent
 }

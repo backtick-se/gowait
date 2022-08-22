@@ -5,6 +5,7 @@ import (
 	"cowait/adapter/engine/k8s"
 	"cowait/core"
 	"cowait/core/daemon"
+	"time"
 
 	"context"
 
@@ -25,11 +26,16 @@ func main() {
 	cowaitd.Run()
 }
 
-func createTask(cluster core.Cluster) error {
-	_, err := cluster.Create(context.Background(), &core.TaskSpec{
-		Name:    "gowait-task",
-		Image:   "cowait/gowait-python",
-		Command: []string{"python", "-u", "hello.py"},
+func createTask(lc fx.Lifecycle, cluster core.Cluster) {
+	lc.Append(fx.Hook{
+		OnStart: func(context.Context) error {
+			time.Sleep(3 * time.Second)
+			_, err := cluster.Create(context.Background(), &core.TaskSpec{
+				Name:    "gowait-task",
+				Image:   "cowait/gowait-python",
+				Command: []string{"python", "-u", "hello.py"},
+			})
+			return err
+		},
 	})
-	return err
 }

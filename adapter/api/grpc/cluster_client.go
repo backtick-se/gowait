@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"cowait/adapter/api/grpc/pb"
+	"cowait/core"
 	"cowait/core/client"
 	"fmt"
 	"io"
@@ -41,12 +42,12 @@ func (c *clusterClient) Connected() bool {
 	return c.conn.GetState() == connectivity.Ready
 }
 
-func (c *clusterClient) Info(ctx context.Context) (*client.ClusterInfo, error) {
+func (c *clusterClient) Info(ctx context.Context) (*core.ClusterInfo, error) {
 	reply, err := c.cluster.Info(ctx, &pb.ClusterInfoReq{})
 	if err != nil {
 		return nil, err
 	}
-	return &client.ClusterInfo{
+	return &core.ClusterInfo{
 		Name: reply.Name,
 	}, nil
 }
@@ -58,6 +59,7 @@ func (c *clusterClient) Subscribe(ctx context.Context) (client.ClusterEventStrea
 	}
 	events := &clusterEventStream{
 		stream: stream,
+		events: make(chan *core.ClusterEvent),
 	}
 	go events.proc()
 	return events, nil
@@ -65,7 +67,7 @@ func (c *clusterClient) Subscribe(ctx context.Context) (client.ClusterEventStrea
 
 type clusterEventStream struct {
 	stream pb.Cluster_SubscribeClient
-	events chan *client.ClusterEvent
+	events chan *core.ClusterEvent
 }
 
 func (c *clusterEventStream) proc() {
@@ -78,13 +80,12 @@ func (c *clusterEventStream) proc() {
 			}
 			return
 		}
-		c.events <- &client.ClusterEvent{
+		c.events <- &core.ClusterEvent{
 			Type: event.Type,
 		}
 	}
 }
 
-func (c *clusterEventStream) Read() (*client.ClusterEvent, bool) {
-	event, ok := <-c.events
-	return event, ok
+func (c *clusterEventStream) Next() <-chan *core.ClusterEvent {
+	return c.events
 }

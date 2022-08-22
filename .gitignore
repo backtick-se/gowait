@@ -2,3 +2,5 @@
 .venv/
 tmp/
 vendor/
+__pycache__/
+**.pyc

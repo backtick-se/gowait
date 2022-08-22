@@ -23,9 +23,9 @@ func NewClusterHandler(cluster core.Cluster) pb.ClusterServer {
 }
 
 func (s *clusterHandler) Info(context.Context, *pb.ClusterInfoReq) (*pb.ClusterInfoReply, error) {
-	fmt.Println("cluster.Info() call!")
+	info := s.cluster.Info()
 	return &pb.ClusterInfoReply{
-		Name: s.cluster.Name(),
+		Name: info.Name,
 	}, nil
 }
 
@@ -41,6 +41,19 @@ func (s *clusterHandler) Poke(context.Context, *pb.ClusterPokeReq) (*pb.ClusterP
 	return nil, status.Errorf(codes.Unimplemented, "method Poke not implemented")
 }
 
-func (s *clusterHandler) Subscribe(*pb.ClusterSubscribeReq, pb.Cluster_SubscribeServer) error {
-	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
+func (s *clusterHandler) Subscribe(req *pb.ClusterSubscribeReq, stream pb.Cluster_SubscribeServer) error {
+	sub := s.cluster.Events().Subscribe()
+	for {
+		event, ok := <-sub.Next()
+		if !ok {
+			fmt.Println("end of event stream")
+			break
+		}
+		if err := stream.Send(&pb.ClusterEvent{
+			Type: event.Type,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
