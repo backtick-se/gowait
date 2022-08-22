@@ -1,13 +1,11 @@
-package client
+package core
 
 import (
-	"cowait/core"
-
 	"context"
 )
 
-type Executor interface {
-	Connect(hostname string, id core.TaskID) error
+type ExecutorClient interface {
+	Connect(hostname string, id TaskID) error
 
 	Init(ctx context.Context) error
 	Failure(ctx context.Context, taskErr error) error

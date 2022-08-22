@@ -4,7 +4,6 @@ import (
 	"context"
 	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
-	"cowait/core/client"
 
 	"google.golang.org/grpc"
 )
@@ -14,7 +13,7 @@ type apiclient struct {
 	api  pb.CowaitClient
 }
 
-func NewApiClient() client.API {
+func NewApiClient() core.APIClient {
 	return &apiclient{}
 }
 
@@ -35,7 +34,7 @@ func (c *apiclient) dial(hostname string, opts ...grpc.DialOption) error {
 
 func (c *apiclient) CreateTask(ctx context.Context, def *core.TaskSpec) (*core.TaskState, error) {
 	if c.conn == nil {
-		return nil, client.ErrNotConnected
+		return nil, core.ErrNotConnected
 	}
 	reply, err := c.api.CreateTask(ctx, &pb.CreateTaskReq{
 		Spec: pb.PackTaskSpec(def),

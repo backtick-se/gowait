@@ -3,7 +3,6 @@ package grpc
 import (
 	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
-	"cowait/core/client"
 
 	"context"
 	"time"
@@ -19,7 +18,7 @@ type executorClient struct {
 	version string
 }
 
-func NewExecutorClient() client.Executor {
+func NewExecutorClient() core.ExecutorClient {
 	return &executorClient{
 		version: "gowait/1.0",
 	}
@@ -46,7 +45,7 @@ func (c *executorClient) header() *pb.Header {
 
 func (c *executorClient) Init(ctx context.Context) error {
 	if c.conn == nil {
-		return client.ErrNotConnected
+		return core.ErrNotConnected
 	}
 	_, err := c.tasks.TaskInit(ctx, &pb.TaskInitReq{
 		Header:  c.header(),
@@ -57,7 +56,7 @@ func (c *executorClient) Init(ctx context.Context) error {
 
 func (c *executorClient) Failure(ctx context.Context, taskErr error) error {
 	if c.conn == nil {
-		return client.ErrNotConnected
+		return core.ErrNotConnected
 	}
 	_, err := c.tasks.TaskFailure(ctx, &pb.TaskFailureReq{
 		Header: c.header(),
@@ -68,7 +67,7 @@ func (c *executorClient) Failure(ctx context.Context, taskErr error) error {
 
 func (c *executorClient) Complete(ctx context.Context, result string) error {
 	if c.conn == nil {
-		return client.ErrNotConnected
+		return core.ErrNotConnected
 	}
 	_, err := c.tasks.TaskComplete(ctx, &pb.TaskCompleteReq{
 		Header: c.header(),
@@ -77,9 +76,9 @@ func (c *executorClient) Complete(ctx context.Context, result string) error {
 	return err
 }
 
-func (c *executorClient) Log(ctx context.Context) (client.Logger, error) {
+func (c *executorClient) Log(ctx context.Context) (core.Logger, error) {
 	if c.conn == nil {
-		return nil, client.ErrNotConnected
+		return nil, core.ErrNotConnected
 	}
 	stream, err := c.tasks.TaskLog(ctx)
 	if err != nil {

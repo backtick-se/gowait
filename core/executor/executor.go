@@ -2,7 +2,6 @@ package executor
 
 import (
 	"cowait/core"
-	"cowait/core/client"
 
 	"context"
 	"fmt"
@@ -15,10 +14,10 @@ type Executor interface {
 
 type executor struct {
 	server Server
-	client client.Executor
+	client core.ExecutorClient
 }
 
-func New(client client.Executor, server Server) (Executor, error) {
+func New(client core.ExecutorClient, server Server) (Executor, error) {
 	return &executor{
 		server: server,
 		client: client,

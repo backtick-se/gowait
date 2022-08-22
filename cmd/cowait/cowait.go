@@ -3,10 +3,9 @@ package main
 import (
 	"cowait/adapter/api/grpc"
 	"cowait/core"
-	"cowait/core/client"
-	"fmt"
 
 	"context"
+	"fmt"
 
 	"go.uber.org/fx"
 )
@@ -24,7 +23,7 @@ func main() {
 	executor.Run()
 }
 
-func run(ctrl fx.Shutdowner, cli client.API) error {
+func run(ctrl fx.Shutdowner, cli core.APIClient) error {
 	hostname := "localhost:50949"
 	if err := cli.Connect(hostname); err != nil {
 		return err
