@@ -1,18 +1,19 @@
 package daemon
 
 import (
-	"cowait/core"
+	"cowait/core/cluster"
 	"cowait/core/msg"
+	"cowait/core/task"
 
 	"context"
 	"fmt"
 	"time"
 )
 
-type task struct {
-	id     core.TaskID
-	driver core.Driver
-	state  core.TaskState
+type instance struct {
+	id     task.ID
+	driver cluster.Driver
+	state  task.State
 	logs   map[string][]string
 
 	publish     TaskEventFn
@@ -22,18 +23,18 @@ type task struct {
 	on_log      chan *msg.LogEntry
 }
 
-var _ core.Task = &task{}
+var _ task.T = &instance{}
 
-type TaskEventFn func(event string, state core.TaskState)
+type TaskEventFn func(event string, state task.State)
 
-func newTask(driver core.Driver, id core.TaskID, spec *core.TaskSpec, callback TaskEventFn) *task {
-	t := &task{
+func newInstance(driver cluster.Driver, id task.ID, spec *task.Spec, callback TaskEventFn) *instance {
+	t := &instance{
 		id:     id,
 		driver: driver,
-		state: core.TaskState{
+		state: task.State{
 			ID:        id,
 			Spec:      spec,
-			Status:    core.StatusWait,
+			Status:    task.StatusWait,
 			Scheduled: time.Now(),
 		},
 		logs: make(map[string][]string),
@@ -48,18 +49,18 @@ func newTask(driver core.Driver, id core.TaskID, spec *core.TaskSpec, callback T
 	return t
 }
 
-func (i *task) ID() core.TaskID       { return i.state.ID }
-func (i *task) Spec() *core.TaskSpec  { return i.state.Spec }
-func (i *task) State() core.TaskState { return i.state }
+func (i *instance) ID() task.ID       { return i.state.ID }
+func (i *instance) Spec() *task.Spec  { return i.state.Spec }
+func (i *instance) State() task.State { return i.state }
 
-func (i *task) Logs(file string) []string {
+func (i *instance) Logs(file string) []string {
 	if logs, ok := i.logs[file]; ok {
 		return logs
 	}
 	return nil
 }
 
-func (i *task) proc() {
+func (i *instance) proc() {
 	defer i.cleanup()
 
 	spec := i.state.Spec
@@ -126,7 +127,7 @@ func (i *task) proc() {
 	}
 }
 
-func (i *task) cleanup() {
+func (i *instance) cleanup() {
 	defer close(i.on_init)
 	defer close(i.on_complete)
 	defer close(i.on_fail)
@@ -137,7 +138,7 @@ func (i *task) cleanup() {
 	time.Sleep(time.Second)
 
 	// delete completed tasks
-	if i.state.Status == core.StatusDone {
+	if i.state.Status == task.StatusDone {
 		ctx := context.Background()
 		if err := i.driver.Kill(ctx, i.id); err != nil {
 			// log error

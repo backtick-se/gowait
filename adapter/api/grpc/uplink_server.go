@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"cowait/core"
+	"cowait/core/cluster"
 
 	"fmt"
 	"net"
@@ -13,11 +13,11 @@ type uplinkSrv struct {
 	listen net.Listener
 }
 
-func NewUplinkServer() core.UplinkServer {
+func NewUplinkServer() cluster.UplinkServer {
 	return &uplinkSrv{}
 }
 
-func (s *uplinkSrv) Serve(handler func(core.ClusterClient) error) error {
+func (s *uplinkSrv) Serve(handler func(cluster.Client) error) error {
 	var err error
 	s.listen, err = net.Listen("tcp", fmt.Sprintf(":%d", 1338))
 	if err != nil {
@@ -39,7 +39,7 @@ func (s *uplinkSrv) Close() error {
 	return s.listen.Close()
 }
 
-func (u *uplinkSrv) handle(incoming net.Conn, handler func(core.ClusterClient) error) error {
+func (u *uplinkSrv) handle(incoming net.Conn, handler func(cluster.Client) error) error {
 	defer incoming.Close()
 
 	session, err := yamux.Client(incoming, yamux.DefaultConfig())

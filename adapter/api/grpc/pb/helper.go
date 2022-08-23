@@ -3,6 +3,8 @@ package pb
 import (
 	"cowait/core"
 	"cowait/core/msg"
+	"cowait/core/task"
+
 	"encoding/json"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -15,7 +17,7 @@ func UnpackHeader(h *Header) msg.Header {
 	}
 }
 
-func PackTaskSpec(def *core.TaskSpec) *TaskSpec {
+func PackTaskSpec(def *task.Spec) *TaskSpec {
 	return &TaskSpec{
 		Name:    def.Name,
 		Image:   def.Image,
@@ -26,8 +28,8 @@ func PackTaskSpec(def *core.TaskSpec) *TaskSpec {
 	}
 }
 
-func UnpackTaskSpec(def *TaskSpec) *core.TaskSpec {
-	return &core.TaskSpec{
+func UnpackTaskSpec(def *TaskSpec) *task.Spec {
+	return &task.Spec{
 		Name:    def.Name,
 		Image:   def.Image,
 		Command: def.Command,
@@ -37,7 +39,7 @@ func UnpackTaskSpec(def *TaskSpec) *core.TaskSpec {
 	}
 }
 
-func PackTaskState(s *core.TaskState) *Task {
+func PackTaskState(s *task.State) *Task {
 	err := ""
 	if s.Err != nil {
 		err = s.Err.Error()
@@ -55,15 +57,15 @@ func PackTaskState(s *core.TaskState) *Task {
 	}
 }
 
-func UnpackTaskState(s *Task) core.TaskState {
+func UnpackTaskState(s *Task) task.State {
 	var err error
 	if s.Error != "" {
 		err = core.NewError(s.Error)
 	}
-	return core.TaskState{
-		ID:        core.TaskID(s.TaskId),
-		Parent:    core.TaskID(s.Parent),
-		Status:    core.TaskStatus(s.Status),
+	return task.State{
+		ID:        task.ID(s.TaskId),
+		Parent:    task.ID(s.Parent),
+		Status:    task.Status(s.Status),
 		Spec:      UnpackTaskSpec(s.Spec),
 		Scheduled: s.Scheduled.AsTime(),
 		Started:   s.Started.AsTime(),

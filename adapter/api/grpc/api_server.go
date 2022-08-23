@@ -2,7 +2,8 @@ package grpc
 
 import (
 	"cowait/adapter/api/grpc/pb"
-	"cowait/core"
+	"cowait/core/cluster"
+	"cowait/core/task"
 
 	"context"
 	"fmt"
@@ -15,13 +16,13 @@ import (
 type apiHandler struct {
 	pb.UnimplementedCowaitServer
 
-	cluster core.Cluster
+	cluster cluster.T
 }
 
 func RegisterApiServer(
 	lc fx.Lifecycle,
 	srv *grpc.Server,
-	cluster core.Cluster,
+	cluster cluster.T,
 ) {
 	pb.RegisterCowaitServer(srv, &apiHandler{
 		cluster: cluster,
@@ -54,7 +55,7 @@ func (s *apiHandler) QueryTasks(ctx context.Context, req *pb.QueryTasksReq) (*pb
 }
 
 func (s *apiHandler) KillTask(ctx context.Context, req *pb.KillTaskReq) (*pb.KillTaskReply, error) {
-	if err := s.cluster.Destroy(ctx, core.TaskID(req.Id)); err != nil {
+	if err := s.cluster.Destroy(ctx, task.ID(req.Id)); err != nil {
 		return nil, err
 	}
 	return &pb.KillTaskReply{}, nil

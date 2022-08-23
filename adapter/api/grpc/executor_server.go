@@ -3,11 +3,12 @@ package grpc
 import (
 	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
+	"cowait/core/executor"
 	"cowait/core/msg"
-	"fmt"
 
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"go.uber.org/fx"
@@ -16,10 +17,10 @@ import (
 
 type executorServer struct {
 	pb.UnimplementedExecutorServer
-	handler core.ExecutorHandler
+	handler executor.Handler
 }
 
-func RegisterExecutorServer(lc fx.Lifecycle, srv *grpc.Server, handler core.ExecutorHandler) {
+func RegisterExecutorServer(lc fx.Lifecycle, srv *grpc.Server, handler executor.Handler) {
 	pb.RegisterExecutorServer(srv, &executorServer{
 		handler: handler,
 	})

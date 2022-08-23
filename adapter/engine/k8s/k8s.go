@@ -1,7 +1,9 @@
 package k8s
 
 import (
-	"cowait/core"
+	"cowait/core/cluster"
+	"cowait/core/task"
+
 	"flag"
 	"fmt"
 	"path/filepath"
@@ -24,7 +26,7 @@ type kube struct {
 	namespace string
 }
 
-func New() core.Driver {
+func New() cluster.Driver {
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -51,7 +53,7 @@ func New() core.Driver {
 	}
 }
 
-func NewInCluster() (core.Driver, error) {
+func NewInCluster() (cluster.Driver, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -73,8 +75,8 @@ func (k *kube) Name() string {
 	return k.name
 }
 
-func (k *kube) Spawn(ctx context.Context, id core.TaskID, def *core.TaskSpec) error {
-	envdef, err := def.ToEnv()
+func (k *kube) Spawn(ctx context.Context, id task.ID, spec *task.Spec) error {
+	envdef, err := spec.ToEnv()
 	if err != nil {
 		return err
 	}
@@ -88,15 +90,15 @@ func (k *kube) Spawn(ctx context.Context, id core.TaskID, def *core.TaskSpec) er
 		Containers: []apiv1.Container{
 			{
 				Name:            "task",
-				Image:           def.Image,
+				Image:           spec.Image,
 				ImagePullPolicy: apiv1.PullAlways,
 				Env: []apiv1.EnvVar{
 					{
-						Name:  core.EnvTaskdef,
+						Name:  task.EnvTaskdef,
 						Value: envdef,
 					},
 					{
-						Name:  core.EnvTaskID,
+						Name:  task.EnvTaskID,
 						Value: string(id),
 					},
 				},
@@ -111,11 +113,11 @@ func (k *kube) Spawn(ctx context.Context, id core.TaskID, def *core.TaskSpec) er
 	return err
 }
 
-func (k *kube) Kill(ctx context.Context, id core.TaskID) error {
+func (k *kube) Kill(ctx context.Context, id task.ID) error {
 	return k.CoreV1().Pods(k.namespace).Delete(ctx, string(id), metav1.DeleteOptions{})
 }
 
-func (k *kube) Poke(ctx context.Context, id core.TaskID) error {
+func (k *kube) Poke(ctx context.Context, id task.ID) error {
 	pod, err := k.CoreV1().Pods(k.namespace).Get(ctx, string(id), metav1.GetOptions{})
 	if err != nil {
 		return err

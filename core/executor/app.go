@@ -1,8 +1,9 @@
 package executor
 
 import (
+	"cowait/core/task"
+
 	"context"
-	"cowait/core"
 	"fmt"
 	"os"
 
@@ -18,12 +19,12 @@ func App(opts ...fx.Option) *fx.App {
 	return fx.New(modules...)
 }
 
-func run(lc fx.Lifecycle, exec Executor) {
+func run(lc fx.Lifecycle, exec T) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			// read task data from environment
-			id := core.TaskID(os.Getenv(core.EnvTaskID))
-			def, err := core.TaskDefFromEnv(os.Getenv(core.EnvTaskdef))
+			id := task.ID(os.Getenv(task.EnvTaskID))
+			def, err := task.SpecFromEnv(os.Getenv(task.EnvTaskdef))
 			if err != nil {
 				fmt.Println("failed to parse task spec:", err)
 				os.Exit(1)

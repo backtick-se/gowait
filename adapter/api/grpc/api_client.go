@@ -4,6 +4,7 @@ import (
 	"context"
 	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
+	"cowait/core/task"
 
 	"google.golang.org/grpc"
 )
@@ -32,7 +33,7 @@ func (c *apiclient) dial(hostname string, opts ...grpc.DialOption) error {
 	return nil
 }
 
-func (c *apiclient) CreateTask(ctx context.Context, def *core.TaskSpec) (*core.TaskState, error) {
+func (c *apiclient) CreateTask(ctx context.Context, def *task.Spec) (*task.State, error) {
 	if c.conn == nil {
 		return nil, core.ErrNotConnected
 	}
@@ -42,10 +43,10 @@ func (c *apiclient) CreateTask(ctx context.Context, def *core.TaskSpec) (*core.T
 	if err != nil {
 		return nil, err
 	}
-	return &core.TaskState{
-		ID:        core.TaskID(reply.Task.TaskId),
-		Parent:    core.TaskID(reply.Task.Parent),
-		Status:    core.TaskStatus(reply.Task.Status),
+	return &task.State{
+		ID:        task.ID(reply.Task.TaskId),
+		Parent:    task.ID(reply.Task.Parent),
+		Status:    task.Status(reply.Task.Status),
 		Spec:      pb.UnpackTaskSpec(reply.Task.Spec),
 		Scheduled: reply.Task.Scheduled.AsTime(),
 		Started:   reply.Task.Started.AsTime(),

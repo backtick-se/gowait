@@ -1,4 +1,4 @@
-package core
+package task
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ const EnvTaskID = "COWAIT_ID"
 const EnvParentID = "COWAIT_PARENT"
 const EnvTaskdef = "COWAIT_TASK"
 
-type TaskSpec struct {
+type Spec struct {
 	Name    string
 	Image   string
 	Command []string
@@ -18,7 +18,7 @@ type TaskSpec struct {
 	Time    time.Time
 }
 
-func (t *TaskSpec) ToEnv() (string, error) {
+func (t *Spec) ToEnv() (string, error) {
 	if len(t.Input) == 0 {
 		t.Input = json.RawMessage("{}")
 	}
@@ -29,8 +29,8 @@ func (t *TaskSpec) ToEnv() (string, error) {
 	return string(encoded), nil
 }
 
-func TaskDefFromEnv(env string) (*TaskSpec, error) {
-	def := new(TaskSpec)
+func SpecFromEnv(env string) (*Spec, error) {
+	def := new(Spec)
 	err := json.Unmarshal([]byte(env), def)
 	if err != nil {
 		return nil, err

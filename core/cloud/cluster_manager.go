@@ -1,7 +1,7 @@
 package cloud
 
 import (
-	"cowait/core"
+	"cowait/core/cluster"
 
 	"context"
 	"fmt"
@@ -10,19 +10,19 @@ import (
 )
 
 type clustermgr struct {
-	server   core.UplinkServer
-	clusters map[string]*cluster
+	server   cluster.UplinkServer
+	clusters map[string]*kluster
 }
 
-type cluster struct {
-	*core.ClusterInfo
-	core.ClusterClient
+type kluster struct {
+	*cluster.Info
+	cluster.Client
 }
 
-func NewClusterManager(lc fx.Lifecycle, server core.UplinkServer) *clustermgr {
+func NewClusterManager(lc fx.Lifecycle, server cluster.UplinkServer) *clustermgr {
 	mgr := &clustermgr{
 		server:   server,
-		clusters: make(map[string]*cluster),
+		clusters: make(map[string]*kluster),
 	}
 
 	lc.Append(fx.Hook{
@@ -43,7 +43,7 @@ func NewClusterManager(lc fx.Lifecycle, server core.UplinkServer) *clustermgr {
 	return mgr
 }
 
-func (s *clustermgr) handle(client core.ClusterClient) error {
+func (s *clustermgr) handle(client cluster.Client) error {
 	// query cluster information
 	info, err := client.Info(context.Background())
 	if err != nil {
@@ -53,9 +53,9 @@ func (s *clustermgr) handle(client core.ClusterClient) error {
 	// todo: match against database & existing connections
 	// todo: check api key
 
-	cluster := &cluster{
-		ClusterInfo:   info,
-		ClusterClient: client,
+	cluster := &kluster{
+		Info:   info,
+		Client: client,
 	}
 
 	s.add(cluster)
@@ -77,12 +77,12 @@ func (s *clustermgr) handle(client core.ClusterClient) error {
 	return nil
 }
 
-func (s *clustermgr) add(cluster *cluster) {
+func (s *clustermgr) add(cluster *kluster) {
 	fmt.Println("added cluster:", cluster.Name)
 	s.clusters[cluster.ID] = cluster
 }
 
-func (s *clustermgr) remove(cluster *cluster) {
+func (s *clustermgr) remove(cluster *kluster) {
 	fmt.Println("lost cluster:", cluster.Name)
 	delete(s.clusters, cluster.ID)
 }

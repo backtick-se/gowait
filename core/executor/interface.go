@@ -1,12 +1,13 @@
-package core
+package executor
 
 import (
 	"context"
 	"cowait/core/msg"
+	"cowait/core/task"
 )
 
-type ExecutorClient interface {
-	Connect(hostname string, id TaskID) error
+type Client interface {
+	Connect(hostname string, id task.ID) error
 
 	Init(ctx context.Context) error
 	Failure(ctx context.Context, taskErr error) error
@@ -15,7 +16,7 @@ type ExecutorClient interface {
 }
 
 // Handles commands from executors
-type ExecutorHandler interface {
+type Handler interface {
 	Init(*msg.TaskInit) error
 	Complete(*msg.TaskComplete) error
 	Fail(*msg.TaskFailure) error

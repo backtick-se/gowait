@@ -2,10 +2,10 @@ package grpc
 
 import (
 	"cowait/adapter/api/grpc/pb"
-	"cowait/core"
-	"fmt"
+	"cowait/core/cluster"
 
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,10 +13,10 @@ import (
 
 type clusterHandler struct {
 	pb.UnimplementedClusterServer
-	cluster core.Cluster
+	cluster cluster.T
 }
 
-func NewClusterHandler(cluster core.Cluster) pb.ClusterServer {
+func NewClusterHandler(cluster cluster.T) pb.ClusterServer {
 	return &clusterHandler{
 		cluster: cluster,
 	}

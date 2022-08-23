@@ -1,8 +1,6 @@
 package executor
 
 import (
-	"cowait/core"
-
 	"bytes"
 	"fmt"
 	"io"
@@ -124,7 +122,7 @@ func LinePrinter(name string, pump LineReader) {
 	}
 }
 
-func LineLogger(name string, pump LineReader, log core.Logger) {
+func LineLogger(name string, pump LineReader, log Logger) {
 	for {
 		line, err := pump.Read()
 		if err != nil {

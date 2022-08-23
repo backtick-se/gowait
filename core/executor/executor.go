@@ -1,30 +1,30 @@
 package executor
 
 import (
-	"cowait/core"
+	"cowait/core/task"
 
 	"context"
 	"fmt"
 	"time"
 )
 
-type Executor interface {
-	Run(context.Context, core.TaskID, *core.TaskSpec) error
+type T interface {
+	Run(context.Context, task.ID, *task.Spec) error
 }
 
 type executor struct {
 	server Server
-	client core.ExecutorClient
+	client Client
 }
 
-func New(client core.ExecutorClient, server Server) (Executor, error) {
+func New(client Client, server Server) (T, error) {
 	return &executor{
 		server: server,
 		client: client,
 	}, nil
 }
 
-func (e *executor) Run(ctx context.Context, id core.TaskID, task *core.TaskSpec) error {
+func (e *executor) Run(ctx context.Context, id task.ID, task *task.Spec) error {
 	// apply timeout if set
 	if task.Timeout > 0 {
 		deadline, cancel := context.WithTimeout(ctx, time.Duration(task.Timeout)*time.Second)

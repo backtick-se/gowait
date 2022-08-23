@@ -1,4 +1,4 @@
-package core
+package cluster
 
 type UplinkClient interface {
 	Connect(endpoint string) error
@@ -6,6 +6,6 @@ type UplinkClient interface {
 }
 
 type UplinkServer interface {
-	Serve(func(ClusterClient) error) error
+	Serve(func(Client) error) error
 	Close() error
 }

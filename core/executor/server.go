@@ -1,14 +1,13 @@
 package executor
 
 import (
-	"cowait/core"
 	"cowait/core/msg"
 
 	"go.uber.org/fx"
 )
 
 type Server interface {
-	core.ExecutorHandler
+	Handler
 
 	Close() error
 	OnInit() <-chan *msg.TaskInit
@@ -35,7 +34,7 @@ func NewServer(lc fx.Lifecycle) Server {
 	return server
 }
 
-func registerExecutorHandler(server Server) core.ExecutorHandler {
+func registerExecutorHandler(server Server) Handler {
 	return server
 }
 

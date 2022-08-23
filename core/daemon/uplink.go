@@ -1,7 +1,7 @@
 package daemon
 
 import (
-	"cowait/core"
+	"cowait/core/cluster"
 
 	"context"
 
@@ -9,10 +9,10 @@ import (
 )
 
 type uplinkmgr struct {
-	uplink core.UplinkClient
+	uplink cluster.UplinkClient
 }
 
-func NewUplinkManager(lc fx.Lifecycle, uplink core.UplinkClient) *uplinkmgr {
+func NewUplinkManager(lc fx.Lifecycle, uplink cluster.UplinkClient) *uplinkmgr {
 	mgr := &uplinkmgr{
 		uplink: uplink,
 	}

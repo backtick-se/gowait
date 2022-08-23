@@ -3,6 +3,8 @@ package grpc
 import (
 	"cowait/adapter/api/grpc/pb"
 	"cowait/core"
+	"cowait/core/executor"
+	"cowait/core/task"
 
 	"context"
 	"time"
@@ -12,19 +14,19 @@ import (
 )
 
 type executorClient struct {
-	taskID  core.TaskID
+	taskID  task.ID
 	conn    *grpc.ClientConn
 	tasks   pb.ExecutorClient
 	version string
 }
 
-func NewExecutorClient() core.ExecutorClient {
+func NewExecutorClient() executor.Client {
 	return &executorClient{
 		version: "gowait/1.0",
 	}
 }
 
-func (c *executorClient) Connect(hostname string, id core.TaskID) error {
+func (c *executorClient) Connect(hostname string, id task.ID) error {
 	var err error
 	c.conn, err = grpc.Dial(hostname, grpc.WithInsecure())
 	if err != nil {
@@ -76,7 +78,7 @@ func (c *executorClient) Complete(ctx context.Context, result string) error {
 	return err
 }
 
-func (c *executorClient) Log(ctx context.Context) (core.Logger, error) {
+func (c *executorClient) Log(ctx context.Context) (executor.Logger, error) {
 	if c.conn == nil {
 		return nil, core.ErrNotConnected
 	}

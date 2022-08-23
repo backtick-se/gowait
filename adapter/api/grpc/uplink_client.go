@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"cowait/adapter/api/grpc/pb"
-	"cowait/core"
+	"cowait/core/cluster"
 
 	"fmt"
 	"net"
@@ -12,11 +12,11 @@ import (
 )
 
 type uplink struct {
-	cluster core.Cluster
+	cluster cluster.T
 	srv     *grpc.Server
 }
 
-func NewUplinkClient(cluster core.Cluster) core.UplinkClient {
+func NewUplinkClient(cluster cluster.T) cluster.UplinkClient {
 	return &uplink{
 		cluster: cluster,
 	}
