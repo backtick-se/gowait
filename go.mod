@@ -1,4 +1,4 @@
-module cowait
+module github.com/backtick-se/gowait
 
 go 1.18
 

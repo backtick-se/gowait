@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"cowait/core/executor"
+	"github.com/backtick-se/gowait/core/executor"
 	"io"
 )
 

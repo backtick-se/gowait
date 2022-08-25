@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/core/task"
 
 	"context"
 	"fmt"

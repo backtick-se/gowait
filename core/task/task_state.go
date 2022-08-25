@@ -1,8 +1,8 @@
 package task
 
 import (
-	"cowait/util"
 	"encoding/json"
+	"github.com/backtick-se/gowait/util"
 	"time"
 )
 

@@ -1,9 +1,9 @@
 package pb
 
 import (
-	"cowait/core"
-	"cowait/core/msg"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/msg"
+	"github.com/backtick-se/gowait/core/task"
 
 	"encoding/json"
 

@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"cowait/core/msg"
+	"github.com/backtick-se/gowait/core/msg"
 
 	"go.uber.org/fx"
 )

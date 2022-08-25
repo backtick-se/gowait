@@ -1,8 +1,8 @@
 package main
 
 import (
-	"cowait/adapter/api/grpc"
-	"cowait/core/cloud"
+	"github.com/backtick-se/gowait/adapter/api/grpc"
+	"github.com/backtick-se/gowait/core/cloud"
 )
 
 func main() {

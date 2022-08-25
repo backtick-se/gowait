@@ -1,10 +1,10 @@
 package grpc
 
 import (
-	"cowait/adapter/api/grpc/pb"
-	"cowait/core"
-	"cowait/core/executor"
-	"cowait/core/msg"
+	"github.com/backtick-se/gowait/adapter/api/grpc/pb"
+	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/executor"
+	"github.com/backtick-se/gowait/core/msg"
 
 	"context"
 	"encoding/json"

@@ -2,8 +2,8 @@ package executor
 
 import (
 	"context"
-	"cowait/core/msg"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/core/msg"
+	"github.com/backtick-se/gowait/core/task"
 )
 
 type Client interface {

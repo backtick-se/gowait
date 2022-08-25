@@ -1,8 +1,8 @@
 package k8s
 
 import (
-	"cowait/core/cluster"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/core/cluster"
+	"github.com/backtick-se/gowait/core/task"
 
 	"flag"
 	"fmt"

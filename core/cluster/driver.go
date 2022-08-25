@@ -2,7 +2,7 @@ package cluster
 
 import (
 	"context"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/core/task"
 )
 
 type Driver interface {

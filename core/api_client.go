@@ -2,7 +2,7 @@ package core
 
 import (
 	"context"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/core/task"
 )
 
 type APIClient interface {

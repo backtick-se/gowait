@@ -2,9 +2,9 @@ package grpc
 
 import (
 	"context"
-	"cowait/adapter/api/grpc/pb"
-	"cowait/core"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/adapter/api/grpc/pb"
+	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/task"
 
 	"google.golang.org/grpc"
 )

@@ -1,8 +1,8 @@
 package cluster
 
 import (
-	"cowait/core/task"
-	"cowait/util/events"
+	"github.com/backtick-se/gowait/core/task"
+	"github.com/backtick-se/gowait/util/events"
 
 	"context"
 	"net"

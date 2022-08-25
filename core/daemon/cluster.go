@@ -2,13 +2,13 @@ package daemon
 
 import (
 	"context"
-	"cowait/core"
-	"cowait/core/cluster"
-	"cowait/core/executor"
-	"cowait/core/msg"
-	"cowait/core/task"
-	"cowait/util"
-	"cowait/util/events"
+	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/cluster"
+	"github.com/backtick-se/gowait/core/executor"
+	"github.com/backtick-se/gowait/core/msg"
+	"github.com/backtick-se/gowait/core/task"
+	"github.com/backtick-se/gowait/util"
+	"github.com/backtick-se/gowait/util/events"
 
 	"fmt"
 	"time"

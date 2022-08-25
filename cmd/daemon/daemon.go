@@ -1,11 +1,11 @@
 package main
 
 import (
-	"cowait/adapter/api/grpc"
-	"cowait/adapter/engine/k8s"
-	"cowait/core/cluster"
-	"cowait/core/daemon"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/adapter/api/grpc"
+	"github.com/backtick-se/gowait/adapter/engine/k8s"
+	"github.com/backtick-se/gowait/core/cluster"
+	"github.com/backtick-se/gowait/core/daemon"
+	"github.com/backtick-se/gowait/core/task"
 
 	"context"
 	"time"
@@ -33,7 +33,7 @@ func createTask(lc fx.Lifecycle, cluster cluster.T) {
 			time.Sleep(3 * time.Second)
 			_, err := cluster.Create(context.Background(), &task.Spec{
 				Name:    "gowait-task",
-				Image:   "cowait/gowait-python",
+				Image:   "github.com/backtick-se/gowait/gowait-python",
 				Command: []string{"python", "-u", "hello.py"},
 			})
 			return err

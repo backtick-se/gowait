@@ -1,6 +1,6 @@
 package grpc
 
-import "cowait/adapter/api/grpc/pb"
+import "github.com/backtick-se/gowait/adapter/api/grpc/pb"
 
 type execLog struct {
 	client *executorClient

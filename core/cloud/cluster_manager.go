@@ -1,7 +1,7 @@
 package cloud
 
 import (
-	"cowait/core/cluster"
+	"github.com/backtick-se/gowait/core/cluster"
 
 	"context"
 	"fmt"

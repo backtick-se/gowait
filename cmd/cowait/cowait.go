@@ -1,9 +1,9 @@
 package main
 
 import (
-	"cowait/adapter/api/grpc"
-	"cowait/core"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/adapter/api/grpc"
+	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/task"
 
 	"context"
 	"fmt"
@@ -33,7 +33,7 @@ func run(ctrl fx.Shutdowner, cli core.APIClient) error {
 	ctx := context.Background()
 	id, err := cli.CreateTask(ctx, &task.Spec{
 		Name:    "client-task",
-		Image:   "cowait/gowait-python",
+		Image:   "github.com/backtick-se/gowait/gowait-python",
 		Command: []string{"python", "-u", "hello.py"},
 	})
 	if err != nil {

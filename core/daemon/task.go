@@ -1,9 +1,9 @@
 package daemon
 
 import (
-	"cowait/core/cluster"
-	"cowait/core/msg"
-	"cowait/core/task"
+	"github.com/backtick-se/gowait/core/cluster"
+	"github.com/backtick-se/gowait/core/msg"
+	"github.com/backtick-se/gowait/core/task"
 
 	"context"
 	"fmt"

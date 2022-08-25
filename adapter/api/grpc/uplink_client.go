@@ -1,8 +1,8 @@
 package grpc
 
 import (
-	"cowait/adapter/api/grpc/pb"
-	"cowait/core/cluster"
+	"github.com/backtick-se/gowait/adapter/api/grpc/pb"
+	"github.com/backtick-se/gowait/core/cluster"
 
 	"fmt"
 	"net"
