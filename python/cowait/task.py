@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import functools
 from datetime import datetime
 from .client import Client
 
@@ -15,11 +16,16 @@ def _excepthook(type, value, trace):
 
 
 def _init():
-    global _client, _taskdef
+    global _client, _taskdef, _tasks
     _taskdef = taskdef_from_env()
     _client = Client(os.getenv('COWAIT_ID'))
     _client.init()
     sys.excepthook = _excepthook
+    tname = _taskdef['Name']
+    if tname in _tasks:
+        _tasks[tname]()
+    else:
+        print('unknown task', tname)
 
 
 def taskdef_from_env():
@@ -52,4 +58,26 @@ def time() -> datetime:
     return _taskdef['Time']
 
 
-_init()
+# _init()
+
+
+_tasks = {}
+
+def task(rpc):
+    def deco(func):
+        global _tasks
+        name = f'{func.__module__}.{func.__name__}'
+        _tasks[name] = func
+
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            global _taskdef
+            if _taskdef['Name'] == name or not rpc:
+                # we could replace with RPC here if we like
+                return func(*args, **kwargs)
+            else:
+                print('subprocess:', name)
+
+        return wrapped
+
+    return deco

@@ -110,9 +110,7 @@ message AwaitTaskReply {
 
 service Cluster {
     rpc Info(ClusterInfoReq) returns (ClusterInfoReply) {}
-    rpc Spawn(ClusterSpawnReq) returns (ClusterSpawnReply) {}
-    rpc Kill(ClusterKillReq) returns (ClusterKillReply) {}
-    rpc Poke(ClusterPokeReq) returns (ClusterPokeReply) {}
+    rpc CreateTask(CreateTaskReq) returns (CreateTaskReply) {}
     
     rpc Subscribe(ClusterSubscribeReq) returns (stream ClusterEvent) {}
 }

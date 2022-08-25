@@ -349,20 +349,10 @@ class ClusterStub(object):
                 request_serializer=cowait__pb2.ClusterInfoReq.SerializeToString,
                 response_deserializer=cowait__pb2.ClusterInfoReply.FromString,
                 )
-        self.Spawn = channel.unary_unary(
-                '/Cluster/Spawn',
-                request_serializer=cowait__pb2.ClusterSpawnReq.SerializeToString,
-                response_deserializer=cowait__pb2.ClusterSpawnReply.FromString,
-                )
-        self.Kill = channel.unary_unary(
-                '/Cluster/Kill',
-                request_serializer=cowait__pb2.ClusterKillReq.SerializeToString,
-                response_deserializer=cowait__pb2.ClusterKillReply.FromString,
-                )
-        self.Poke = channel.unary_unary(
-                '/Cluster/Poke',
-                request_serializer=cowait__pb2.ClusterPokeReq.SerializeToString,
-                response_deserializer=cowait__pb2.ClusterPokeReply.FromString,
+        self.CreateTask = channel.unary_unary(
+                '/Cluster/CreateTask',
+                request_serializer=cowait__pb2.CreateTaskReq.SerializeToString,
+                response_deserializer=cowait__pb2.CreateTaskReply.FromString,
                 )
         self.Subscribe = channel.unary_stream(
                 '/Cluster/Subscribe',
@@ -384,19 +374,7 @@ class ClusterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Spawn(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def Kill(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def Poke(self, request, context):
+    def CreateTask(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -416,20 +394,10 @@ def add_ClusterServicer_to_server(servicer, server):
                     request_deserializer=cowait__pb2.ClusterInfoReq.FromString,
                     response_serializer=cowait__pb2.ClusterInfoReply.SerializeToString,
             ),
-            'Spawn': grpc.unary_unary_rpc_method_handler(
-                    servicer.Spawn,
-                    request_deserializer=cowait__pb2.ClusterSpawnReq.FromString,
-                    response_serializer=cowait__pb2.ClusterSpawnReply.SerializeToString,
-            ),
-            'Kill': grpc.unary_unary_rpc_method_handler(
-                    servicer.Kill,
-                    request_deserializer=cowait__pb2.ClusterKillReq.FromString,
-                    response_serializer=cowait__pb2.ClusterKillReply.SerializeToString,
-            ),
-            'Poke': grpc.unary_unary_rpc_method_handler(
-                    servicer.Poke,
-                    request_deserializer=cowait__pb2.ClusterPokeReq.FromString,
-                    response_serializer=cowait__pb2.ClusterPokeReply.SerializeToString,
+            'CreateTask': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateTask,
+                    request_deserializer=cowait__pb2.CreateTaskReq.FromString,
+                    response_serializer=cowait__pb2.CreateTaskReply.SerializeToString,
             ),
             'Subscribe': grpc.unary_stream_rpc_method_handler(
                     servicer.Subscribe,
@@ -468,7 +436,7 @@ class Cluster(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def Spawn(request,
+    def CreateTask(request,
             target,
             options=(),
             channel_credentials=None,
@@ -478,43 +446,9 @@ class Cluster(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Cluster/Spawn',
-            cowait__pb2.ClusterSpawnReq.SerializeToString,
-            cowait__pb2.ClusterSpawnReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def Kill(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Cluster/Kill',
-            cowait__pb2.ClusterKillReq.SerializeToString,
-            cowait__pb2.ClusterKillReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def Poke(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Cluster/Poke',
-            cowait__pb2.ClusterPokeReq.SerializeToString,
-            cowait__pb2.ClusterPokeReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Cluster/CreateTask',
+            cowait__pb2.CreateTaskReq.SerializeToString,
+            cowait__pb2.CreateTaskReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

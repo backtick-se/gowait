@@ -53,11 +53,11 @@ func (i *instance) ID() task.ID       { return i.state.ID }
 func (i *instance) Spec() *task.Spec  { return i.state.Spec }
 func (i *instance) State() task.State { return i.state }
 
-func (i *instance) Logs(file string) []string {
+func (i *instance) Logs(file string) ([]string, error) {
 	if logs, ok := i.logs[file]; ok {
-		return logs
+		return logs, nil
 	}
-	return nil
+	return nil, fmt.Errorf("no such log: %s", file)
 }
 
 func (i *instance) proc() {

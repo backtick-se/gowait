@@ -9,20 +9,21 @@ import (
 	"go.uber.org/fx"
 )
 
-type clustermgr struct {
-	server   cluster.UplinkServer
-	clusters map[string]*kluster
+// Some kind of service to query a defined cluster based on an ID and a secret key
+type ClusterFinder interface {
+	Find(id, key string) (*cluster.Info, error)
 }
 
-type kluster struct {
-	*cluster.Info
-	cluster.Client
+type clustermgr struct {
+	server   cluster.UplinkServer
+	clusters map[string]cluster.T
+	finder   ClusterFinder
 }
 
 func NewClusterManager(lc fx.Lifecycle, server cluster.UplinkServer) *clustermgr {
 	mgr := &clustermgr{
 		server:   server,
-		clusters: make(map[string]*kluster),
+		clusters: make(map[string]cluster.T),
 	}
 
 	lc.Append(fx.Hook{
@@ -52,37 +53,28 @@ func (s *clustermgr) handle(client cluster.Client) error {
 
 	// todo: match against database & existing connections
 	// todo: check api key
+	actual, err := s.finder.Find(info.ID, info.Key)
+	if err != nil {
+		return err
+	}
 
 	cluster := &kluster{
-		Info:   info,
-		Client: client,
+		info:   actual,
+		client: client,
 	}
 
 	s.add(cluster)
 	defer s.remove(cluster)
 
-	events, err := cluster.Subscribe(context.Background())
-	if err != nil {
-		return fmt.Errorf("cluster.Subscribe() failed: %w", err)
-	}
-
-	for {
-		event, ok := <-events.Next()
-		if !ok {
-			break
-		}
-		fmt.Println(cluster.Name, "event:", event)
-	}
-
-	return nil
+	return cluster.proc()
 }
 
 func (s *clustermgr) add(cluster *kluster) {
-	fmt.Println("added cluster:", cluster.Name)
-	s.clusters[cluster.ID] = cluster
+	fmt.Println("added cluster:", cluster.info.Name)
+	s.clusters[cluster.info.ID] = cluster
 }
 
 func (s *clustermgr) remove(cluster *kluster) {
-	fmt.Println("lost cluster:", cluster.Name)
-	delete(s.clusters, cluster.ID)
+	fmt.Println("lost cluster:", cluster.info.Name)
+	delete(s.clusters, cluster.info.ID)
 }
