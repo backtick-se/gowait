@@ -2,7 +2,7 @@
 name = "grpcio"
 version = "1.48.0"
 description = "HTTP/2-based RPC framework"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -36,14 +36,14 @@ python-versions = ">=3.7"
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "342f0307271c6b8984d6f7a3e1d93e048d64f27c4a0da74af6f38d597e3c4398"
+content-hash = "5a70120ec9dd74b19cfe7fc989bc0b6bee9e3e2daf331b41c7c12a6077cf1ccf"
 
 [metadata.files]
 grpcio = []

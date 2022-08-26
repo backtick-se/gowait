@@ -6,6 +6,7 @@ authors = ["Johan Henriksson <johan@backtick.se>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+grpcio = "^1.48.0"
 
 [tool.poetry.dev-dependencies]
 grpcio-tools = "^1.48.0"

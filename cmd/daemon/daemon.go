@@ -33,8 +33,8 @@ func createTask(lc fx.Lifecycle, cluster cluster.T) {
 			time.Sleep(3 * time.Second)
 			_, err := cluster.Create(context.Background(), &task.Spec{
 				Name:    "gowait-task",
-				Image:   "github.com/backtick-se/gowait/gowait-python",
-				Command: []string{"python", "-u", "hello.py"},
+				Image:   "cowait/gowait-python",
+				Command: []string{"python", "-um", "cowait", "exec", "hello.my_task"},
 			})
 			return err
 		},

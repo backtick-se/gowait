@@ -1,18 +1,26 @@
 import cowait
 
 
-@cowait.task(rpc=False)
-def my_task():
+@cowait.task()
+def my_task(context, **input):
+    """
+    A very undescriptive description of what the task does.
+    """
     print("hello world")
+    print("input:", input)
 
     print("evil\nthis line does not end", end='')
     print(" ... until here")
 
-    args = cowait.inputs()
-    # result = cowait.invoke('subtask', value=5)
+    result = cowait.invoke('hello.square', value=5)
+    # raise RuntimeError('something went to shit')
 
-    raise RuntimeError('something went to shit')
-
-    cowait.exit({
+    return {
         'hello': 'world',
-    })
+        'squared': result,
+    }
+
+
+@cowait.task()
+def square(value: int) -> int:
+    return value**2
