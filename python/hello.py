@@ -1,15 +1,26 @@
 import cowait
 
-print("hello world")
 
-print("evil\nthis line does not end", end='')
-print(" ... until here")
+@cowait.task()
+def my_task(context, **input):
+    """
+    A very undescriptive description of what the task does.
+    """
+    print("hello world")
+    print("input:", input)
 
-args = cowait.inputs()
-# result = cowait.invoke('subtask', value=5)
+    print("evil\nthis line does not end", end='')
+    print(" ... until here")
 
-raise RuntimeError('something went to shit')
+    result = cowait.invoke('hello.square', value=5)
+    # raise RuntimeError('something went to shit')
 
-cowait.exit({
-    'hello': 'world',
-})
+    return {
+        'hello': 'world',
+        'squared': result,
+    }
+
+
+@cowait.task()
+def square(value: int) -> int:
+    return value**2

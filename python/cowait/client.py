@@ -21,19 +21,19 @@ class Client:
             time=Timestamp(),
         )
 
-    def init(self):
+    def init(self) -> None:
         self._client.TaskInit(TaskInitReq(
             header=self._header(),
             version=VERSION,
         ))
 
-    def complete(self, result: any):
+    def complete(self, result: any) -> None:
         self._client.TaskComplete(TaskCompleteReq(
             header=self._header(),
             result=json.dumps(result)
         ))
 
-    def failure(self, error: str):
+    def failure(self, error: str) -> None:
         self._client.TaskFailure(TaskFailureReq(
             header=self._header(),
             error=error,

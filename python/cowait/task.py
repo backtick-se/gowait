@@ -1,55 +1,61 @@
 import os
-import sys
 import json
+import inspect
+import importlib
+from typing import Callable, Dict, List
 from datetime import datetime
-from .client import Client
-
-_client: Client = None
-_taskdef: dict = None
 
 
-def _excepthook(type, value, trace):
-    global _client
-    sys.__excepthook__(type, value, trace)
-    _client.failure(f'{type.__name__}: {value}')
+class Task:
+    def __init__(self, func: Callable):
+        if not inspect.isfunction(func):
+            raise ValueError('Task must be a function')
+
+        self.func = func
+        self.name = f'{func.__module__}.{func.__name__}'
+        self.desc = func.__doc__.strip() if func.__doc__ else ''
+
+        sig = inspect.signature(func)
+        self.input = sig.parameters
+        self.output = sig.return_annotation
+
+    def __call__(self, *args, **kwargs) -> any:
+        return self.func(*args, **kwargs)
+
+    @property
+    def accepts_context(self) -> bool:
+        return 'context' in self.input
+    
+
+_tasks: Dict[str, Task] = {}
 
 
-def _init():
-    global _client, _taskdef
-    _taskdef = taskdef_from_env()
-    _client = Client(os.getenv('COWAIT_ID'))
-    _client.init()
-    sys.excepthook = _excepthook
+def get_task(name: str) -> Task:
+    if name not in _tasks:
+        raise ValueError(f'No such task: {name}')
+    return _tasks[name]
 
 
-def taskdef_from_env():
-    global _taskdef
-    if _taskdef == None:
-        taskjson = os.getenv('COWAIT_TASK')
-        _taskdef = json.loads(taskjson)
-        _taskdef['Time'] = datetime.strptime(_taskdef['Time'].split(".")[0] + "Z", "%Y-%m-%dT%H:%M:%SZ")
-    return _taskdef
+def get_tasks() -> List[Task]:
+    return _tasks.values()
 
 
-def inputs() -> dict:
-    td = taskdef_from_env()
-    return td['Input']
+def find_tasks(path: str, recursive: bool = False):
+    for f in os.listdir(path):
+        if os.path.isdir(f):
+            if recursive:
+                find_tasks(f, recursive=True)
+        elif f.endswith('.py'):
+            try:
+                importlib.import_module(f[:f.rindex('.py')])
+            except Exception as e:
+                print(f'failed to import {f}: {str(e)}')
 
 
-def error(error: str):
-    global _client
-    _client.failure(error)
-
-
-def exit(result: dict):
-    global _client
-    _client.complete(result)
-
-
-def time() -> datetime:
-    """ logical execution time """
-    global _taskdef
-    return _taskdef['Time']
-
-
-_init()
+def task():
+    def deco(func):
+        global _tasks
+        task = Task(func)
+        _tasks[task.name] = task
+        return func
+    return deco

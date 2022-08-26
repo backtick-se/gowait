@@ -66,14 +66,15 @@ func (e *executor) Run(ctx context.Context, id task.ID, task *task.Spec) error {
 		break
 
 	case err := <-proc.Done():
-		logger.Log("system", fmt.Sprintf("process exit without sdk init: %s\n", err.Error()))
 		logger.Close()
 		if err == nil {
 			// if the task exits with code 0 without sending init, we assume its running without SDK
 			// so we consider it a successful completion with an empty result
+			logger.Log("system", "process exit ok without sdk init")
 			e.client.Complete(ctx, "{}")
 			return nil
 		} else {
+			logger.Log("system", fmt.Sprintf("process exit without sdk init: %s\n", err.Error()))
 			e.client.Failure(ctx, err)
 			return err
 		}

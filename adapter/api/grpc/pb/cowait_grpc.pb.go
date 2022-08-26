@@ -474,9 +474,7 @@ var Cowait_ServiceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ClusterClient interface {
 	Info(ctx context.Context, in *ClusterInfoReq, opts ...grpc.CallOption) (*ClusterInfoReply, error)
-	Spawn(ctx context.Context, in *ClusterSpawnReq, opts ...grpc.CallOption) (*ClusterSpawnReply, error)
-	Kill(ctx context.Context, in *ClusterKillReq, opts ...grpc.CallOption) (*ClusterKillReply, error)
-	Poke(ctx context.Context, in *ClusterPokeReq, opts ...grpc.CallOption) (*ClusterPokeReply, error)
+	CreateTask(ctx context.Context, in *CreateTaskReq, opts ...grpc.CallOption) (*CreateTaskReply, error)
 	Subscribe(ctx context.Context, in *ClusterSubscribeReq, opts ...grpc.CallOption) (Cluster_SubscribeClient, error)
 }
 
@@ -497,27 +495,9 @@ func (c *clusterClient) Info(ctx context.Context, in *ClusterInfoReq, opts ...gr
 	return out, nil
 }
 
-func (c *clusterClient) Spawn(ctx context.Context, in *ClusterSpawnReq, opts ...grpc.CallOption) (*ClusterSpawnReply, error) {
-	out := new(ClusterSpawnReply)
-	err := c.cc.Invoke(ctx, "/Cluster/Spawn", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterClient) Kill(ctx context.Context, in *ClusterKillReq, opts ...grpc.CallOption) (*ClusterKillReply, error) {
-	out := new(ClusterKillReply)
-	err := c.cc.Invoke(ctx, "/Cluster/Kill", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterClient) Poke(ctx context.Context, in *ClusterPokeReq, opts ...grpc.CallOption) (*ClusterPokeReply, error) {
-	out := new(ClusterPokeReply)
-	err := c.cc.Invoke(ctx, "/Cluster/Poke", in, out, opts...)
+func (c *clusterClient) CreateTask(ctx context.Context, in *CreateTaskReq, opts ...grpc.CallOption) (*CreateTaskReply, error) {
+	out := new(CreateTaskReply)
+	err := c.cc.Invoke(ctx, "/Cluster/CreateTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -561,9 +541,7 @@ func (x *clusterSubscribeClient) Recv() (*ClusterEvent, error) {
 // for forward compatibility
 type ClusterServer interface {
 	Info(context.Context, *ClusterInfoReq) (*ClusterInfoReply, error)
-	Spawn(context.Context, *ClusterSpawnReq) (*ClusterSpawnReply, error)
-	Kill(context.Context, *ClusterKillReq) (*ClusterKillReply, error)
-	Poke(context.Context, *ClusterPokeReq) (*ClusterPokeReply, error)
+	CreateTask(context.Context, *CreateTaskReq) (*CreateTaskReply, error)
 	Subscribe(*ClusterSubscribeReq, Cluster_SubscribeServer) error
 	mustEmbedUnimplementedClusterServer()
 }
@@ -575,14 +553,8 @@ type UnimplementedClusterServer struct {
 func (UnimplementedClusterServer) Info(context.Context, *ClusterInfoReq) (*ClusterInfoReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
 }
-func (UnimplementedClusterServer) Spawn(context.Context, *ClusterSpawnReq) (*ClusterSpawnReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Spawn not implemented")
-}
-func (UnimplementedClusterServer) Kill(context.Context, *ClusterKillReq) (*ClusterKillReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Kill not implemented")
-}
-func (UnimplementedClusterServer) Poke(context.Context, *ClusterPokeReq) (*ClusterPokeReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Poke not implemented")
+func (UnimplementedClusterServer) CreateTask(context.Context, *CreateTaskReq) (*CreateTaskReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTask not implemented")
 }
 func (UnimplementedClusterServer) Subscribe(*ClusterSubscribeReq, Cluster_SubscribeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
@@ -618,56 +590,20 @@ func _Cluster_Info_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Cluster_Spawn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClusterSpawnReq)
+func _Cluster_CreateTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTaskReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClusterServer).Spawn(ctx, in)
+		return srv.(ClusterServer).CreateTask(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Cluster/Spawn",
+		FullMethod: "/Cluster/CreateTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterServer).Spawn(ctx, req.(*ClusterSpawnReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Cluster_Kill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClusterKillReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterServer).Kill(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Cluster/Kill",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterServer).Kill(ctx, req.(*ClusterKillReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Cluster_Poke_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClusterPokeReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterServer).Poke(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Cluster/Poke",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterServer).Poke(ctx, req.(*ClusterPokeReq))
+		return srv.(ClusterServer).CreateTask(ctx, req.(*CreateTaskReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -705,16 +641,8 @@ var Cluster_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Cluster_Info_Handler,
 		},
 		{
-			MethodName: "Spawn",
-			Handler:    _Cluster_Spawn_Handler,
-		},
-		{
-			MethodName: "Kill",
-			Handler:    _Cluster_Kill_Handler,
-		},
-		{
-			MethodName: "Poke",
-			Handler:    _Cluster_Poke_Handler,
+			MethodName: "CreateTask",
+			Handler:    _Cluster_CreateTask_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -55,7 +55,6 @@ func (t *daemon) Get(ctx context.Context, id task.ID) (i task.T, ok bool) {
 }
 
 func (t *daemon) publish(event string, state task.State) {
-	fmt.Println(event, state.ID)
 	t.events.Publish(&cluster.Event{
 		ID:   t.info.ID,
 		Type: event,
@@ -89,6 +88,7 @@ func (t *daemon) Destroy(ctx context.Context, id task.ID) error {
 func (t *daemon) Init(req *msg.TaskInit) error {
 	id := task.ID(req.Header.ID)
 	if task, ok := t.tasks[id]; ok {
+		fmt.Println("task/init", id)
 		task.on_init <- req
 		return nil
 	}
@@ -98,6 +98,7 @@ func (t *daemon) Init(req *msg.TaskInit) error {
 func (t *daemon) Complete(req *msg.TaskComplete) error {
 	id := task.ID(req.Header.ID)
 	if task, ok := t.tasks[id]; ok {
+		fmt.Println("task/complete", id, string(req.Result))
 		task.on_complete <- req
 		return nil
 	}
@@ -107,6 +108,7 @@ func (t *daemon) Complete(req *msg.TaskComplete) error {
 func (t *daemon) Fail(req *msg.TaskFailure) error {
 	id := task.ID(req.Header.ID)
 	if task, ok := t.tasks[id]; ok {
+		fmt.Println("task/fail", id, req.Error)
 		task.on_fail <- req
 		return nil
 	}

@@ -14,6 +14,8 @@ type Client interface {
 
 	Info(context.Context) (*Info, error)
 	Subscribe(ctx context.Context) (EventStream, error)
+
+	CreateTask(context.Context, *task.Spec) (*task.State, error)
 }
 
 type EventStream interface {
@@ -32,6 +34,7 @@ type T interface {
 type Info struct {
 	ID   string
 	Name string
+	Key  string
 }
 
 type Event struct {

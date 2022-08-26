@@ -1,7 +1,13 @@
-from .task import inputs, exit, error
+import cowait.builtin as builtin
+from .task import task
+from .globals import invoke, input, exit
+
 
 __all__ = [
-    'inputs',
+    'task',
+    'invoke',
+    'input',
     'exit',
-    'error',
+
+    'builtin',
 ]

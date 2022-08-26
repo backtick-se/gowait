@@ -3,6 +3,7 @@ package grpc
 import (
 	"github.com/backtick-se/gowait/adapter/api/grpc/pb"
 	"github.com/backtick-se/gowait/core/cluster"
+	"github.com/backtick-se/gowait/core/task"
 
 	"context"
 	"fmt"
@@ -46,8 +47,21 @@ func (c *clusterClient) Info(ctx context.Context) (*cluster.Info, error) {
 		return nil, err
 	}
 	return &cluster.Info{
+		ID:   reply.ClusterId,
 		Name: reply.Name,
+		Key:  reply.Key,
 	}, nil
+}
+
+func (c *clusterClient) CreateTask(ctx context.Context, spec *task.Spec) (*task.State, error) {
+	reply, err := c.cluster.CreateTask(ctx, &pb.CreateTaskReq{
+		Spec: pb.PackTaskSpec(spec),
+	})
+	if err != nil {
+		return nil, err
+	}
+	state := pb.UnpackTaskState(reply.Task)
+	return &state, nil
 }
 
 func (c *clusterClient) Subscribe(ctx context.Context) (cluster.EventStream, error) {
