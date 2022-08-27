@@ -37,14 +37,12 @@ func (e *executor) Run(ctx context.Context, id task.ID) error {
 	}
 
 	for {
-		fmt.Println("waiting...")
 		// grab next task
-		spec, err := e.client.ExecAquire(ctx)
+		spec, err := e.aquire()
 		if err != nil {
 			fmt.Println("aquire failed. stopping.")
 			return e.client.ExecStop(ctx)
 		}
-		fmt.Println("dequeue:", spec)
 
 		// apply timeout if set
 		if spec.Timeout > 0 {
@@ -63,6 +61,28 @@ func (e *executor) Run(ctx context.Context, id task.ID) error {
 			fmt.Println("complete:", string(result))
 			e.client.Complete(ctx, spec.ID, string(result))
 		}
+	}
+}
+
+func (e *executor) aquire() (*task.Run, error) {
+	fmt.Println("waiting...")
+	timeout := time.After(time.Minute)
+	for {
+		select {
+		case <-timeout:
+			return nil, fmt.Errorf("aquire timeout")
+		default:
+		}
+
+		spec, err := e.client.ExecAquire(context.Background())
+		if err != nil {
+			// todo: differentiate between different errors
+			// we should only continue on "no task available" errors
+			time.Sleep(time.Second)
+			continue
+		}
+		fmt.Println("aquired task:", spec)
+		return spec, nil
 	}
 }
 

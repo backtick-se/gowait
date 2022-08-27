@@ -9,6 +9,16 @@ import (
 	"github.com/backtick-se/gowait/core/task"
 )
 
+type Instance interface {
+	task.T
+
+	OnInit(m *msg.TaskInit)
+	OnFailure(m *msg.TaskFailure)
+	OnComplete(m *msg.TaskComplete)
+	OnLog(m *msg.LogEntry)
+	Exec(done chan struct{})
+}
+
 type instance struct {
 	run  *task.Run
 	logs map[string][]string
@@ -19,9 +29,7 @@ type instance struct {
 	on_log      chan *msg.LogEntry
 }
 
-var _ task.T = &instance{}
-
-func newInstance(spec *task.Spec) *instance {
+func newInstance(spec *task.Spec) Instance {
 	return &instance{
 		run: &task.Run{
 			ID:        task.GenerateID("task"),
@@ -37,23 +45,24 @@ func newInstance(spec *task.Spec) *instance {
 	}
 }
 
-func (t *instance) ID() task.ID {
-	return t.run.ID
-}
-
-func (t *instance) Spec() *task.Spec {
-	return t.run.Spec
-}
-
-func (t *instance) State() *task.Run {
-	return t.run
-}
+func (t *instance) ID() task.ID      { return t.run.ID }
+func (t *instance) Spec() *task.Spec { return t.run.Spec }
+func (t *instance) State() *task.Run { return t.run }
 
 func (t *instance) Logs(file string) ([]string, error) {
 	return t.logs[file], nil
 }
 
-func (i *instance) exec(done chan struct{}) {
+//
+// Instance events
+//
+
+func (i *instance) OnInit(m *msg.TaskInit)         { i.on_init <- m }
+func (i *instance) OnFailure(m *msg.TaskFailure)   { i.on_fail <- m }
+func (i *instance) OnComplete(m *msg.TaskComplete) { i.on_complete <- m }
+func (i *instance) OnLog(m *msg.LogEntry)          { i.on_log <- m }
+
+func (i *instance) Exec(done chan struct{}) {
 	ctx := context.Background()
 	defer func() {
 		fmt.Println("instance", i.run.ID, "exited")
