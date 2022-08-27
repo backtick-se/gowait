@@ -4,6 +4,10 @@ import "google/protobuf/timestamp.proto";
 option go_package = "cowait/adapter/api/grpc/pb";
 
 service Executor {
+    rpc ExecInit(ExecInitReq) returns (ExecInitReply) {}
+    rpc ExecAquire(ExecAquireReq) returns (ExecAquireReply) {}
+    rpc ExecStop(ExecStopReq) returns (ExecStopReply) {}
+
     rpc TaskInit(TaskInitReq) returns (TaskInitReply) {}
     rpc TaskFailure(TaskFailureReq) returns (TaskFailureReply) {}
     rpc TaskComplete(TaskCompleteReq) returns (TaskCompleteReply) {}
@@ -15,9 +19,42 @@ message Header {
     google.protobuf.Timestamp time = 3;
 }
 
+//
+// Executor API
+//
+
+message ExecInitReq {
+    Header header = 1;
+    string version = 2;
+    string image = 3;
+    repeated TaskSpec specs = 4;
+}
+
+message ExecInitReply { }
+
+message ExecAquireReq {
+    Header header = 1;
+}
+
+message ExecAquireReply {
+    string id = 1;
+    Task next = 2;
+}
+
+message ExecStopReq {
+    Header header = 1;
+}
+
+message ExecStopReply { }
+
+//
+// Task API
+//
+
 message TaskInitReq {
     Header header = 1;
     string version = 2;
+    string executor = 3;
 }
 
 message TaskInitReply { }

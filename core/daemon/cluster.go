@@ -16,15 +16,18 @@ import (
 
 func NewDaemon(driver cluster.Driver) cluster.T {
 	return &daemon{
-		events: events.New[*cluster.Event](),
-		driver: driver,
-		tasks:  make(map[task.ID]*instance),
+		events:    events.New[*cluster.Event](),
+		driver:    driver,
+		tasks:     make(map[task.ID]*instance),
+		executors: make(map[task.ID]*instance),
 		info: cluster.Info{
 			ID:   util.RandomString(8),
 			Name: "test-daemon",
 		},
 	}
 }
+
+var _ executor.Handler = &daemon{}
 
 func registerExecutorHandler(cluster cluster.T) (executor.Handler, error) {
 	// re-export as an executor server
@@ -35,10 +38,11 @@ func registerExecutorHandler(cluster cluster.T) (executor.Handler, error) {
 }
 
 type daemon struct {
-	info   cluster.Info
-	driver cluster.Driver
-	tasks  map[task.ID]*instance
-	events events.Pub[*cluster.Event]
+	info      cluster.Info
+	driver    cluster.Driver
+	tasks     map[task.ID]*instance
+	executors map[task.ID]*instance
+	events    events.Pub[*cluster.Event]
 }
 
 func (t *daemon) Info() cluster.Info {
@@ -54,7 +58,8 @@ func (t *daemon) Get(ctx context.Context, id task.ID) (i task.T, ok bool) {
 	return
 }
 
-func (t *daemon) publish(event string, state task.State) {
+func (t *daemon) publish(event string, state task.Run) {
+	fmt.Println("!", event, state)
 	t.events.Publish(&cluster.Event{
 		ID:   t.info.ID,
 		Type: event,
@@ -64,7 +69,7 @@ func (t *daemon) publish(event string, state task.State) {
 
 func (t *daemon) Create(ctx context.Context, tsk *task.Spec) (task.T, error) {
 	// generate task id
-	id := task.GenerateID(tsk.Name)
+	id := task.GenerateID("executor")
 
 	// set logical time
 	if tsk.Time.IsZero() {
@@ -72,7 +77,7 @@ func (t *daemon) Create(ctx context.Context, tsk *task.Spec) (task.T, error) {
 	}
 
 	instance := newInstance(t.driver, id, tsk, t.publish)
-	t.tasks[id] = instance
+	t.executors[id] = instance
 
 	return instance, nil
 }
@@ -85,14 +90,42 @@ func (t *daemon) Destroy(ctx context.Context, id task.ID) error {
 // Executor Server implementation
 //
 
+func (t *daemon) ExecInit(req *msg.ExecInit) error {
+	fmt.Println("executor init from", req.Header.ID)
+	return nil
+}
+
+func (t *daemon) ExecAquire(req *msg.ExecAquire) (*task.Run, error) {
+	id := task.ID(req.Header.ID)
+	if task, ok := t.executors[id]; ok {
+		run := task.dequeue()
+		if run != nil {
+			t.publish("executor/aquire", *run)
+			return run, nil
+		}
+	}
+	return nil, core.ErrUnknownTask
+}
+
+func (t *daemon) ExecStop(req *msg.ExecStop) error {
+	fmt.Println("executor stopped:", req.Header.ID)
+	delete(t.executors, task.ID(req.Header.ID))
+	return nil
+}
+
 func (t *daemon) Init(req *msg.TaskInit) error {
 	id := task.ID(req.Header.ID)
-	if task, ok := t.tasks[id]; ok {
-		fmt.Println("task/init", id)
-		task.on_init <- req
-		return nil
+
+	executor, exists := t.executors[req.Executor]
+	if !exists {
+		fmt.Println("unknown executor", req.Executor)
+		return core.ErrUnknownTask
 	}
-	return core.ErrUnknownTask
+	t.tasks[id] = executor
+
+	fmt.Println("task/init", id, "on", req.Executor)
+	executor.on_init <- req
+	return nil
 }
 
 func (t *daemon) Complete(req *msg.TaskComplete) error {

@@ -5,9 +5,10 @@ import (
 	"github.com/backtick-se/gowait/core"
 	"github.com/backtick-se/gowait/core/executor"
 	"github.com/backtick-se/gowait/core/msg"
+	"github.com/backtick-se/gowait/core/task"
+	"github.com/backtick-se/gowait/util/slices"
 
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 
@@ -27,10 +28,49 @@ func RegisterExecutorServer(lc fx.Lifecycle, srv *grpc.Server, handler executor.
 	fmt.Println("registered grpc executor server")
 }
 
+func (t *executorServer) ExecInit(ctx context.Context, req *pb.ExecInitReq) (*pb.ExecInitReply, error) {
+	err := t.handler.ExecInit(&msg.ExecInit{
+		Header: pb.UnpackHeader(req.Header),
+		Image:  req.Image,
+		Specs:  slices.Map(req.Specs, pb.UnpackTaskSpec),
+	})
+	return &pb.ExecInitReply{}, err
+}
+
+func (t *executorServer) ExecAquire(ctx context.Context, req *pb.ExecAquireReq) (*pb.ExecAquireReply, error) {
+	spec, err := t.handler.ExecAquire(&msg.ExecAquire{
+		Header: pb.UnpackHeader(req.Header),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if spec == nil {
+		return &pb.ExecAquireReply{
+			Next: nil,
+		}, nil
+	}
+
+	return &pb.ExecAquireReply{
+		Next: pb.PackTaskState(spec),
+	}, nil
+}
+
+func (t *executorServer) ExecStop(ctx context.Context, req *pb.ExecStopReq) (*pb.ExecStopReply, error) {
+	err := t.handler.ExecStop(&msg.ExecStop{
+		Header: pb.UnpackHeader(req.Header),
+	})
+	return &pb.ExecStopReply{}, err
+}
+
+//
+// Task API
+//
+
 func (t *executorServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.TaskInitReply, error) {
 	err := t.handler.Init(&msg.TaskInit{
-		Header:  pb.UnpackHeader(req.Header),
-		Version: req.Version,
+		Header:   pb.UnpackHeader(req.Header),
+		Version:  req.Version,
+		Executor: task.ID(req.Executor),
 	})
 	if err != nil {
 		return nil, err
@@ -53,7 +93,7 @@ func (t *executorServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq
 func (t *executorServer) TaskComplete(ctx context.Context, req *pb.TaskCompleteReq) (*pb.TaskCompleteReply, error) {
 	err := t.handler.Complete(&msg.TaskComplete{
 		Header: pb.UnpackHeader(req.Header),
-		Result: json.RawMessage(req.Result),
+		Result: task.Result(req.Result),
 	})
 	if err != nil {
 		return nil, err

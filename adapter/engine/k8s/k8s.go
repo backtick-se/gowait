@@ -75,12 +75,7 @@ func (k *kube) Name() string {
 	return k.name
 }
 
-func (k *kube) Spawn(ctx context.Context, id task.ID, spec *task.Spec) error {
-	envdef, err := spec.ToEnv()
-	if err != nil {
-		return err
-	}
-
+func (k *kube) Spawn(ctx context.Context, id task.ID, image string) error {
 	meta := metav1.ObjectMeta{
 		Name:      string(id),
 		Namespace: k.namespace,
@@ -90,12 +85,12 @@ func (k *kube) Spawn(ctx context.Context, id task.ID, spec *task.Spec) error {
 		Containers: []apiv1.Container{
 			{
 				Name:            "task",
-				Image:           spec.Image,
+				Image:           image,
 				ImagePullPolicy: apiv1.PullAlways,
 				Env: []apiv1.EnvVar{
 					{
-						Name:  task.EnvTaskdef,
-						Value: envdef,
+						Name:  "COWAIT_IMAGE",
+						Value: image,
 					},
 					{
 						Name:  task.EnvTaskID,
@@ -106,7 +101,7 @@ func (k *kube) Spawn(ctx context.Context, id task.ID, spec *task.Spec) error {
 		},
 	}
 
-	_, err = k.CoreV1().Pods(k.namespace).Create(ctx, &apiv1.Pod{
+	_, err := k.CoreV1().Pods(k.namespace).Create(ctx, &apiv1.Pod{
 		ObjectMeta: meta,
 		Spec:       pod,
 	}, metav1.CreateOptions{})

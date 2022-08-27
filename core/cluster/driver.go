@@ -6,7 +6,7 @@ import (
 )
 
 type Driver interface {
-	Spawn(context.Context, task.ID, *task.Spec) error
+	Spawn(context.Context, task.ID, string) error
 	Kill(context.Context, task.ID) error
 	Poke(context.Context, task.ID) error
 }

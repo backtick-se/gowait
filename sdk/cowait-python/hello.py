@@ -1,8 +1,9 @@
 import cowait
+from cowait import Context
 
 
 @cowait.task()
-def my_task(context, **input):
+def my_task(context: Context, **input):
     """
     A very undescriptive description of what the task does.
     """

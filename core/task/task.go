@@ -3,6 +3,6 @@ package task
 type T interface {
 	ID() ID
 	Spec() *Spec
-	State() State
+	State() Run
 	Logs(file string) ([]string, error)
 }

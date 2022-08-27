@@ -12,7 +12,7 @@ services:
 
   python:
     image: 'cowait/gowait-python'
-    build: './python'
+    build: './sdk/cowait-python'
     depends_on:
       - 'base'
 

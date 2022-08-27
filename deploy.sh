@@ -1,12 +1,14 @@
 #!/bin/bash
 
+set -e
+
 # build and push images
 docker compose build base
 docker compose build daemon cloud python
 docker compose push daemon cloud base python
 
 # delete any existing daemon pod
-kubectl delete pod cowaitd cloud
+kubectl delete pod --ignore-not-found cowaitd cloud
 sleep 1
 
 # re-create daemon

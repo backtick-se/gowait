@@ -53,7 +53,7 @@ func (c *clusterClient) Info(ctx context.Context) (*cluster.Info, error) {
 	}, nil
 }
 
-func (c *clusterClient) CreateTask(ctx context.Context, spec *task.Spec) (*task.State, error) {
+func (c *clusterClient) CreateTask(ctx context.Context, spec *task.Spec) (*task.Run, error) {
 	reply, err := c.cluster.CreateTask(ctx, &pb.CreateTaskReq{
 		Spec: pb.PackTaskSpec(spec),
 	})

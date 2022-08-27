@@ -22,21 +22,18 @@ func App(opts ...fx.Option) *fx.App {
 func run(lc fx.Lifecycle, exec T) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
-			// read task data from environment
-			id := task.ID(os.Getenv(task.EnvTaskID))
-			def, err := task.SpecFromEnv(os.Getenv(task.EnvTaskdef))
-			if err != nil {
-				fmt.Println("failed to parse task spec:", err)
-				os.Exit(1)
-			}
-
-			ctx := context.Background()
-			if err := exec.Run(ctx, id, def); err != nil {
-				fmt.Println("execution failed:", err)
-				os.Exit(1)
-			}
-
-			os.Exit(0)
+			go func() {
+				id := task.ID(os.Getenv(task.EnvTaskID))
+				ctx := context.Background()
+				if err := exec.Run(ctx, id); err != nil {
+					fmt.Println("execution failed:", err)
+					os.Exit(1)
+				}
+				os.Exit(0)
+			}()
+			return nil
+		},
+		OnStop: func(context.Context) error {
 			return nil
 		},
 	})

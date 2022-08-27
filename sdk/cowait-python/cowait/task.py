@@ -1,9 +1,7 @@
 import os
-import json
 import inspect
 import importlib
 from typing import Callable, Dict, List
-from datetime import datetime
 
 
 class Task:
@@ -53,6 +51,9 @@ def find_tasks(path: str, recursive: bool = False):
 
 
 def task():
+    """
+    Task function decorator
+    """
     def deco(func):
         global _tasks
         task = Task(func)

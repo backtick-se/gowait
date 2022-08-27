@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 from cowait.client import Client
 from cowait.task import find_tasks
 from cowait.executor import execute
@@ -8,12 +9,14 @@ from cowait.taskdef import Taskdef
 
 def main() -> int:
     client = Client(os.getenv('COWAIT_ID'))
-    client.init()
+    client.executor_init(os.getenv('COWAIT_IMAGE'))
+    taskdef = client.dequeue()
 
     # install a global exception hook as a last resort to report all uncaught exceptions
     def _excepthook(type, value, trace):
         sys.__excepthook__(type, value, trace)
         try:
+            trace = traceback.format_exc()
             client.failure(f'{type.__name__}: {value}')
         except Exception as e:
             print('failed to report exception:')
@@ -29,15 +32,15 @@ def main() -> int:
     # discover tasks
     find_tasks(os.getcwd())
 
-    taskdef = Taskdef.from_env()
     name = sys.argv[2]
 
+    client.init(taskdef.id)
     try:
         result = execute(client, taskdef, name)
-        client.complete(result)
+        client.complete(taskdef.id, result)
 
     except Exception as e:
-        client.failure(str(e))
+        client.failure(taskdef.id, str(e))
 
 
 if __name__ == '__main__':

@@ -1,8 +1,9 @@
 package msg
 
 import (
-	"encoding/json"
 	"time"
+
+	"github.com/backtick-se/gowait/core/task"
 )
 
 type Header struct {
@@ -10,9 +11,25 @@ type Header struct {
 	Time time.Time
 }
 
-type TaskInit struct {
+type ExecInit struct {
 	Header
 	Version string
+	Image   string
+	Specs   []*task.Spec
+}
+
+type TaskInit struct {
+	Header
+	Version  string
+	Executor task.ID
+}
+
+type ExecAquire struct {
+	Header
+}
+
+type ExecStop struct {
+	Header
 }
 
 type TaskFailure struct {
@@ -22,7 +39,7 @@ type TaskFailure struct {
 
 type TaskComplete struct {
 	Header
-	Result json.RawMessage
+	Result task.Result
 }
 
 type LogEntry struct {

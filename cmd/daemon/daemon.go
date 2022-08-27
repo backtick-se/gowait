@@ -30,7 +30,7 @@ func main() {
 func createTask(lc fx.Lifecycle, cluster cluster.T) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
-			time.Sleep(3 * time.Second)
+			time.Sleep(2 * time.Second)
 			_, err := cluster.Create(context.Background(), &task.Spec{
 				Name:    "gowait-task",
 				Image:   "cowait/gowait-python",

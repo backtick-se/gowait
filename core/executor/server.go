@@ -2,6 +2,7 @@ package executor
 
 import (
 	"github.com/backtick-se/gowait/core/msg"
+	"github.com/backtick-se/gowait/core/task"
 
 	"go.uber.org/fx"
 )
@@ -53,6 +54,18 @@ func (s *server) Close() error {
 
 func (t *server) Init(req *msg.TaskInit) error {
 	t.on_init <- req
+	return nil
+}
+
+func (t *server) ExecInit(*msg.ExecInit) error {
+	return nil
+}
+
+func (t *server) ExecAquire(*msg.ExecAquire) (*task.Run, error) {
+	return nil, nil
+}
+
+func (t *server) ExecStop(*msg.ExecStop) error {
 	return nil
 }
 

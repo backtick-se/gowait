@@ -1,7 +1,6 @@
 package task
 
 import (
-	"encoding/json"
 	"github.com/backtick-se/gowait/util"
 	"time"
 )
@@ -22,30 +21,34 @@ func GenerateID(name string) ID {
 	return ID(name + "-" + util.RandomString(6))
 }
 
-type State struct {
+type Result []byte
+
+var NoResult = Result("{}")
+
+type Run struct {
+	*Spec
 	ID        ID
 	Parent    ID
 	Status    Status
-	Spec      *Spec
 	Scheduled time.Time
 	Started   time.Time
 	Completed time.Time
-	Result    json.RawMessage
+	Result    Result
 	Err       error
 }
 
-func (i *State) Init() {
+func (i *Run) Init() {
 	i.Status = StatusExec
 	i.Started = time.Now()
 }
 
-func (i *State) Complete(result json.RawMessage) {
+func (i *Run) Complete(result Result) {
 	i.Result = result
 	i.Status = StatusDone
 	i.Completed = time.Now()
 }
 
-func (i *State) Fail(err error) {
+func (i *Run) Fail(err error) {
 	i.Err = err
 	i.Status = StatusFail
 	i.Completed = time.Now()

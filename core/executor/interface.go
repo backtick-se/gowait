@@ -8,15 +8,22 @@ import (
 
 type Client interface {
 	Connect(hostname string, id task.ID) error
+	ExecInit(context.Context, []*task.Spec) error
+	ExecAquire(ctx context.Context) (*task.Run, error)
+	ExecStop(ctx context.Context) error
 
-	Init(ctx context.Context) error
-	Failure(ctx context.Context, taskErr error) error
-	Complete(ctx context.Context, result string) error
-	Log(ctx context.Context) (Logger, error)
+	Init(ctx context.Context, id task.ID) error
+	Failure(ctx context.Context, id task.ID, taskErr error) error
+	Complete(ctx context.Context, id task.ID, result string) error
+	Log(ctx context.Context, id task.ID) (Logger, error)
 }
 
 // Handles commands from executors
 type Handler interface {
+	ExecInit(*msg.ExecInit) error
+	ExecAquire(*msg.ExecAquire) (*task.Run, error)
+	ExecStop(*msg.ExecStop) error
+
 	Init(*msg.TaskInit) error
 	Complete(*msg.TaskComplete) error
 	Fail(*msg.TaskFailure) error

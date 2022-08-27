@@ -39,7 +39,7 @@ func UnpackTaskSpec(def *TaskSpec) *task.Spec {
 	}
 }
 
-func PackTaskState(s *task.State) *Task {
+func PackTaskState(s *task.Run) *Task {
 	err := ""
 	if s.Err != nil {
 		err = s.Err.Error()
@@ -57,12 +57,12 @@ func PackTaskState(s *task.State) *Task {
 	}
 }
 
-func UnpackTaskState(s *Task) task.State {
+func UnpackTaskState(s *Task) task.Run {
 	var err error
 	if s.Error != "" {
 		err = core.NewError(s.Error)
 	}
-	return task.State{
+	return task.Run{
 		ID:        task.ID(s.TaskId),
 		Parent:    task.ID(s.Parent),
 		Status:    task.Status(s.Status),
@@ -70,7 +70,7 @@ func UnpackTaskState(s *Task) task.State {
 		Scheduled: s.Scheduled.AsTime(),
 		Started:   s.Started.AsTime(),
 		Completed: s.Completed.AsTime(),
-		Result:    json.RawMessage(s.Result),
+		Result:    task.Result(s.Result),
 		Err:       err,
 	}
 }

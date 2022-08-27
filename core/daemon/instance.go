@@ -10,10 +10,12 @@ import (
 	"time"
 )
 
+// executor
 type instance struct {
 	id     task.ID
 	driver cluster.Driver
-	state  task.State
+	image  string
+	state  task.Run
 	logs   map[string][]string
 
 	publish     TaskEventFn
@@ -21,37 +23,58 @@ type instance struct {
 	on_fail     chan *msg.TaskFailure
 	on_complete chan *msg.TaskComplete
 	on_log      chan *msg.LogEntry
+	on_dequeue  chan *task.Run
+	queue       []*task.Run
 }
 
 var _ task.T = &instance{}
 
-type TaskEventFn func(event string, state task.State)
+type TaskEventFn func(event string, state task.Run)
 
 func newInstance(driver cluster.Driver, id task.ID, spec *task.Spec, callback TaskEventFn) *instance {
 	t := &instance{
 		id:     id,
 		driver: driver,
-		state: task.State{
-			ID:        id,
-			Spec:      spec,
-			Status:    task.StatusWait,
-			Scheduled: time.Now(),
-		},
-		logs: make(map[string][]string),
+		image:  spec.Image,
+		logs:   make(map[string][]string),
 
 		publish:     callback,
 		on_init:     make(chan *msg.TaskInit),
 		on_fail:     make(chan *msg.TaskFailure),
 		on_complete: make(chan *msg.TaskComplete),
 		on_log:      make(chan *msg.LogEntry),
+		on_dequeue:  make(chan *task.Run),
+		queue:       []*task.Run{},
 	}
+	t.Queue(spec)
+	t.Queue(spec)
 	go t.proc()
 	return t
 }
 
-func (i *instance) ID() task.ID       { return i.state.ID }
-func (i *instance) Spec() *task.Spec  { return i.state.Spec }
-func (i *instance) State() task.State { return i.state }
+func (i *instance) ID() task.ID      { return i.state.ID }
+func (i *instance) Spec() *task.Spec { return i.state.Spec }
+func (i *instance) State() task.Run  { return i.state }
+
+func (i *instance) Queue(spec *task.Spec) {
+	i.queue = append(i.queue, &task.Run{
+		ID:        task.GenerateID("tasky-mctaskface"),
+		Spec:      spec,
+		Status:    task.StatusWait,
+		Scheduled: time.Now(),
+	})
+}
+
+func (i *instance) dequeue() *task.Run {
+	if len(i.queue) > 0 {
+		run := i.queue[0]
+		i.queue = i.queue[1:]
+		i.publish("task/schedule", *run)
+		i.on_dequeue <- run
+		return run
+	}
+	return nil
+}
 
 func (i *instance) Logs(file string) ([]string, error) {
 	if logs, ok := i.logs[file]; ok {
@@ -63,23 +86,10 @@ func (i *instance) Logs(file string) ([]string, error) {
 func (i *instance) proc() {
 	defer i.cleanup()
 
-	spec := i.state.Spec
-
-	// a specific context for each task allows us to set per-task deadlines etc
-	ctx := context.Background()
-
-	if spec.Timeout > 0 {
-		deadline, cancel := context.WithTimeout(ctx, time.Duration(spec.Timeout)*time.Second)
-		defer cancel()
-		ctx = deadline
-	}
-
-	i.publish("task/schedule", i.state)
-
 	// this is the instance management loop
 	// at this point the task is in the "scheduled" state
 	// i suppose we start by calling cluster.Spawn() ?
-	if err := i.driver.Spawn(ctx, i.id, spec); err != nil {
+	if err := i.driver.Spawn(context.Background(), i.id, i.image); err != nil {
 		fmt.Println("failed to spawn task", i.id, ":", err)
 		return
 	}
@@ -87,19 +97,37 @@ func (i *instance) proc() {
 	// todo: this should be structured as a finite state machine
 
 	for {
+		i.aquire()
+	}
+}
+
+func (i *instance) aquire() {
+	// a specific context for each task allows us to set per-task deadlines etc
+	ctx := context.Background()
+
+	run := <-i.on_dequeue
+	fmt.Println("dequeued", run)
+
+	if run.Timeout > 0 {
+		deadline, cancel := context.WithTimeout(ctx, time.Duration(run.Timeout)*time.Second)
+		defer cancel()
+		ctx = deadline
+	}
+
+	for {
 		select {
 		case <-i.on_init:
-			i.state.Init()
-			i.publish("task/init", i.state)
+			run.Init()
+			i.publish("task/init", *run)
 
 		case req := <-i.on_complete:
-			i.state.Complete(req.Result)
-			i.publish("task/complete", i.state)
+			run.Complete(req.Result)
+			i.publish("task/complete", *run)
 			return
 
 		case req := <-i.on_fail:
-			i.state.Fail(req.Error)
-			i.publish("task/fail", i.state)
+			run.Fail(req.Error)
+			i.publish("task/fail", *run)
 			return
 
 		case req := <-i.on_log:
@@ -110,8 +138,8 @@ func (i *instance) proc() {
 			i.logs[req.File] = append(log, req.Data)
 
 		case <-ctx.Done():
-			i.state.Fail(fmt.Errorf("killed by task manager: timeout exceeded"))
-			i.publish("task/fail", i.state)
+			run.Fail(fmt.Errorf("killed by task manager: timeout exceeded"))
+			i.publish("task/fail", *run)
 			return
 
 		case <-time.After(10 * time.Second):
@@ -119,8 +147,8 @@ func (i *instance) proc() {
 			fmt.Println("poke", i.id)
 			if err := i.driver.Poke(ctx, i.id); err != nil {
 				fmt.Println("task", i.id, "failed liveness check:", err)
-				i.state.Fail(fmt.Errorf("cluster task error: %w", err))
-				i.publish("task/fail", i.state)
+				run.Fail(fmt.Errorf("cluster task error: %w", err))
+				i.publish("task/fail", *run)
 				return
 			}
 		}
@@ -137,12 +165,10 @@ func (i *instance) cleanup() {
 	// todo: avoid race condition here
 	time.Sleep(time.Second)
 
-	// delete completed tasks
-	if i.state.Status == task.StatusDone {
-		ctx := context.Background()
-		if err := i.driver.Kill(ctx, i.id); err != nil {
-			// log error
-			fmt.Println("failed to kill", i, ":", err)
-		}
-	}
+	// delete executor pod
+	// ctx := context.Background()
+	// if err := i.driver.Kill(ctx, i.id); err != nil {
+	// 	// log error
+	// 	fmt.Println("failed to kill", i, ":", err)
+	// }
 }

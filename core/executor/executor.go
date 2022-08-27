@@ -9,7 +9,7 @@ import (
 )
 
 type T interface {
-	Run(context.Context, task.ID, *task.Spec) error
+	Run(context.Context, task.ID) error
 }
 
 type executor struct {
@@ -24,36 +24,76 @@ func New(client Client, server Server) (T, error) {
 	}, nil
 }
 
-func (e *executor) Run(ctx context.Context, id task.ID, task *task.Spec) error {
-	// apply timeout if set
-	if task.Timeout > 0 {
-		deadline, cancel := context.WithTimeout(ctx, time.Duration(task.Timeout)*time.Second)
-		defer cancel()
-		ctx = deadline
-	}
-
+func (e *executor) Run(ctx context.Context, id task.ID) error {
 	// connect to daemon
 	hostname := "cowaitd.default.svc.cluster.local:1337"
 	if err := e.client.Connect(hostname, id); err != nil {
 		return fmt.Errorf("failed to connect upstream: %w", err)
 	}
 
-	if err := e.client.Init(ctx); err != nil {
-		// init failed
-		return err
+	// register executor
+	if err := e.client.ExecInit(ctx, nil); err != nil {
+		return fmt.Errorf("failed to register: %w", err)
 	}
 
-	logger, err := e.client.Log(ctx)
+	for {
+		fmt.Println("waiting...")
+		// grab next task
+		spec, err := e.client.ExecAquire(ctx)
+		if err != nil {
+			fmt.Println("aquire failed. stopping.")
+			return e.client.ExecStop(ctx)
+		}
+		fmt.Println("dequeue:", spec)
+
+		// apply timeout if set
+		if spec.Timeout > 0 {
+			deadline, cancel := context.WithTimeout(ctx, time.Duration(spec.Timeout)*time.Second)
+			defer cancel()
+			ctx = deadline
+		}
+
+		// execute task
+		result, err := e.exec(spec)
+
+		if err != nil {
+			fmt.Println("error:", err)
+			e.client.Failure(ctx, spec.ID, err)
+		} else {
+			fmt.Println("complete:", string(result))
+			e.client.Complete(ctx, spec.ID, string(result))
+		}
+	}
+}
+
+func (e *executor) exec(spec *task.Run) (task.Result, error) {
+	ctx := context.Background()
+
+	fmt.Println("sending init..")
+	if err := e.client.Init(ctx, spec.ID); err != nil {
+		// init failed
+		return nil, err
+	}
+
+	fmt.Println("open log init..")
+	logger, err := e.client.Log(ctx, spec.ID)
 	if err != nil {
 		// logging failed
-		return err
+		return nil, err
+	}
+	defer logger.Close()
+
+	// apply timeout if set
+	if spec.Timeout > 0 {
+		deadline, cancel := context.WithTimeout(ctx, time.Duration(spec.Timeout)*time.Second)
+		defer cancel()
+		ctx = deadline
 	}
 
-	proc, err := Exec(task.Command[0], task.Command[1:]...)
+	fmt.Println("run exe")
+	proc, err := Exec(spec.Command[0], spec.Command[1:]...)
 	if err != nil {
-		logger.Close()
-		e.client.Failure(ctx, err)
-		return err
+		return nil, err
 	}
 
 	go LineLogger("stdout", proc.Stdout(), logger)
@@ -66,52 +106,36 @@ func (e *executor) Run(ctx context.Context, id task.ID, task *task.Spec) error {
 		break
 
 	case err := <-proc.Done():
-		logger.Close()
 		if err == nil {
 			// if the task exits with code 0 without sending init, we assume its running without SDK
 			// so we consider it a successful completion with an empty result
 			logger.Log("system", "process exit ok without sdk init")
-			e.client.Complete(ctx, "{}")
-			return nil
+			return task.NoResult, nil
 		} else {
 			logger.Log("system", fmt.Sprintf("process exit without sdk init: %s\n", err.Error()))
-			e.client.Failure(ctx, err)
-			return err
+			return nil, err
 		}
 
 	case <-ctx.Done():
-		logger.Close()
-		err := fmt.Errorf("deadline exceeded")
-		e.client.Failure(ctx, err)
-		return err
+		return nil, fmt.Errorf("deadline exceeded")
 	}
 
 	select {
 	case req := <-e.server.OnComplete():
-		logger.Close()
-		e.client.Complete(ctx, string(req.Result))
-		break
+		return req.Result, nil
 
 	case req := <-e.server.OnFailure():
-		logger.Close()
-		e.client.Failure(ctx, req.Error)
-		break
+		return nil, req.Error
 
 	case err := <-proc.Done():
 		// exiting without sending complete/fail is an error
-		logger.Close()
 		if err == nil {
-			e.client.Failure(ctx, fmt.Errorf("task exited unexpectedly with status 0"))
+			return nil, fmt.Errorf("task exited unexpectedly with status 0")
 		} else {
-			e.client.Failure(ctx, fmt.Errorf("task exited unexpectedly: %w", err))
+			return nil, fmt.Errorf("task exited unexpectedly: %w", err)
 		}
-		break
 
 	case <-ctx.Done():
-		logger.Close()
-		e.client.Failure(ctx, fmt.Errorf("deadline exceeded"))
-		break
+		return nil, fmt.Errorf("deadline exceeded")
 	}
-
-	return nil
 }

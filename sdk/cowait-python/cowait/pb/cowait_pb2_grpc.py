@@ -14,6 +14,21 @@ class ExecutorStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.ExecInit = channel.unary_unary(
+                '/Executor/ExecInit',
+                request_serializer=cowait__pb2.ExecInitReq.SerializeToString,
+                response_deserializer=cowait__pb2.ExecInitReply.FromString,
+                )
+        self.ExecAquire = channel.unary_unary(
+                '/Executor/ExecAquire',
+                request_serializer=cowait__pb2.ExecAquireReq.SerializeToString,
+                response_deserializer=cowait__pb2.ExecAquireReply.FromString,
+                )
+        self.ExecStop = channel.unary_unary(
+                '/Executor/ExecStop',
+                request_serializer=cowait__pb2.ExecStopReq.SerializeToString,
+                response_deserializer=cowait__pb2.ExecStopReply.FromString,
+                )
         self.TaskInit = channel.unary_unary(
                 '/Executor/TaskInit',
                 request_serializer=cowait__pb2.TaskInitReq.SerializeToString,
@@ -38,6 +53,24 @@ class ExecutorStub(object):
 
 class ExecutorServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def ExecInit(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExecAquire(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExecStop(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def TaskInit(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -66,6 +99,21 @@ class ExecutorServicer(object):
 
 def add_ExecutorServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'ExecInit': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExecInit,
+                    request_deserializer=cowait__pb2.ExecInitReq.FromString,
+                    response_serializer=cowait__pb2.ExecInitReply.SerializeToString,
+            ),
+            'ExecAquire': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExecAquire,
+                    request_deserializer=cowait__pb2.ExecAquireReq.FromString,
+                    response_serializer=cowait__pb2.ExecAquireReply.SerializeToString,
+            ),
+            'ExecStop': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExecStop,
+                    request_deserializer=cowait__pb2.ExecStopReq.FromString,
+                    response_serializer=cowait__pb2.ExecStopReply.SerializeToString,
+            ),
             'TaskInit': grpc.unary_unary_rpc_method_handler(
                     servicer.TaskInit,
                     request_deserializer=cowait__pb2.TaskInitReq.FromString,
@@ -95,6 +143,57 @@ def add_ExecutorServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class Executor(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def ExecInit(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Executor/ExecInit',
+            cowait__pb2.ExecInitReq.SerializeToString,
+            cowait__pb2.ExecInitReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ExecAquire(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Executor/ExecAquire',
+            cowait__pb2.ExecAquireReq.SerializeToString,
+            cowait__pb2.ExecAquireReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ExecStop(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Executor/ExecStop',
+            cowait__pb2.ExecStopReq.SerializeToString,
+            cowait__pb2.ExecStopReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def TaskInit(request,

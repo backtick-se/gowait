@@ -22,6 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ExecutorClient interface {
+	ExecInit(ctx context.Context, in *ExecInitReq, opts ...grpc.CallOption) (*ExecInitReply, error)
+	ExecAquire(ctx context.Context, in *ExecAquireReq, opts ...grpc.CallOption) (*ExecAquireReply, error)
+	ExecStop(ctx context.Context, in *ExecStopReq, opts ...grpc.CallOption) (*ExecStopReply, error)
 	TaskInit(ctx context.Context, in *TaskInitReq, opts ...grpc.CallOption) (*TaskInitReply, error)
 	TaskFailure(ctx context.Context, in *TaskFailureReq, opts ...grpc.CallOption) (*TaskFailureReply, error)
 	TaskComplete(ctx context.Context, in *TaskCompleteReq, opts ...grpc.CallOption) (*TaskCompleteReply, error)
@@ -34,6 +37,33 @@ type executorClient struct {
 
 func NewExecutorClient(cc grpc.ClientConnInterface) ExecutorClient {
 	return &executorClient{cc}
+}
+
+func (c *executorClient) ExecInit(ctx context.Context, in *ExecInitReq, opts ...grpc.CallOption) (*ExecInitReply, error) {
+	out := new(ExecInitReply)
+	err := c.cc.Invoke(ctx, "/Executor/ExecInit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *executorClient) ExecAquire(ctx context.Context, in *ExecAquireReq, opts ...grpc.CallOption) (*ExecAquireReply, error) {
+	out := new(ExecAquireReply)
+	err := c.cc.Invoke(ctx, "/Executor/ExecAquire", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *executorClient) ExecStop(ctx context.Context, in *ExecStopReq, opts ...grpc.CallOption) (*ExecStopReply, error) {
+	out := new(ExecStopReply)
+	err := c.cc.Invoke(ctx, "/Executor/ExecStop", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *executorClient) TaskInit(ctx context.Context, in *TaskInitReq, opts ...grpc.CallOption) (*TaskInitReply, error) {
@@ -101,6 +131,9 @@ func (x *executorTaskLogClient) CloseAndRecv() (*LogSummary, error) {
 // All implementations must embed UnimplementedExecutorServer
 // for forward compatibility
 type ExecutorServer interface {
+	ExecInit(context.Context, *ExecInitReq) (*ExecInitReply, error)
+	ExecAquire(context.Context, *ExecAquireReq) (*ExecAquireReply, error)
+	ExecStop(context.Context, *ExecStopReq) (*ExecStopReply, error)
 	TaskInit(context.Context, *TaskInitReq) (*TaskInitReply, error)
 	TaskFailure(context.Context, *TaskFailureReq) (*TaskFailureReply, error)
 	TaskComplete(context.Context, *TaskCompleteReq) (*TaskCompleteReply, error)
@@ -112,6 +145,15 @@ type ExecutorServer interface {
 type UnimplementedExecutorServer struct {
 }
 
+func (UnimplementedExecutorServer) ExecInit(context.Context, *ExecInitReq) (*ExecInitReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecInit not implemented")
+}
+func (UnimplementedExecutorServer) ExecAquire(context.Context, *ExecAquireReq) (*ExecAquireReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecAquire not implemented")
+}
+func (UnimplementedExecutorServer) ExecStop(context.Context, *ExecStopReq) (*ExecStopReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecStop not implemented")
+}
 func (UnimplementedExecutorServer) TaskInit(context.Context, *TaskInitReq) (*TaskInitReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskInit not implemented")
 }
@@ -135,6 +177,60 @@ type UnsafeExecutorServer interface {
 
 func RegisterExecutorServer(s grpc.ServiceRegistrar, srv ExecutorServer) {
 	s.RegisterService(&Executor_ServiceDesc, srv)
+}
+
+func _Executor_ExecInit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecInitReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutorServer).ExecInit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Executor/ExecInit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutorServer).ExecInit(ctx, req.(*ExecInitReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Executor_ExecAquire_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecAquireReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutorServer).ExecAquire(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Executor/ExecAquire",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutorServer).ExecAquire(ctx, req.(*ExecAquireReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Executor_ExecStop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecStopReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutorServer).ExecStop(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Executor/ExecStop",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutorServer).ExecStop(ctx, req.(*ExecStopReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Executor_TaskInit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -224,6 +320,18 @@ var Executor_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "Executor",
 	HandlerType: (*ExecutorServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ExecInit",
+			Handler:    _Executor_ExecInit_Handler,
+		},
+		{
+			MethodName: "ExecAquire",
+			Handler:    _Executor_ExecAquire_Handler,
+		},
+		{
+			MethodName: "ExecStop",
+			Handler:    _Executor_ExecStop_Handler,
+		},
 		{
 			MethodName: "TaskInit",
 			Handler:    _Executor_TaskInit_Handler,

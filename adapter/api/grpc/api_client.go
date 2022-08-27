@@ -33,7 +33,7 @@ func (c *apiclient) dial(hostname string, opts ...grpc.DialOption) error {
 	return nil
 }
 
-func (c *apiclient) CreateTask(ctx context.Context, def *task.Spec) (*task.State, error) {
+func (c *apiclient) CreateTask(ctx context.Context, def *task.Spec) (*task.Run, error) {
 	if c.conn == nil {
 		return nil, core.ErrNotConnected
 	}
@@ -43,7 +43,7 @@ func (c *apiclient) CreateTask(ctx context.Context, def *task.Spec) (*task.State
 	if err != nil {
 		return nil, err
 	}
-	return &task.State{
+	return &task.Run{
 		ID:        task.ID(reply.Task.TaskId),
 		Parent:    task.ID(reply.Task.Parent),
 		Status:    task.Status(reply.Task.Status),
