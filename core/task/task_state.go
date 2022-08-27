@@ -1,34 +1,14 @@
 package task
 
 import (
-	"github.com/backtick-se/gowait/util"
 	"time"
 )
-
-type ID string
-type Status string
-
-const None = ID("")
-
-const (
-	StatusWait Status = "wait"
-	StatusExec Status = "exec"
-	StatusFail Status = "fail"
-	StatusDone Status = "done"
-)
-
-func GenerateID(name string) ID {
-	return ID(name + "-" + util.RandomString(6))
-}
-
-type Result []byte
-
-var NoResult = Result("{}")
 
 type Run struct {
 	*Spec
 	ID        ID
 	Parent    ID
+	Executor  ID
 	Status    Status
 	Scheduled time.Time
 	Started   time.Time

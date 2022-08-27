@@ -17,7 +17,7 @@ var _ task.T = &instance{}
 func (i *instance) ID() task.ID { return i.state.ID }
 
 func (i *instance) Spec() *task.Spec { return i.state.Spec }
-func (i *instance) State() task.Run  { return *i.state }
+func (i *instance) State() *task.Run { return i.state }
 
 func (i *instance) Logs(file string) ([]string, error) {
 	// todo: implement

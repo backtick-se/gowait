@@ -14,12 +14,22 @@ import (
 	"time"
 )
 
+type daemon struct {
+	info      cluster.Info
+	driver    cluster.Driver
+	tasks     map[task.ID]*instance
+	executors map[task.ID]*worker
+	events    events.Pub[*cluster.Event]
+	queue     *Queue
+}
+
 func NewDaemon(driver cluster.Driver) cluster.T {
 	return &daemon{
 		events:    events.New[*cluster.Event](),
 		driver:    driver,
 		tasks:     make(map[task.ID]*instance),
-		executors: make(map[task.ID]*instance),
+		executors: make(map[task.ID]*worker),
+		queue:     NewQueue(),
 		info: cluster.Info{
 			ID:   util.RandomString(8),
 			Name: "test-daemon",
@@ -35,14 +45,6 @@ func registerExecutorHandler(cluster cluster.T) (executor.Handler, error) {
 		return srv, nil
 	}
 	return nil, fmt.Errorf("expected cluster implementation to also be an executor server")
-}
-
-type daemon struct {
-	info      cluster.Info
-	driver    cluster.Driver
-	tasks     map[task.ID]*instance
-	executors map[task.ID]*instance
-	events    events.Pub[*cluster.Event]
 }
 
 func (t *daemon) Info() cluster.Info {
@@ -67,17 +69,21 @@ func (t *daemon) publish(event string, state task.Run) {
 	})
 }
 
-func (t *daemon) Create(ctx context.Context, tsk *task.Spec) (task.T, error) {
+func (t *daemon) Create(ctx context.Context, spec *task.Spec) (task.T, error) {
 	// generate task id
 	id := task.GenerateID("executor")
 
 	// set logical time
-	if tsk.Time.IsZero() {
-		tsk.Time = time.Now()
+	if spec.Time.IsZero() {
+		spec.Time = time.Now()
 	}
 
-	instance := newInstance(t.driver, id, tsk, t.publish)
-	t.executors[id] = instance
+	worker := newWorker(t.driver, id, spec.Image, t.publish)
+	t.executors[id] = worker
+
+	instance := newInstance(spec)
+	t.queue.Enqueue(instance)
+	t.queue.Enqueue(newInstance(spec))
 
 	return instance, nil
 }
@@ -97,12 +103,15 @@ func (t *daemon) ExecInit(req *msg.ExecInit) error {
 
 func (t *daemon) ExecAquire(req *msg.ExecAquire) (*task.Run, error) {
 	id := task.ID(req.Header.ID)
-	if task, ok := t.executors[id]; ok {
-		run := task.dequeue()
-		if run != nil {
-			t.publish("executor/aquire", *run)
-			return run, nil
+	if worker, ok := t.executors[id]; ok {
+		instance := t.queue.Dequeue(worker.image)
+		if instance != nil {
+			t.publish("executor/aquire", *instance.run)
+			t.tasks[instance.ID()] = instance
+			worker.on_dequeue <- instance
+			return instance.run, nil
 		}
+		t.publish("executor/empty", task.Run{})
 	}
 	return nil, core.ErrUnknownTask
 }
@@ -115,17 +124,12 @@ func (t *daemon) ExecStop(req *msg.ExecStop) error {
 
 func (t *daemon) Init(req *msg.TaskInit) error {
 	id := task.ID(req.Header.ID)
-
-	executor, exists := t.executors[req.Executor]
-	if !exists {
-		fmt.Println("unknown executor", req.Executor)
-		return core.ErrUnknownTask
+	if task, ok := t.tasks[id]; ok {
+		fmt.Println("task/init", id, "on", req.Executor)
+		task.on_init <- req
+		return nil
 	}
-	t.tasks[id] = executor
-
-	fmt.Println("task/init", id, "on", req.Executor)
-	executor.on_init <- req
-	return nil
+	return core.ErrUnknownTask
 }
 
 func (t *daemon) Complete(req *msg.TaskComplete) error {
