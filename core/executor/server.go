@@ -1,6 +1,8 @@
 package executor
 
 import (
+	"context"
+
 	"github.com/backtick-se/gowait/core/msg"
 	"github.com/backtick-se/gowait/core/task"
 
@@ -11,6 +13,8 @@ type Server interface {
 	Handler
 
 	Close() error
+	SetRun(*task.Run)
+
 	OnInit() <-chan *msg.TaskInit
 	OnComplete() <-chan *msg.TaskComplete
 	OnFailure() <-chan *msg.TaskFailure
@@ -18,6 +22,7 @@ type Server interface {
 }
 
 type server struct {
+	run         *task.Run
 	on_init     chan *msg.TaskInit
 	on_complete chan *msg.TaskComplete
 	on_failure  chan *msg.TaskFailure
@@ -31,7 +36,6 @@ func NewServer(lc fx.Lifecycle) Server {
 		on_failure:  make(chan *msg.TaskFailure),
 		on_log:      make(chan *msg.LogEntry),
 	}
-
 	return server
 }
 
@@ -43,6 +47,10 @@ func (s *server) OnInit() <-chan *msg.TaskInit         { return s.on_init }
 func (s *server) OnComplete() <-chan *msg.TaskComplete { return s.on_complete }
 func (s *server) OnFailure() <-chan *msg.TaskFailure   { return s.on_failure }
 func (s *server) OnLog() <-chan *msg.LogEntry          { return s.on_log }
+
+func (s *server) SetRun(run *task.Run) {
+	s.run = run
+}
 
 func (s *server) Close() error {
 	defer close(s.on_init)
@@ -57,15 +65,15 @@ func (t *server) Init(req *msg.TaskInit) error {
 	return nil
 }
 
-func (t *server) ExecInit(*msg.ExecInit) error {
+func (t *server) ExecInit(context.Context, *msg.ExecInit) error {
 	return nil
 }
 
-func (t *server) ExecAquire(*msg.ExecAquire) (*task.Run, error) {
-	return nil, nil
+func (t *server) ExecAquire(context.Context, *msg.ExecAquire) (*task.Run, error) {
+	return t.run, nil
 }
 
-func (t *server) ExecStop(*msg.ExecStop) error {
+func (t *server) ExecStop(context.Context, *msg.ExecStop) error {
 	return nil
 }
 

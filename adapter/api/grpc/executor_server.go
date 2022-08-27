@@ -29,7 +29,7 @@ func RegisterExecutorServer(lc fx.Lifecycle, srv *grpc.Server, handler executor.
 }
 
 func (t *executorServer) ExecInit(ctx context.Context, req *pb.ExecInitReq) (*pb.ExecInitReply, error) {
-	err := t.handler.ExecInit(&msg.ExecInit{
+	err := t.handler.ExecInit(ctx, &msg.ExecInit{
 		Header: pb.UnpackHeader(req.Header),
 		Image:  req.Image,
 		Specs:  slices.Map(req.Specs, pb.UnpackTaskSpec),
@@ -38,7 +38,7 @@ func (t *executorServer) ExecInit(ctx context.Context, req *pb.ExecInitReq) (*pb
 }
 
 func (t *executorServer) ExecAquire(ctx context.Context, req *pb.ExecAquireReq) (*pb.ExecAquireReply, error) {
-	spec, err := t.handler.ExecAquire(&msg.ExecAquire{
+	spec, err := t.handler.ExecAquire(ctx, &msg.ExecAquire{
 		Header: pb.UnpackHeader(req.Header),
 	})
 	if err != nil {
@@ -56,7 +56,7 @@ func (t *executorServer) ExecAquire(ctx context.Context, req *pb.ExecAquireReq) 
 }
 
 func (t *executorServer) ExecStop(ctx context.Context, req *pb.ExecStopReq) (*pb.ExecStopReply, error) {
-	err := t.handler.ExecStop(&msg.ExecStop{
+	err := t.handler.ExecStop(ctx, &msg.ExecStop{
 		Header: pb.UnpackHeader(req.Header),
 	})
 	return &pb.ExecStopReply{}, err

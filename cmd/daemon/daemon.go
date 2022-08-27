@@ -33,20 +33,20 @@ func createTask(lc fx.Lifecycle, cluster cluster.T) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
 			time.Sleep(2 * time.Second)
-			queueTask := func() {
+			queueTask := func(name string) {
 				cluster.Create(context.Background(), &task.Spec{
-					Name:    "gowait-task",
+					Name:    name,
 					Image:   "cowait/gowait-python",
-					Command: []string{"python", "-um", "cowait", "exec", "hello.my_task"},
+					Command: []string{"python", "-um", "cowait"},
 				})
 			}
 
-			queueTask()
+			queueTask("cowait.builtin.enumerate")
 
 			go func() {
 				time.Sleep(20 * time.Second)
 				fmt.Println("queueing second task!")
-				queueTask()
+				queueTask("hello.my_task")
 			}()
 
 			return nil

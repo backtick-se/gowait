@@ -1,44 +1,57 @@
 package daemon
 
-import "github.com/backtick-se/gowait/core/task"
+import (
+	"github.com/backtick-se/gowait/core/task"
+
+	"context"
+)
 
 type Queue interface {
-	Push(*task.Spec) Instance
-	Pop(string) Instance
-	Get(task.ID) (Instance, bool)
+	Push(ctx context.Context, spec *task.Spec) (Instance, error)
+	Pop(ctx context.Context, image string) (Instance, error)
 }
 
 type queue struct {
-	byId  map[task.ID]Instance
-	queue []Instance
+	length int
+
+	// todo: make thread safe
+	queues map[string]chan Instance
 }
 
-func NewQueue() Queue {
+func NewQueue(length int) Queue {
 	return &queue{
-		queue: make([]Instance, 0, 32),
-		byId:  make(map[task.ID]Instance),
+		length: length,
+		queues: make(map[string]chan Instance),
 	}
 }
 
-func (q *queue) Get(id task.ID) (Instance, bool) {
-	i, ok := q.byId[id]
-	return i, ok
+func (m *queue) getQueue(image string) chan Instance {
+	queue, exists := m.queues[image]
+	if !exists {
+		queue = make(chan Instance, m.length)
+		m.queues[image] = queue
+	}
+	return queue
 }
 
-func (q *queue) Push(spec *task.Spec) Instance {
+func (m *queue) Pop(ctx context.Context, image string) (Instance, error) {
+	queue := m.getQueue(image)
+	select {
+	case instance := <-queue:
+		return instance, nil
+	case <-ctx.Done():
+		return nil, context.Canceled
+	}
+}
+
+func (m *queue) Push(ctx context.Context, spec *task.Spec) (Instance, error) {
 	instance := newInstance(spec)
-	q.queue = append(q.queue, instance)
-	q.byId[instance.ID()] = instance
-	return instance
-}
+	queue := m.getQueue(spec.Image)
 
-func (q *queue) Pop(image string) Instance {
-	for idx, instance := range q.queue {
-		if instance.State().Image == image {
-			q.queue = append(q.queue[:idx], q.queue[idx+1:]...)
-			// delete(q.byId, instance.ID())
-			return instance
-		}
+	select {
+	case queue <- instance:
+		return instance, nil
+	case <-ctx.Done():
+		return nil, context.Canceled
 	}
-	return nil
 }

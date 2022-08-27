@@ -20,9 +20,9 @@ type Client interface {
 
 // Handles commands from executors
 type Handler interface {
-	ExecInit(*msg.ExecInit) error
-	ExecAquire(*msg.ExecAquire) (*task.Run, error)
-	ExecStop(*msg.ExecStop) error
+	ExecInit(context.Context, *msg.ExecInit) error
+	ExecAquire(context.Context, *msg.ExecAquire) (*task.Run, error)
+	ExecStop(context.Context, *msg.ExecStop) error
 
 	Init(*msg.TaskInit) error
 	Complete(*msg.TaskComplete) error

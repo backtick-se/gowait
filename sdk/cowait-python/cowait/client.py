@@ -36,6 +36,7 @@ class Client:
             return None
         return Taskdef(
             id=reply.next.task_id,
+            name=reply.next.spec.name,
             input=json.loads(reply.next.spec.input or "{}"),
             image=reply.next.spec.image,
             time=reply.next.spec.time,

@@ -9,6 +9,7 @@ def invoke(task: Executable, **input) -> any:
     ctx = get_context()
     taskdef = Taskdef(
         id="subtask",
+        name="subtask",
         input=input,
         image=ctx.taskdef.image,
         time=datetime.now(),

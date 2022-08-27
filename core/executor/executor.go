@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+type ID string
+
 type T interface {
 	Run(context.Context, task.ID) error
 }
@@ -44,6 +46,9 @@ func (e *executor) Run(ctx context.Context, id task.ID) error {
 			return e.client.ExecStop(ctx)
 		}
 
+		// store a copy in the server so that it may respond to SDK Aquire()
+		e.server.SetRun(spec)
+
 		// apply timeout if set
 		if spec.Timeout > 0 {
 			deadline, cancel := context.WithTimeout(ctx, time.Duration(spec.Timeout)*time.Second)
@@ -66,24 +71,16 @@ func (e *executor) Run(ctx context.Context, id task.ID) error {
 
 func (e *executor) aquire() (*task.Run, error) {
 	fmt.Println("waiting...")
-	timeout := time.After(time.Minute)
-	for {
-		select {
-		case <-timeout:
-			return nil, fmt.Errorf("aquire timeout")
-		default:
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 
-		spec, err := e.client.ExecAquire(context.Background())
-		if err != nil {
-			// todo: differentiate between different errors
-			// we should only continue on "no task available" errors
-			time.Sleep(time.Second)
-			continue
-		}
-		fmt.Println("aquired task:", spec)
-		return spec, nil
+	spec, err := e.client.ExecAquire(ctx)
+	if err != nil {
+		return nil, err
 	}
+
+	fmt.Println("aquired task:", spec)
+	return spec, nil
 }
 
 func (e *executor) exec(spec *task.Run) (task.Result, error) {

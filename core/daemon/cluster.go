@@ -18,8 +18,9 @@ type daemon struct {
 	info    cluster.Info
 	driver  cluster.Driver
 	workers Workers
-	events  events.Pub[*cluster.Event]
 	queue   Queue
+	tasks   TaskManager
+	events  events.Pub[*cluster.Event]
 }
 
 func NewDaemon(driver cluster.Driver) cluster.T {
@@ -27,7 +28,8 @@ func NewDaemon(driver cluster.Driver) cluster.T {
 		events:  events.New[*cluster.Event](),
 		driver:  driver,
 		workers: NewWorkers(driver),
-		queue:   NewQueue(),
+		queue:   NewQueue(256),
+		tasks:   NewTaskManager(),
 		info: cluster.Info{
 			ID:   util.RandomString(8),
 			Name: "test-daemon",
@@ -54,16 +56,7 @@ func (t *daemon) Events() events.Pub[*cluster.Event] {
 }
 
 func (t *daemon) Get(ctx context.Context, id task.ID) (task.T, bool) {
-	return t.queue.Get(id)
-}
-
-func (t *daemon) publish(event string, state task.Run) {
-	fmt.Println("!", event, state)
-	t.events.Publish(&cluster.Event{
-		ID:   t.info.ID,
-		Type: event,
-		Task: state,
-	})
+	return t.tasks.Get(id)
 }
 
 func (t *daemon) Create(ctx context.Context, spec *task.Spec) (task.T, error) {
@@ -72,11 +65,17 @@ func (t *daemon) Create(ctx context.Context, spec *task.Spec) (task.T, error) {
 		spec.Time = time.Now()
 	}
 
+	// queue up a task instance
+	instance, err := t.queue.Push(ctx, spec)
+	if err != nil {
+		return nil, err
+	}
+
+	// add to list of tasks
+	t.tasks.Add(instance)
+
 	// request an idle worker
 	t.workers.Request(spec.Image)
-
-	// queue up a task instance
-	instance := t.queue.Push(spec)
 
 	return instance, nil
 }
@@ -89,7 +88,7 @@ func (t *daemon) Destroy(ctx context.Context, id task.ID) error {
 // Executor Server implementation
 //
 
-func (t *daemon) ExecInit(req *msg.ExecInit) error {
+func (t *daemon) ExecInit(ctx context.Context, req *msg.ExecInit) error {
 	id := task.ID(req.Header.ID)
 	if worker, ok := t.workers.Get(id); ok {
 		fmt.Println("executor init:", id)
@@ -98,22 +97,26 @@ func (t *daemon) ExecInit(req *msg.ExecInit) error {
 	return nil
 }
 
-func (t *daemon) ExecAquire(req *msg.ExecAquire) (*task.Run, error) {
+func (t *daemon) ExecAquire(ctx context.Context, req *msg.ExecAquire) (*task.Run, error) {
 	id := task.ID(req.Header.ID)
 	if worker, ok := t.workers.Get(id); ok {
 		// find the next suitable work item for this executor
-		instance := t.queue.Pop(worker.Image())
-
-		if instance != nil {
-			t.publish("executor/aquire", *instance.State())
-			worker.OnAquire(instance)
-			return instance.State(), nil
+		// this will block until a new task is available.
+		// its up to the caller to abort the call if the wait is too long.
+		// this greatly reduces task startup latency
+		instance, err := t.queue.Pop(ctx, worker.Image())
+		if err != nil {
+			return nil, err
 		}
+
+		fmt.Println("executor/aquire", *instance.State())
+		worker.OnAquire(instance)
+		return instance.State(), nil
 	}
 	return nil, core.ErrUnknownTask
 }
 
-func (t *daemon) ExecStop(req *msg.ExecStop) error {
+func (t *daemon) ExecStop(ctx context.Context, req *msg.ExecStop) error {
 	id := task.ID(req.Header.ID)
 	if worker, ok := t.workers.Get(id); ok {
 		fmt.Println("executor stopped:", id)
@@ -126,7 +129,7 @@ func (t *daemon) ExecStop(req *msg.ExecStop) error {
 
 func (t *daemon) Init(req *msg.TaskInit) error {
 	id := task.ID(req.Header.ID)
-	if instance, ok := t.queue.Get(id); ok {
+	if instance, ok := t.tasks.Get(id); ok {
 		fmt.Println("task/init", id, "on", req.Executor)
 		instance.OnInit(req)
 		return nil
@@ -136,7 +139,7 @@ func (t *daemon) Init(req *msg.TaskInit) error {
 
 func (t *daemon) Complete(req *msg.TaskComplete) error {
 	id := task.ID(req.Header.ID)
-	if instance, ok := t.queue.Get(id); ok {
+	if instance, ok := t.tasks.Get(id); ok {
 		fmt.Println("task/complete", id, string(req.Result))
 		instance.OnComplete(req)
 		return nil
@@ -146,7 +149,7 @@ func (t *daemon) Complete(req *msg.TaskComplete) error {
 
 func (t *daemon) Fail(req *msg.TaskFailure) error {
 	id := task.ID(req.Header.ID)
-	if instance, ok := t.queue.Get(id); ok {
+	if instance, ok := t.tasks.Get(id); ok {
 		fmt.Println("task/fail", id, req.Error)
 		instance.OnFailure(req)
 		return nil
@@ -156,7 +159,7 @@ func (t *daemon) Fail(req *msg.TaskFailure) error {
 
 func (t *daemon) Log(req *msg.LogEntry) error {
 	id := task.ID(req.Header.ID)
-	if instance, ok := t.queue.Get(id); ok {
+	if instance, ok := t.tasks.Get(id); ok {
 		fmt.Printf("%s [%s] %s", req.Header.ID, req.File, req.Data)
 		instance.OnLog(req)
 	}

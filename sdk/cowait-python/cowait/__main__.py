@@ -24,19 +24,12 @@ def main() -> int:
 
     sys.excepthook = _excepthook
 
-    if len(sys.argv) != 3:
-        print("usage: python -m cowait exec <task-name>")
-        print(sys.argv)
-        return 1
-
     # discover tasks
     find_tasks(os.getcwd())
 
-    name = sys.argv[2]
-
     client.init(taskdef.id)
     try:
-        result = execute(client, taskdef, name)
+        result = execute(client, taskdef, taskdef.name)
         client.complete(taskdef.id, result)
 
     except Exception as e:
