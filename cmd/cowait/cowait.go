@@ -2,20 +2,18 @@ package main
 
 import (
 	"github.com/backtick-se/gowait/adapter/api/grpc"
-	"github.com/backtick-se/gowait/core"
-	"github.com/backtick-se/gowait/core/task"
+	"github.com/backtick-se/gowait/core/cli/cmd"
 
-	"context"
 	"fmt"
+	"os"
 
 	"go.uber.org/fx"
 )
 
-// container client / process manager
-
 func main() {
 	executor := fx.New(
 		grpc.Module,
+		cmd.Module,
 
 		fx.Invoke(run),
 
@@ -24,21 +22,10 @@ func main() {
 	executor.Run()
 }
 
-func run(shut fx.Shutdowner, cli core.APIClient) error {
-	hostname := "localhost:1337"
-	if err := cli.Connect(hostname); err != nil {
+func run(app cmd.App, shut fx.Shutdowner) error {
+	if err := app.Run(os.Args); err != nil {
+		fmt.Println("error:", err)
 		return err
 	}
-
-	ctx := context.Background()
-	id, err := cli.CreateTask(ctx, &task.Spec{
-		Name:    "cowait.builtin.enumerate",
-		Image:   "cowait/gowait-python",
-		Command: []string{"python", "-um", "cowait"},
-	})
-	if err != nil {
-		return err
-	}
-	fmt.Println("created task", id)
 	return shut.Shutdown()
 }

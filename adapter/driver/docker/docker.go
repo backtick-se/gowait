@@ -1,12 +1,11 @@
 package docker
 
 import (
-	"fmt"
-
 	"github.com/backtick-se/gowait/core/cluster"
 	"github.com/backtick-se/gowait/core/task"
 
 	"context"
+	"fmt"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -36,7 +35,15 @@ func (d *dock) Kill(ctx context.Context, id task.ID) error {
 }
 
 // Poke implements cluster.Driver
-func (*dock) Poke(context.Context, task.ID) error {
+func (d *dock) Poke(ctx context.Context, id task.ID) error {
+	r, err := d.client.ContainerInspect(ctx, string(id))
+	if err != nil {
+		// todo: we need to differentiate between container errors and API errors
+		return err
+	}
+	if r.State.Status != "running" {
+		return fmt.Errorf("container state is %s", r.State.Status)
+	}
 	return nil
 }
 
@@ -51,7 +58,7 @@ func (d *dock) Spawn(ctx context.Context, id task.ID, image string) error {
 		},
 	}
 	host := container.HostConfig{
-		AutoRemove: false,
+		AutoRemove: true,
 	}
 	net := network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
