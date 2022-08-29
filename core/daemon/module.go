@@ -1,13 +1,21 @@
 package daemon
 
-import "go.uber.org/fx"
+import (
+	"github.com/backtick-se/gowait/core/executor"
+	"github.com/backtick-se/gowait/core/task"
+	"go.uber.org/fx"
+)
 
 var Module = fx.Module(
 	"daemon",
 	fx.Provide(NewDaemon),
 	fx.Provide(NewWorkers),
-	fx.Provide(NewTaskManager),
+	fx.Provide(task.NewManager),
 
-	// register daemon.Cluster as the executor handler
-	fx.Provide(registerExecutorHandler),
+	fx.Provide(func(workers Workers) executor.Handler {
+		return workers
+	}),
+	fx.Provide(func(taskMgr task.Manager) task.Handler {
+		return taskMgr
+	}),
 )

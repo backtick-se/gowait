@@ -3,7 +3,6 @@ package daemon
 import (
 	"github.com/backtick-se/gowait/core/cluster"
 	"github.com/backtick-se/gowait/core/executor"
-	"github.com/backtick-se/gowait/core/msg"
 	"github.com/backtick-se/gowait/core/task"
 
 	"context"
@@ -20,7 +19,7 @@ type Worker interface {
 	OnInit()
 	OnStop()
 	OnIdle()
-	OnAquire(Instance)
+	OnAquire(task.Instance)
 }
 
 // executor instance
@@ -33,7 +32,7 @@ type worker struct {
 	on_init   chan struct{}
 	on_idle   chan struct{}
 	on_stop   chan struct{}
-	on_aquire chan Instance
+	on_aquire chan task.Instance
 }
 
 type TaskEventFn func(event string, state task.Run)
@@ -48,7 +47,7 @@ func NewWorker(driver cluster.Driver, id task.ID, image string) Worker {
 		on_init:   make(chan struct{}),
 		on_idle:   make(chan struct{}),
 		on_stop:   make(chan struct{}),
-		on_aquire: make(chan Instance),
+		on_aquire: make(chan task.Instance),
 	}
 	return t
 }
@@ -62,7 +61,7 @@ func (w *worker) OnInit() { w.on_init <- struct{}{} }
 func (w *worker) OnIdle() { w.on_idle <- struct{}{} }
 func (w *worker) OnStop() { w.on_stop <- struct{}{} }
 
-func (w *worker) OnAquire(i Instance) {
+func (w *worker) OnAquire(i task.Instance) {
 	w.on_aquire <- i
 }
 
@@ -92,7 +91,7 @@ func (i *worker) proc() {
 	}
 }
 
-func (i *worker) process_next(instance Instance) {
+func (i *worker) process_next(instance task.Instance) {
 	done := make(chan struct{})
 	fmt.Println("dequeued", instance)
 
@@ -108,6 +107,9 @@ func (i *worker) process_next(instance Instance) {
 		case <-done:
 			i.status = executor.StatusIdle
 			return
+		case <-i.on_stop:
+			i.status = executor.StatusStop
+			return
 		case <-time.After(10 * time.Second):
 			// periodic liveness check
 			fmt.Println("poke", i.id)
@@ -116,8 +118,8 @@ func (i *worker) process_next(instance Instance) {
 				// crash detected.
 				// maybe we want to handle crashes differently? e.g. re-try task
 				fmt.Println("executor", i.id, "failed liveness check:", err)
-				instance.OnFailure(&msg.TaskFailure{
-					Header: msg.Header{
+				instance.OnFailure(&task.MsgFailure{
+					Header: task.Header{
 						ID: string(instance.ID()),
 					},
 					Error: fmt.Errorf("cluster task error: %w", err),

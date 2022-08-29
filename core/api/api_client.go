@@ -1,11 +1,11 @@
-package core
+package api
 
 import (
 	"context"
 	"github.com/backtick-se/gowait/core/task"
 )
 
-type APIClient interface {
+type Client interface {
 	Connect(hostname string) error
 
 	CreateTask(context.Context, *task.Spec) (*task.Run, error)

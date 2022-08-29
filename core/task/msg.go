@@ -4,29 +4,29 @@ import (
 	"time"
 )
 
-type MsgHeader struct {
+type Header struct {
 	ID   string
 	Time time.Time
 }
 
 type MsgInit struct {
-	MsgHeader
+	Header
 	Version  string
 	Executor ID
 }
 
 type MsgFailure struct {
-	MsgHeader
+	Header
 	Error error
 }
 
 type MsgComplete struct {
-	MsgHeader
+	Header
 	Result Result
 }
 
 type MsgLog struct {
-	MsgHeader
+	Header
 	File string
 	Data string
 }

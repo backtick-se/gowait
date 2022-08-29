@@ -2,7 +2,7 @@ package pb
 
 import (
 	"github.com/backtick-se/gowait/core"
-	"github.com/backtick-se/gowait/core/msg"
+	"github.com/backtick-se/gowait/core/executor"
 	"github.com/backtick-se/gowait/core/task"
 
 	"encoding/json"
@@ -10,8 +10,15 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func UnpackHeader(h *Header) msg.Header {
-	return msg.Header{
+func UnpackTaskHeader(h *Header) task.Header {
+	return task.Header{
+		ID:   h.Id,
+		Time: h.Time.AsTime(),
+	}
+}
+
+func UnpackExecutorHeader(h *Header) executor.Header {
+	return executor.Header{
 		ID:   h.Id,
 		Time: h.Time.AsTime(),
 	}

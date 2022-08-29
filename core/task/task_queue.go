@@ -1,13 +1,11 @@
-package daemon
+package task
 
 import (
-	"github.com/backtick-se/gowait/core/task"
-
 	"context"
 )
 
 type TaskQueue interface {
-	Queue(ctx context.Context, spec *task.Spec) (Instance, error)
+	Queue(ctx context.Context, spec *Spec) (Instance, error)
 	Aquire(ctx context.Context, image string) (Instance, error)
 }
 
@@ -40,7 +38,7 @@ func (m *queue) Aquire(ctx context.Context, image string) (Instance, error) {
 		select {
 		case instance := <-queue:
 			// skip any task that may have been cancelled
-			if instance.State().Status != task.StatusWait {
+			if instance.State().Status != StatusWait {
 				continue
 			}
 			return instance, nil
@@ -50,7 +48,7 @@ func (m *queue) Aquire(ctx context.Context, image string) (Instance, error) {
 	}
 }
 
-func (m *queue) Queue(ctx context.Context, spec *task.Spec) (Instance, error) {
+func (m *queue) Queue(ctx context.Context, spec *Spec) (Instance, error) {
 	instance := newInstance(spec)
 	queue := m.getQueue(spec.Image)
 

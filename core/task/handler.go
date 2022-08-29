@@ -1,8 +1,8 @@
 package task
 
 type Handler interface {
-	Init(*MsgInit) error
-	Complete(*MsgComplete) error
-	Fail(*MsgFailure) error
-	Log(*MsgLog) error
+	OnInit(*MsgInit) error
+	OnComplete(*MsgComplete) error
+	OnFailure(*MsgFailure) error
+	OnLog(*MsgLog) error
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/backtick-se/gowait/adapter/api/grpc/pb"
 	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/api"
 	"github.com/backtick-se/gowait/core/task"
 
 	"google.golang.org/grpc"
@@ -14,7 +15,7 @@ type apiclient struct {
 	api  pb.CowaitClient
 }
 
-func NewApiClient() core.APIClient {
+func NewApiClient() api.Client {
 	return &apiclient{}
 }
 

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/api"
 	"github.com/backtick-se/gowait/core/task"
 
 	"context"
@@ -12,7 +12,7 @@ import (
 
 type KillCommand cli.ActionFunc
 
-func NewKillCommand(client core.APIClient) KillCommand {
+func NewKillCommand(client api.Client) KillCommand {
 	return func(cctx *cli.Context) error {
 		if cctx.NArg() < 1 {
 			return fmt.Errorf("usage: cowait kill <task name>")

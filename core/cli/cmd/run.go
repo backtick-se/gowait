@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/api"
 	"github.com/backtick-se/gowait/core/task"
 
 	"context"
@@ -12,7 +12,7 @@ import (
 
 type RunCommand cli.ActionFunc
 
-func NewRunCommand(client core.APIClient) RunCommand {
+func NewRunCommand(client api.Client) RunCommand {
 	return func(cctx *cli.Context) error {
 		if cctx.NArg() < 1 {
 			return fmt.Errorf("usage: cowait run <task name>")

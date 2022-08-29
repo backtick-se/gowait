@@ -1,47 +1,37 @@
-package daemon
+package task
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/backtick-se/gowait/core"
-	"github.com/backtick-se/gowait/core/msg"
-	"github.com/backtick-se/gowait/core/task"
 )
 
-// todo: move to task package
-type TaskHandler interface {
-	OnInit(*msg.TaskInit) error
-	OnComplete(*msg.TaskComplete) error
-	OnFailure(*msg.TaskFailure) error
-	OnLog(*msg.LogEntry) error
-}
-
-type TaskManager interface {
+type Manager interface {
 	TaskQueue
-	TaskHandler
+	Handler
 
-	Get(task.ID) (Instance, bool)
+	Get(ID) (Instance, bool)
 }
 
 type taskmgr struct {
 	TaskQueue
-	byId map[task.ID]Instance
+	byId map[ID]Instance
 }
 
-func NewTaskManager() TaskManager {
+func NewManager() Manager {
 	return &taskmgr{
 		TaskQueue: NewTaskQueue(256),
-		byId:      make(map[task.ID]Instance),
+		byId:      make(map[ID]Instance),
 	}
 }
 
-func (t *taskmgr) Get(id task.ID) (Instance, bool) {
+func (t *taskmgr) Get(id ID) (Instance, bool) {
 	i, ok := t.byId[id]
 	return i, ok
 }
 
-func (t *taskmgr) Queue(ctx context.Context, spec *task.Spec) (Instance, error) {
+func (t *taskmgr) Queue(ctx context.Context, spec *Spec) (Instance, error) {
 	instance, err := t.TaskQueue.Queue(ctx, spec)
 	if err != nil {
 		return nil, err
@@ -54,8 +44,8 @@ func (t *taskmgr) Queue(ctx context.Context, spec *task.Spec) (Instance, error) 
 // task.Handler implementation
 //
 
-func (t *taskmgr) OnInit(req *msg.TaskInit) error {
-	id := task.ID(req.Header.ID)
+func (t *taskmgr) OnInit(req *MsgInit) error {
+	id := ID(req.Header.ID)
 	if instance, ok := t.Get(id); ok {
 		fmt.Println("task/init", id, "on", req.Executor)
 		instance.OnInit(req)
@@ -64,8 +54,8 @@ func (t *taskmgr) OnInit(req *msg.TaskInit) error {
 	return core.ErrUnknownTask
 }
 
-func (t *taskmgr) OnComplete(req *msg.TaskComplete) error {
-	id := task.ID(req.Header.ID)
+func (t *taskmgr) OnComplete(req *MsgComplete) error {
+	id := ID(req.Header.ID)
 	if instance, ok := t.Get(id); ok {
 		fmt.Println("task/complete", id, string(req.Result))
 		instance.OnComplete(req)
@@ -74,8 +64,8 @@ func (t *taskmgr) OnComplete(req *msg.TaskComplete) error {
 	return core.ErrUnknownTask
 }
 
-func (t *taskmgr) OnFailure(req *msg.TaskFailure) error {
-	id := task.ID(req.Header.ID)
+func (t *taskmgr) OnFailure(req *MsgFailure) error {
+	id := ID(req.Header.ID)
 	if instance, ok := t.Get(id); ok {
 		fmt.Println("task/fail", id, req.Error)
 		instance.OnFailure(req)
@@ -84,8 +74,8 @@ func (t *taskmgr) OnFailure(req *msg.TaskFailure) error {
 	return core.ErrUnknownTask
 }
 
-func (t *taskmgr) OnLog(req *msg.LogEntry) error {
-	id := task.ID(req.Header.ID)
+func (t *taskmgr) OnLog(req *MsgLog) error {
+	id := ID(req.Header.ID)
 	if instance, ok := t.Get(id); ok {
 		fmt.Printf("%s [%s] %s", req.Header.ID, req.File, req.Data)
 		instance.OnLog(req)

@@ -13,13 +13,13 @@ import (
 )
 
 type daemon struct {
-	tasks   TaskManager
+	tasks   task.Manager
 	info    cluster.Info
 	workers Workers
 	events  events.Pub[*cluster.Event]
 }
 
-func NewDaemon(workers Workers, taskmgr TaskManager) cluster.T {
+func NewDaemon(workers Workers, taskmgr task.Manager) cluster.T {
 	return &daemon{
 		events:  events.New[*cluster.Event](),
 		workers: workers,
@@ -72,15 +72,8 @@ func (t *daemon) Destroy(ctx context.Context, id task.ID) error {
 
 		case task.StatusExec:
 			instance.State().Fail(fmt.Errorf("stopped manually"))
-			// figure out which executor is running the task
-			// then kill it.
-			worker := instance.Worker()
-			if worker == nil {
-				// this should not happen
-				return fmt.Errorf("task %s is not assigned a worker", id)
-			}
-			// if the task is assigned a worker, then kill it.
-			return t.workers.Remove(ctx, worker)
+			// kill the executor that is running the task
+			return t.workers.Remove(ctx, instance.Executor())
 
 		default:
 			return fmt.Errorf("task %s is in state %s", id, instance.State().Status)

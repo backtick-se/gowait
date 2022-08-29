@@ -1,9 +1,9 @@
 package executor
 
 import (
-	"context"
-	"github.com/backtick-se/gowait/core/msg"
 	"github.com/backtick-se/gowait/core/task"
+
+	"context"
 )
 
 type Client interface {
@@ -20,9 +20,9 @@ type Client interface {
 
 // Handles commands from executors
 type Handler interface {
-	ExecInit(context.Context, *msg.ExecInit) error
-	ExecAquire(context.Context, *msg.ExecAquire) (*task.Run, error)
-	ExecStop(context.Context, *msg.ExecStop) error
+	ExecInit(context.Context, *MsgInit) error
+	ExecAquire(context.Context, *MsgAquire) (*task.Run, error)
+	ExecStop(context.Context, *MsgStop) error
 }
 
 type Logger interface {
