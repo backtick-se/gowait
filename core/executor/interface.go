@@ -23,11 +23,6 @@ type Handler interface {
 	ExecInit(context.Context, *msg.ExecInit) error
 	ExecAquire(context.Context, *msg.ExecAquire) (*task.Run, error)
 	ExecStop(context.Context, *msg.ExecStop) error
-
-	Init(*msg.TaskInit) error
-	Complete(*msg.TaskComplete) error
-	Fail(*msg.TaskFailure) error
-	Log(*msg.LogEntry) error
 }
 
 type Logger interface {

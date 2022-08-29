@@ -6,9 +6,9 @@ import (
 	"context"
 )
 
-type Queue interface {
-	Push(ctx context.Context, spec *task.Spec) (Instance, error)
-	Pop(ctx context.Context, image string) (Instance, error)
+type TaskQueue interface {
+	Queue(ctx context.Context, spec *task.Spec) (Instance, error)
+	Aquire(ctx context.Context, image string) (Instance, error)
 }
 
 type queue struct {
@@ -18,7 +18,7 @@ type queue struct {
 	queues map[string]chan Instance
 }
 
-func NewQueue(length int) Queue {
+func NewTaskQueue(length int) TaskQueue {
 	return &queue{
 		length: length,
 		queues: make(map[string]chan Instance),
@@ -34,7 +34,7 @@ func (m *queue) getQueue(image string) chan Instance {
 	return queue
 }
 
-func (m *queue) Pop(ctx context.Context, image string) (Instance, error) {
+func (m *queue) Aquire(ctx context.Context, image string) (Instance, error) {
 	queue := m.getQueue(image)
 	for {
 		select {
@@ -50,7 +50,7 @@ func (m *queue) Pop(ctx context.Context, image string) (Instance, error) {
 	}
 }
 
-func (m *queue) Push(ctx context.Context, spec *task.Spec) (Instance, error) {
+func (m *queue) Queue(ctx context.Context, spec *task.Spec) (Instance, error) {
 	instance := newInstance(spec)
 	queue := m.getQueue(spec.Image)
 

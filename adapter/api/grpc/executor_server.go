@@ -3,6 +3,7 @@ package grpc
 import (
 	"github.com/backtick-se/gowait/adapter/api/grpc/pb"
 	"github.com/backtick-se/gowait/core"
+	"github.com/backtick-se/gowait/core/daemon"
 	"github.com/backtick-se/gowait/core/executor"
 	"github.com/backtick-se/gowait/core/msg"
 	"github.com/backtick-se/gowait/core/task"
@@ -19,11 +20,13 @@ import (
 type executorServer struct {
 	pb.UnimplementedExecutorServer
 	handler executor.Handler
+	tasks   daemon.TaskManager
 }
 
-func RegisterExecutorServer(lc fx.Lifecycle, srv *grpc.Server, handler executor.Handler) {
+func RegisterExecutorServer(lc fx.Lifecycle, srv *grpc.Server, handler executor.Handler, tasks daemon.TaskManager) {
 	pb.RegisterExecutorServer(srv, &executorServer{
 		handler: handler,
+		tasks:   tasks,
 	})
 	fmt.Println("registered grpc executor server")
 }
@@ -67,7 +70,7 @@ func (t *executorServer) ExecStop(ctx context.Context, req *pb.ExecStopReq) (*pb
 //
 
 func (t *executorServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb.TaskInitReply, error) {
-	err := t.handler.Init(&msg.TaskInit{
+	err := t.tasks.OnInit(&msg.TaskInit{
 		Header:   pb.UnpackHeader(req.Header),
 		Version:  req.Version,
 		Executor: task.ID(req.Executor),
@@ -80,7 +83,7 @@ func (t *executorServer) TaskInit(ctx context.Context, req *pb.TaskInitReq) (*pb
 
 func (t *executorServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq) (*pb.TaskFailureReply, error) {
 	taskErr := core.NewError(req.Error)
-	err := t.handler.Fail(&msg.TaskFailure{
+	err := t.tasks.OnFailure(&msg.TaskFailure{
 		Header: pb.UnpackHeader(req.Header),
 		Error:  taskErr,
 	})
@@ -91,7 +94,7 @@ func (t *executorServer) TaskFailure(ctx context.Context, req *pb.TaskFailureReq
 }
 
 func (t *executorServer) TaskComplete(ctx context.Context, req *pb.TaskCompleteReq) (*pb.TaskCompleteReply, error) {
-	err := t.handler.Complete(&msg.TaskComplete{
+	err := t.tasks.OnComplete(&msg.TaskComplete{
 		Header: pb.UnpackHeader(req.Header),
 		Result: task.Result(req.Result),
 	})
@@ -114,7 +117,7 @@ func (t *executorServer) TaskLog(stream pb.Executor_TaskLogServer) error {
 			return err
 		}
 		records++
-		t.handler.Log(&msg.LogEntry{
+		t.tasks.OnLog(&msg.LogEntry{
 			Header: pb.UnpackHeader(entry.Header),
 			File:   entry.File,
 			Data:   entry.Data,
