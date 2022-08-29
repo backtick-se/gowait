@@ -583,6 +583,7 @@ var Cowait_ServiceDesc = grpc.ServiceDesc{
 type ClusterClient interface {
 	Info(ctx context.Context, in *ClusterInfoReq, opts ...grpc.CallOption) (*ClusterInfoReply, error)
 	CreateTask(ctx context.Context, in *CreateTaskReq, opts ...grpc.CallOption) (*CreateTaskReply, error)
+	KillTask(ctx context.Context, in *KillTaskReq, opts ...grpc.CallOption) (*KillTaskReply, error)
 	Subscribe(ctx context.Context, in *ClusterSubscribeReq, opts ...grpc.CallOption) (Cluster_SubscribeClient, error)
 }
 
@@ -606,6 +607,15 @@ func (c *clusterClient) Info(ctx context.Context, in *ClusterInfoReq, opts ...gr
 func (c *clusterClient) CreateTask(ctx context.Context, in *CreateTaskReq, opts ...grpc.CallOption) (*CreateTaskReply, error) {
 	out := new(CreateTaskReply)
 	err := c.cc.Invoke(ctx, "/Cluster/CreateTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterClient) KillTask(ctx context.Context, in *KillTaskReq, opts ...grpc.CallOption) (*KillTaskReply, error) {
+	out := new(KillTaskReply)
+	err := c.cc.Invoke(ctx, "/Cluster/KillTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -650,6 +660,7 @@ func (x *clusterSubscribeClient) Recv() (*ClusterEvent, error) {
 type ClusterServer interface {
 	Info(context.Context, *ClusterInfoReq) (*ClusterInfoReply, error)
 	CreateTask(context.Context, *CreateTaskReq) (*CreateTaskReply, error)
+	KillTask(context.Context, *KillTaskReq) (*KillTaskReply, error)
 	Subscribe(*ClusterSubscribeReq, Cluster_SubscribeServer) error
 	mustEmbedUnimplementedClusterServer()
 }
@@ -663,6 +674,9 @@ func (UnimplementedClusterServer) Info(context.Context, *ClusterInfoReq) (*Clust
 }
 func (UnimplementedClusterServer) CreateTask(context.Context, *CreateTaskReq) (*CreateTaskReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTask not implemented")
+}
+func (UnimplementedClusterServer) KillTask(context.Context, *KillTaskReq) (*KillTaskReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KillTask not implemented")
 }
 func (UnimplementedClusterServer) Subscribe(*ClusterSubscribeReq, Cluster_SubscribeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
@@ -716,6 +730,24 @@ func _Cluster_CreateTask_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Cluster_KillTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KillTaskReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterServer).KillTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Cluster/KillTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterServer).KillTask(ctx, req.(*KillTaskReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Cluster_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ClusterSubscribeReq)
 	if err := stream.RecvMsg(m); err != nil {
@@ -751,6 +783,10 @@ var Cluster_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateTask",
 			Handler:    _Cluster_CreateTask_Handler,
+		},
+		{
+			MethodName: "KillTask",
+			Handler:    _Cluster_KillTask_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

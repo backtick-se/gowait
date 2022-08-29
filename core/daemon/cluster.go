@@ -16,20 +16,18 @@ import (
 
 type daemon struct {
 	info    cluster.Info
-	driver  cluster.Driver
 	workers Workers
 	queue   Queue
 	tasks   TaskManager
 	events  events.Pub[*cluster.Event]
 }
 
-func NewDaemon(driver cluster.Driver) cluster.T {
+func NewDaemon(workers Workers, taskmgr TaskManager) cluster.T {
 	return &daemon{
 		events:  events.New[*cluster.Event](),
-		driver:  driver,
-		workers: NewWorkers(driver),
+		workers: workers,
+		tasks:   taskmgr,
 		queue:   NewQueue(256),
-		tasks:   NewTaskManager(),
 		info: cluster.Info{
 			ID:   util.RandomString(8),
 			Name: "test-daemon",
@@ -83,7 +81,29 @@ func (t *daemon) Create(ctx context.Context, spec *task.Spec) (task.T, error) {
 }
 
 func (t *daemon) Destroy(ctx context.Context, id task.ID) error {
-	return t.driver.Kill(ctx, id)
+	if instance, ok := t.tasks.Get(id); ok {
+		switch instance.State().Status {
+		case task.StatusWait:
+			instance.State().Fail(fmt.Errorf("stopped manually"))
+			return nil
+
+		case task.StatusExec:
+			instance.State().Fail(fmt.Errorf("stopped manually"))
+			// figure out which executor is running the task
+			// then kill it.
+			worker := instance.Worker()
+			if worker == nil {
+				// this should not happen
+				return fmt.Errorf("task %s is not assigned a worker", id)
+			}
+			// if the task is assigned a worker, then kill it.
+			return t.workers.Remove(ctx, worker)
+
+		default:
+			return fmt.Errorf("task %s is in state %s", id, instance.State().Status)
+		}
+	}
+	return core.ErrUnknownTask
 }
 
 //
@@ -102,6 +122,8 @@ func (t *daemon) ExecInit(ctx context.Context, req *msg.ExecInit) error {
 func (t *daemon) ExecAquire(ctx context.Context, req *msg.ExecAquire) (*task.Run, error) {
 	id := task.ID(req.Header.ID)
 	if worker, ok := t.workers.Get(id); ok {
+		worker.OnIdle()
+
 		// find the next suitable work item for this executor
 		// this will block until a new task is available.
 		// its up to the caller to abort the call if the wait is too long.
@@ -110,6 +132,7 @@ func (t *daemon) ExecAquire(ctx context.Context, req *msg.ExecAquire) (*task.Run
 		if err != nil {
 			return nil, err
 		}
+		instance.Assign(worker)
 
 		fmt.Println("executor/aquire", *instance.State())
 		worker.OnAquire(instance)
@@ -123,7 +146,7 @@ func (t *daemon) ExecStop(ctx context.Context, req *msg.ExecStop) error {
 	if worker, ok := t.workers.Get(id); ok {
 		fmt.Println("executor stopped:", id)
 		worker.OnStop()
-		t.workers.Remove(worker)
+		t.workers.Remove(ctx, worker)
 		return nil
 	}
 	return core.ErrUnknownTask

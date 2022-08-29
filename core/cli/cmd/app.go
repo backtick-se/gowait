@@ -14,6 +14,7 @@ type app struct {
 
 func NewApp(
 	runAction RunCommand,
+	killAction KillCommand,
 ) App {
 	return &app{
 		App: &cli.App{
@@ -31,6 +32,11 @@ func NewApp(
 							Usage: "task image name",
 						},
 					},
+				},
+				{
+					Name:   "kill",
+					Usage:  "kill a running task",
+					Action: cli.ActionFunc(killAction),
 				},
 			},
 		},

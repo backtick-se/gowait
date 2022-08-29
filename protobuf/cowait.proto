@@ -148,6 +148,7 @@ message AwaitTaskReply {
 service Cluster {
     rpc Info(ClusterInfoReq) returns (ClusterInfoReply) {}
     rpc CreateTask(CreateTaskReq) returns (CreateTaskReply) {}
+    rpc KillTask(KillTaskReq) returns (KillTaskReply) {}
     
     rpc Subscribe(ClusterSubscribeReq) returns (stream ClusterEvent) {}
 }
@@ -159,12 +160,6 @@ message ClusterInfoReply {
     string key = 3;
     string status = 4;
 }
-
-message ClusterSpawnReq {}
-message ClusterSpawnReply {}
-
-message ClusterKillReq { }
-message ClusterKillReply {}
 
 message ClusterPokeReq {}
 message ClusterPokeReply {}

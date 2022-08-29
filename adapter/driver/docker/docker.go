@@ -58,7 +58,7 @@ func (d *dock) Spawn(ctx context.Context, id task.ID, image string) error {
 		},
 	}
 	host := container.HostConfig{
-		AutoRemove: true,
+		AutoRemove: false,
 	}
 	net := network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{

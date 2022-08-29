@@ -19,6 +19,7 @@ type Worker interface {
 
 	OnInit()
 	OnStop()
+	OnIdle()
 	OnAquire(Instance)
 }
 
@@ -30,6 +31,7 @@ type worker struct {
 	status executor.Status
 
 	on_init   chan struct{}
+	on_idle   chan struct{}
 	on_stop   chan struct{}
 	on_aquire chan Instance
 }
@@ -44,6 +46,7 @@ func NewWorker(driver cluster.Driver, id task.ID, image string) Worker {
 		status: executor.StatusWait,
 
 		on_init:   make(chan struct{}),
+		on_idle:   make(chan struct{}),
 		on_stop:   make(chan struct{}),
 		on_aquire: make(chan Instance),
 	}
@@ -56,6 +59,7 @@ func (w *worker) Image() string { return w.image }
 func (w *worker) Status() executor.Status { return w.status }
 
 func (w *worker) OnInit() { w.on_init <- struct{}{} }
+func (w *worker) OnIdle() { w.on_idle <- struct{}{} }
 func (w *worker) OnStop() { w.on_stop <- struct{}{} }
 
 func (w *worker) OnAquire(i Instance) {
@@ -76,6 +80,8 @@ func (i *worker) proc() {
 	for {
 		select {
 		case <-i.on_init:
+			i.status = executor.StatusIdle
+		case <-i.on_idle:
 			i.status = executor.StatusIdle
 		case <-i.on_stop:
 			i.status = executor.StatusStop

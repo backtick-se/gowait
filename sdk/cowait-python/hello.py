@@ -1,4 +1,5 @@
 import cowait
+import time
 from cowait import Context
 
 
@@ -25,3 +26,9 @@ def my_task(context: Context, **input):
 @cowait.task()
 def square(value: int) -> int:
     return value**2
+
+
+@cowait.task()
+def wait(**input):
+    print('sleeping for 60 seconds')
+    time.sleep(60)

@@ -36,11 +36,17 @@ func (m *queue) getQueue(image string) chan Instance {
 
 func (m *queue) Pop(ctx context.Context, image string) (Instance, error) {
 	queue := m.getQueue(image)
-	select {
-	case instance := <-queue:
-		return instance, nil
-	case <-ctx.Done():
-		return nil, context.Canceled
+	for {
+		select {
+		case instance := <-queue:
+			// skip any task that may have been cancelled
+			if instance.State().Status != task.StatusWait {
+				continue
+			}
+			return instance, nil
+		case <-ctx.Done():
+			return nil, context.Canceled
+		}
 	}
 }
 

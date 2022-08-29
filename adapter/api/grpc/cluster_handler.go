@@ -3,6 +3,7 @@ package grpc
 import (
 	"github.com/backtick-se/gowait/adapter/api/grpc/pb"
 	"github.com/backtick-se/gowait/core/cluster"
+	"github.com/backtick-se/gowait/core/task"
 
 	"context"
 	"fmt"
@@ -29,12 +30,13 @@ func (s *clusterHandler) Info(context.Context, *pb.ClusterInfoReq) (*pb.ClusterI
 	}, nil
 }
 
-func (s *clusterHandler) Spawn(context.Context, *pb.ClusterSpawnReq) (*pb.ClusterSpawnReply, error) {
+func (s *clusterHandler) Spawn(context.Context, *pb.CreateTaskReq) (*pb.CreateTaskReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Spawn not implemented")
 }
 
-func (s *clusterHandler) Kill(context.Context, *pb.ClusterKillReq) (*pb.ClusterKillReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Kill not implemented")
+func (s *clusterHandler) Kill(ctx context.Context, req *pb.KillTaskReq) (*pb.KillTaskReply, error) {
+	err := s.cluster.Destroy(ctx, task.ID(req.Id))
+	return &pb.KillTaskReply{}, err
 }
 
 func (s *clusterHandler) Poke(context.Context, *pb.ClusterPokeReq) (*pb.ClusterPokeReply, error) {

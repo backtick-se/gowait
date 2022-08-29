@@ -55,3 +55,10 @@ func (c *apiclient) CreateTask(ctx context.Context, def *task.Spec) (*task.Run, 
 		Err:       err,
 	}, nil
 }
+
+func (c *apiclient) KillTask(ctx context.Context, id task.ID) error {
+	_, err := c.api.KillTask(ctx, &pb.KillTaskReq{
+		Id: string(id),
+	})
+	return err
+}

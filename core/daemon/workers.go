@@ -10,9 +10,8 @@ import (
 )
 
 type Workers interface {
-	Add(Worker)
-	Remove(Worker)
 	Get(id task.ID) (Worker, bool)
+	Remove(context.Context, Worker) error
 	Request(ctx context.Context, image string) (Worker, error)
 }
 
@@ -45,17 +44,18 @@ func (w *workers) Add(worker Worker) {
 	w.byId[worker.ID()] = worker
 }
 
-func (w *workers) Remove(worker Worker) {
+func (w *workers) Remove(ctx context.Context, worker Worker) error {
 	workers, ok := w.byImage[worker.Image()]
 	if ok {
 		for idx, wi := range workers {
 			if wi == worker {
 				w.byImage[worker.Image()] = append(workers[:idx], workers[idx+1:]...)
 				delete(w.byId, worker.ID())
-				return
+				return w.driver.Kill(ctx, worker.ID())
 			}
 		}
 	}
+	return fmt.Errorf("worker %s not found", worker.ID())
 }
 
 func (w *workers) Request(ctx context.Context, image string) (Worker, error) {

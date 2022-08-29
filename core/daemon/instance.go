@@ -12,16 +12,20 @@ import (
 type Instance interface {
 	task.T
 
+	Assign(Worker)
+	Worker() Worker
+	Exec(done chan struct{})
+
 	OnInit(m *msg.TaskInit)
 	OnFailure(m *msg.TaskFailure)
 	OnComplete(m *msg.TaskComplete)
 	OnLog(m *msg.LogEntry)
-	Exec(done chan struct{})
 }
 
 type instance struct {
-	run  *task.Run
-	logs map[string][]string
+	run    *task.Run
+	worker Worker
+	logs   map[string][]string
 
 	on_init     chan *msg.TaskInit
 	on_fail     chan *msg.TaskFailure
@@ -52,6 +56,9 @@ func (t *instance) State() *task.Run { return t.run }
 func (t *instance) Logs(file string) ([]string, error) {
 	return t.logs[file], nil
 }
+
+func (t *instance) Assign(w Worker) { t.worker = w }
+func (t *instance) Worker() Worker  { return t.worker }
 
 //
 // Instance events

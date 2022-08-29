@@ -10,6 +10,7 @@ var Module = fx.Module(
 	fx.Provide(NewApp),
 
 	fx.Provide(NewRunCommand),
+	fx.Provide(NewKillCommand),
 
 	fx.Decorate(func(client core.APIClient) (core.APIClient, error) {
 		hostname := "localhost:1337"

@@ -453,6 +453,11 @@ class ClusterStub(object):
                 request_serializer=cowait__pb2.CreateTaskReq.SerializeToString,
                 response_deserializer=cowait__pb2.CreateTaskReply.FromString,
                 )
+        self.KillTask = channel.unary_unary(
+                '/Cluster/KillTask',
+                request_serializer=cowait__pb2.KillTaskReq.SerializeToString,
+                response_deserializer=cowait__pb2.KillTaskReply.FromString,
+                )
         self.Subscribe = channel.unary_stream(
                 '/Cluster/Subscribe',
                 request_serializer=cowait__pb2.ClusterSubscribeReq.SerializeToString,
@@ -479,6 +484,12 @@ class ClusterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def KillTask(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def Subscribe(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -497,6 +508,11 @@ def add_ClusterServicer_to_server(servicer, server):
                     servicer.CreateTask,
                     request_deserializer=cowait__pb2.CreateTaskReq.FromString,
                     response_serializer=cowait__pb2.CreateTaskReply.SerializeToString,
+            ),
+            'KillTask': grpc.unary_unary_rpc_method_handler(
+                    servicer.KillTask,
+                    request_deserializer=cowait__pb2.KillTaskReq.FromString,
+                    response_serializer=cowait__pb2.KillTaskReply.SerializeToString,
             ),
             'Subscribe': grpc.unary_stream_rpc_method_handler(
                     servicer.Subscribe,
@@ -548,6 +564,23 @@ class Cluster(object):
         return grpc.experimental.unary_unary(request, target, '/Cluster/CreateTask',
             cowait__pb2.CreateTaskReq.SerializeToString,
             cowait__pb2.CreateTaskReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def KillTask(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Cluster/KillTask',
+            cowait__pb2.KillTaskReq.SerializeToString,
+            cowait__pb2.KillTaskReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

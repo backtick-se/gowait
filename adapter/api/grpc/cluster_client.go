@@ -64,6 +64,13 @@ func (c *clusterClient) CreateTask(ctx context.Context, spec *task.Spec) (*task.
 	return &state, nil
 }
 
+func (c *clusterClient) KillTask(ctx context.Context, id task.ID) error {
+	_, err := c.cluster.KillTask(ctx, &pb.KillTaskReq{
+		Id: string(id),
+	})
+	return err
+}
+
 func (c *clusterClient) Subscribe(ctx context.Context) (cluster.EventStream, error) {
 	stream, err := c.cluster.Subscribe(ctx, &pb.ClusterSubscribeReq{})
 	if err != nil {
