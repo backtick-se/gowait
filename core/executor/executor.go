@@ -11,7 +11,7 @@ import (
 type ID string
 
 type T interface {
-	Run(context.Context, task.ID) error
+	Run(context.Context, task.ID, string) error
 }
 
 type executor struct {
@@ -26,10 +26,9 @@ func New(client Client, server Server) (T, error) {
 	}, nil
 }
 
-func (e *executor) Run(ctx context.Context, id task.ID) error {
+func (e *executor) Run(ctx context.Context, id task.ID, daemonEndpoint string) error {
 	// connect to daemon
-	hostname := "cowaitd.default.svc.cluster.local:1337"
-	if err := e.client.Connect(hostname, id); err != nil {
+	if err := e.client.Connect(daemonEndpoint, id); err != nil {
 		return fmt.Errorf("failed to connect upstream: %w", err)
 	}
 

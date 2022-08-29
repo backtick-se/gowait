@@ -23,6 +23,21 @@ class Task:
     @property
     def accepts_context(self) -> bool:
         return 'context' in self.input
+
+    def json(self) -> dict:
+        return {
+            'Name': self.name,
+            'Description': self.desc,
+            'Input': [
+                {
+                    'Name': name,
+                    'Type': str(param.annotation),
+                    'Default': str(param.default),
+                }
+                for name, param in self.input.items()
+            ],
+            'Output': str(self.output),
+        }
     
 
 _tasks: Dict[str, Task] = {}

@@ -89,12 +89,16 @@ func (k *kube) Spawn(ctx context.Context, id task.ID, image string) error {
 				ImagePullPolicy: apiv1.PullAlways,
 				Env: []apiv1.EnvVar{
 					{
+						Name:  task.EnvTaskID,
+						Value: string(id),
+					},
+					{
 						Name:  "COWAIT_IMAGE",
 						Value: image,
 					},
 					{
-						Name:  task.EnvTaskID,
-						Value: string(id),
+						Name:  "COWAIT_DAEMON",
+						Value: "cowaitd.default.svc.cluster.local:1337",
 					},
 				},
 			},

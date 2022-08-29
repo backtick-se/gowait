@@ -15,6 +15,7 @@ type Worker interface {
 	ID() task.ID
 	Image() string
 	Status() executor.Status
+	Start(context.Context) error
 
 	OnInit()
 	OnStop()
@@ -46,7 +47,6 @@ func NewWorker(driver cluster.Driver, id task.ID, image string) Worker {
 		on_stop:   make(chan struct{}),
 		on_aquire: make(chan Instance),
 	}
-	go t.proc()
 	return t
 }
 
@@ -62,18 +62,16 @@ func (w *worker) OnAquire(i Instance) {
 	w.on_aquire <- i
 }
 
+func (i *worker) Start(ctx context.Context) error {
+	if err := i.driver.Spawn(ctx, i.id, i.image); err != nil {
+		return fmt.Errorf("failed to spawn task %s: %w", i.id, err)
+	}
+	go i.proc()
+	return nil
+}
+
 func (i *worker) proc() {
 	defer i.cleanup()
-
-	// this is the instance management loop
-	// at this point the task is in the "scheduled" state
-	// i suppose we start by calling cluster.Spawn() ?
-	if err := i.driver.Spawn(context.Background(), i.id, i.image); err != nil {
-		fmt.Println("failed to spawn task", i.id, ":", err)
-		return
-	}
-
-	// todo: this should be structured as a finite state machine
 
 	for {
 		select {

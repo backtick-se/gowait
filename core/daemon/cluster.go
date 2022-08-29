@@ -75,7 +75,9 @@ func (t *daemon) Create(ctx context.Context, spec *task.Spec) (task.T, error) {
 	t.tasks.Add(instance)
 
 	// request an idle worker
-	t.workers.Request(spec.Image)
+	if _, err := t.workers.Request(ctx, spec.Image); err != nil {
+		return nil, err
+	}
 
 	return instance, nil
 }

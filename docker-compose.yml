@@ -1,4 +1,7 @@
 version: '2'
+networks:
+  cowait:
+    external: true
 services:
   base:
     image: 'cowait/gowait'
@@ -25,6 +28,14 @@ services:
     build: 
       context: '.'
       target: 'daemon'
+    command: ['-driver=docker']
+    networks:
+      - 'default'
+      - 'cowait'
+    ports:
+      - '1337:1337'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
 
   cloud:
     image: 'cowait/cloud'

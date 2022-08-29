@@ -19,26 +19,26 @@ func main() {
 
 		fx.Invoke(run),
 
-		fx.NopLogger,
+		// fx.NopLogger,
 	)
 	executor.Run()
 }
 
-func run(ctrl fx.Shutdowner, cli core.APIClient) error {
-	hostname := "localhost:50949"
+func run(shut fx.Shutdowner, cli core.APIClient) error {
+	hostname := "localhost:1337"
 	if err := cli.Connect(hostname); err != nil {
 		return err
 	}
 
 	ctx := context.Background()
 	id, err := cli.CreateTask(ctx, &task.Spec{
-		Name:    "client-task",
-		Image:   "github.com/backtick-se/gowait/gowait-python",
-		Command: []string{"python", "-u", "hello.py"},
+		Name:    "cowait.builtin.enumerate",
+		Image:   "cowait/gowait-python",
+		Command: []string{"python", "-um", "cowait"},
 	})
 	if err != nil {
 		return err
 	}
 	fmt.Println("created task", id)
-	return ctrl.Shutdown()
+	return shut.Shutdown()
 }

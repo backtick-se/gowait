@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/backtick-se/gowait/core/cluster"
@@ -12,7 +13,7 @@ type Workers interface {
 	Add(Worker)
 	Remove(Worker)
 	Get(id task.ID) (Worker, bool)
-	Request(image string) Worker
+	Request(ctx context.Context, image string) (Worker, error)
 }
 
 type workers struct {
@@ -57,7 +58,7 @@ func (w *workers) Remove(worker Worker) {
 	}
 }
 
-func (w *workers) Request(image string) Worker {
+func (w *workers) Request(ctx context.Context, image string) (Worker, error) {
 	fmt.Println("requested executor for", image)
 	workers, ok := w.byImage[image]
 	if !ok {
@@ -67,20 +68,26 @@ func (w *workers) Request(image string) Worker {
 	for _, worker := range workers {
 		if worker.Image() == image && worker.Status() == executor.StatusIdle {
 			fmt.Println("found existing executor", worker.ID())
-			return worker
+			return worker, nil
 		}
 	}
 
-	worker := w.Spawn(image)
-	fmt.Println("spawning new executor", worker.ID())
+	worker, err := w.Spawn(ctx, image)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("spawned new executor", worker.ID())
 	workers = append(workers, worker)
 	w.byImage[image] = workers
-	return worker
+	return worker, nil
 }
 
-func (w *workers) Spawn(image string) Worker {
+func (w *workers) Spawn(ctx context.Context, image string) (Worker, error) {
 	id := task.GenerateID("executor")
 	worker := NewWorker(w.driver, id, image)
+	if err := worker.Start(ctx); err != nil {
+		return nil, err
+	}
 	w.Add(worker)
-	return worker
+	return worker, nil
 }

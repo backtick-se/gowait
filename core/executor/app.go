@@ -24,8 +24,9 @@ func run(lc fx.Lifecycle, exec T) {
 		OnStart: func(context.Context) error {
 			go func() {
 				id := task.ID(os.Getenv(task.EnvTaskID))
+				daemon := os.Getenv("COWAIT_DAEMON")
 				ctx := context.Background()
-				if err := exec.Run(ctx, id); err != nil {
+				if err := exec.Run(ctx, id, daemon); err != nil {
 					fmt.Println("execution failed:", err)
 					os.Exit(1)
 				}

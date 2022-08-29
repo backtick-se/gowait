@@ -3,7 +3,7 @@ from .task import task, get_tasks
 
 
 @task()
-def enumerate(**input) -> List[str]:
+def enumerate(**input) -> List[dict]:
     """
     Enumerate all available tasks.
     """
@@ -17,6 +17,6 @@ def enumerate(**input) -> List[str]:
             print('\t\t', input)
         print('\t', 'output:', task.output)
 
-        results.append(task.name)
+        results.append(task.json())
 
     return results
