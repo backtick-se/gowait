@@ -2,17 +2,17 @@ package task
 
 import (
 	"context"
-	"errors"
 	"time"
 )
-
-var ErrInactiveTask = errors.New("task is inactive")
 
 type Instance interface {
 	T
 	Handler
 
-	Start(done chan struct{})
+	// Starts the instance handler goroutine
+	Start() chan struct{}
+
+	// Explicitly triggers an OnFailure event
 	Fail(err error) error
 }
 
@@ -48,12 +48,14 @@ func (t *instance) Logs(file string) ([]string, error) {
 	return t.logs[file], nil
 }
 
-func (i *instance) Start(done chan struct{}) {
+func (i *instance) Start() chan struct{} {
 	if i.active {
 		panic("task routine is already running")
 	}
+	done := make(chan struct{})
 	go i.proc(done)
 	<-i.err
+	return done
 }
 
 func (i *instance) Fail(err error) error {
@@ -120,7 +122,7 @@ func (i *instance) proc(done chan struct{}) {
 
 func (i *instance) OnInit(m *MsgInit) error {
 	if !i.active {
-		return ErrInactiveTask
+		return ErrInactive
 	}
 	i.on_init <- m
 	return <-i.err
@@ -128,7 +130,7 @@ func (i *instance) OnInit(m *MsgInit) error {
 
 func (i *instance) OnFailure(m *MsgFailure) error {
 	if !i.active {
-		return ErrInactiveTask
+		return ErrInactive
 	}
 	i.on_fail <- m
 	return <-i.err
@@ -136,7 +138,7 @@ func (i *instance) OnFailure(m *MsgFailure) error {
 
 func (i *instance) OnComplete(m *MsgComplete) error {
 	if !i.active {
-		return ErrInactiveTask
+		return ErrInactive
 	}
 	i.on_complete <- m
 	return <-i.err
@@ -144,7 +146,7 @@ func (i *instance) OnComplete(m *MsgComplete) error {
 
 func (i *instance) OnLog(m *MsgLog) error {
 	if !i.active {
-		return ErrInactiveTask
+		return ErrInactive
 	}
 	i.on_log <- m
 	return <-i.err

@@ -28,8 +28,7 @@ var _ = Describe("Task Instance", func() {
 
 	Context("state transitions", func() {
 		BeforeEach(func() {
-			done = make(chan struct{})
-			instance.Start(done)
+			done = instance.Start()
 
 			err := instance.OnInit(&MsgInit{
 				Header:   Header{ID: string(instance.ID()), Time: time.Now()},
@@ -45,8 +44,8 @@ var _ = Describe("Task Instance", func() {
 		AfterEach(func() {
 			select {
 			case <-done:
-				break
 			default:
+				instance.Fail(ErrCanceled)
 				Fail("expected instance routine exit")
 			}
 		})

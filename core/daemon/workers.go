@@ -86,6 +86,7 @@ func (w *workers) get(id task.ID) (Worker, bool) {
 func (w *workers) spawn(ctx context.Context, image string) (Worker, error) {
 	id := task.GenerateID("executor")
 	worker := NewWorker(w.driver, id, image)
+
 	if err := worker.Start(ctx); err != nil {
 		return nil, err
 	}
@@ -116,8 +117,6 @@ func (t *workers) ExecInit(ctx context.Context, req *executor.MsgInit) error {
 func (t *workers) ExecAquire(ctx context.Context, req *executor.MsgAquire) (*task.Run, error) {
 	id := task.ID(req.Header.ID)
 	if worker, ok := t.get(id); ok {
-		worker.OnIdle()
-
 		// find the next suitable work item for this executor
 		// this will block until a new task is available.
 		// its up to the caller to abort the call if the wait is too long.

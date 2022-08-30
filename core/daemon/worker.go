@@ -6,9 +6,14 @@ import (
 	"github.com/backtick-se/gowait/core/task"
 
 	"context"
+	"errors"
 	"fmt"
 	"time"
 )
+
+var ErrInvalidState = errors.New("invalid state")
+
+type stateFn func() (stateFn, error)
 
 type Worker interface {
 	ID() task.ID
@@ -16,10 +21,9 @@ type Worker interface {
 	Status() executor.Status
 	Start(context.Context) error
 
-	OnInit()
-	OnStop()
-	OnIdle()
-	OnAquire(task.Instance)
+	OnInit() error
+	OnStop() error
+	OnAquire(task.Instance) error
 }
 
 // executor instance
@@ -29,13 +33,13 @@ type worker struct {
 	image  string
 	status executor.Status
 
+	task task.Instance
+
 	on_init   chan struct{}
-	on_idle   chan struct{}
 	on_stop   chan struct{}
 	on_aquire chan task.Instance
+	err       chan error
 }
-
-type TaskEventFn func(event string, state task.Run)
 
 func NewWorker(driver cluster.Driver, id task.ID, image string) Worker {
 	t := &worker{
@@ -45,9 +49,9 @@ func NewWorker(driver cluster.Driver, id task.ID, image string) Worker {
 		status: executor.StatusWait,
 
 		on_init:   make(chan struct{}),
-		on_idle:   make(chan struct{}),
 		on_stop:   make(chan struct{}),
 		on_aquire: make(chan task.Instance),
+		err:       make(chan error),
 	}
 	return t
 }
@@ -57,82 +61,131 @@ func (w *worker) Image() string { return w.image }
 
 func (w *worker) Status() executor.Status { return w.status }
 
-func (w *worker) OnInit() { w.on_init <- struct{}{} }
-func (w *worker) OnIdle() { w.on_idle <- struct{}{} }
-func (w *worker) OnStop() { w.on_stop <- struct{}{} }
+func (w *worker) OnInit() error { w.on_init <- struct{}{}; return <-w.err }
+func (w *worker) OnStop() error { w.on_stop <- struct{}{}; return <-w.err }
 
-func (w *worker) OnAquire(i task.Instance) {
-	w.on_aquire <- i
-}
+func (w *worker) OnAquire(i task.Instance) error { w.on_aquire <- i; return <-w.err }
 
-func (i *worker) Start(ctx context.Context) error {
-	if err := i.driver.Spawn(ctx, i.id, i.image); err != nil {
-		return fmt.Errorf("failed to spawn task %s: %w", i.id, err)
+func (w *worker) Start(ctx context.Context) error {
+	if err := w.driver.Spawn(ctx, w.id, w.image); err != nil {
+		return fmt.Errorf("failed to spawn task %s: %w", w.id, err)
 	}
-	go i.proc()
+	go w.proc()
 	return nil
 }
 
-func (i *worker) proc() {
-	defer i.cleanup()
+func (w *worker) proc() {
+	defer w.cleanup()
 
+	var err error
+	state := w.state_wait
 	for {
-		select {
-		case <-i.on_init:
-			i.status = executor.StatusIdle
-		case <-i.on_idle:
-			i.status = executor.StatusIdle
-		case <-i.on_stop:
-			i.status = executor.StatusStop
+		state, err = state()
+		if err != nil {
+			w.task = nil
+			w.status = executor.StatusCrash
 			return
-		case instance := <-i.on_aquire:
-			i.process_next(instance)
+		}
+		if state == nil {
+			return
 		}
 	}
 }
 
-func (i *worker) process_next(instance task.Instance) {
-	done := make(chan struct{})
-	fmt.Println("dequeued", instance)
+// Acknowledge state transfer
+func (w *worker) ack() {
+	select {
+	case w.err <- nil:
+	case <-time.After(time.Millisecond):
+	}
+}
 
-	// change state to Executing
-	i.status = executor.StatusExec
+func (w *worker) state_wait() (stateFn, error) {
+	for {
+		select {
+		case <-w.on_init:
+			return w.state_idle, nil
+		case <-w.on_stop:
+			return w.state_stop, nil
+
+		// invalid transitions:
+		case <-w.on_aquire:
+			w.err <- ErrInvalidState
+		}
+	}
+}
+
+func (w *worker) state_idle() (stateFn, error) {
+	w.task = nil
+	w.status = executor.StatusIdle
+	fmt.Println("executor", w.id, "idle")
+
+	w.ack()
+
+	for {
+		select {
+		case w.task = <-w.on_aquire:
+			return w.state_exec, nil
+		case <-w.on_stop:
+			return w.state_stop, nil
+
+		// invalid transitions:
+		case <-w.on_init:
+			w.err <- ErrInvalidState
+		}
+	}
+}
+
+func (w *worker) state_exec() (stateFn, error) {
+	if w.task == nil {
+		return nil, fmt.Errorf("no worker task set")
+	}
+	w.status = executor.StatusExec
 
 	// launch a goroutine to handle instance events
-	instance.Start(done)
+	// maybe its weird that this happens here.
+	done := w.task.Start()
 
-	// wait for execution to complete
+	w.ack()
+	fmt.Println("executor", w.id, "running", w.task.ID())
+
 	for {
 		select {
 		case <-done:
-			i.status = executor.StatusIdle
-			return
+			return w.state_idle, nil
 
-		case <-i.on_stop:
-			i.status = executor.StatusStop
-			return
+		case <-w.on_stop:
+			// this might be a reasonable place to fail the running task
+			return w.state_stop, nil
 
 		case <-time.After(10 * time.Second):
 			// periodic liveness check
-			fmt.Println("poke", i.id)
+			fmt.Println("poke", w.id)
 			ctx := context.Background()
-			if err := i.driver.Poke(ctx, i.id); err != nil {
+			if err := w.driver.Poke(ctx, w.id); err != nil {
 				// crash detected.
 				// maybe we want to handle crashes differently? e.g. re-try task
-				fmt.Println("executor", i.id, "failed liveness check:", err)
-				instance.OnFailure(&task.MsgFailure{
-					Header: task.Header{
-						ID: string(instance.ID()),
-					},
-					Error: fmt.Errorf("cluster task error: %w", err),
-				})
-				i.status = executor.StatusCrash
-				return
+				fmt.Println("executor", w.id, "failed liveness check:", err)
+				w.task.Fail(err)
+				return nil, err
 			}
+
+		// invalid transitions:
+		case <-w.on_aquire:
+			w.err <- ErrInvalidState
+		case <-w.on_init:
+			w.err <- ErrInvalidState
 		}
 	}
+}
 
-	// change state to Idle
+func (w *worker) state_stop() (stateFn, error) {
+	w.task = nil
+	w.status = executor.StatusStop
+	w.ack()
+	fmt.Println("executor", w.id, "stopped")
+
+	return nil, nil
 }
 
 func (i *worker) cleanup() {
