@@ -1,28 +1,27 @@
 package daemon_test
 
 import (
-	"context"
-	"time"
-
-	"github.com/backtick-se/gowait/core/daemon"
 	. "github.com/backtick-se/gowait/core/daemon"
-	"github.com/backtick-se/gowait/util/spy"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.uber.org/zap"
+
+	"context"
+	"time"
 
 	"github.com/backtick-se/gowait/core/cluster"
 	"github.com/backtick-se/gowait/core/executor"
 	"github.com/backtick-se/gowait/core/task"
+	"github.com/backtick-se/gowait/util/spy"
 )
 
-var _ = Describe("Worker", func() {
-
+var _ = Describe("executor", func() {
 	var worker Worker
 	var driver *cluster.DriverMock
 
 	BeforeEach(func() {
 		driver = &cluster.DriverMock{}
-		worker = NewWorker(driver, task.GenerateID("test"), "image")
+		worker = NewWorker(driver, task.GenerateID("test"), "image", zap.NewNop())
 	})
 
 	Context("state transitions", func() {
@@ -40,7 +39,7 @@ var _ = Describe("Worker", func() {
 
 		It("rejects init once initialized", func() {
 			err := worker.OnInit()
-			Expect(err).To(MatchError(daemon.ErrInvalidState))
+			Expect(err).To(MatchError(ErrInvalidState))
 		})
 
 		It("aquires tasks", func() {

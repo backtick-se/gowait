@@ -1,9 +1,11 @@
 package task
 
 import (
+	"github.com/backtick-se/gowait/core"
+
 	"fmt"
 
-	"github.com/backtick-se/gowait/core"
+	"go.uber.org/zap"
 )
 
 type Manager interface {
@@ -14,14 +16,14 @@ type Manager interface {
 }
 
 type taskmgr struct {
-	TaskQueue
 	byId map[ID]Instance
+	log  *zap.Logger
 }
 
-func NewManager() Manager {
+func NewManager(log *zap.Logger) Manager {
 	return &taskmgr{
-		TaskQueue: NewTaskQueue(256),
-		byId:      make(map[ID]Instance),
+		log:  log,
+		byId: make(map[ID]Instance),
 	}
 }
 
@@ -42,7 +44,7 @@ func (t *taskmgr) Add(instance Instance) error {
 func (t *taskmgr) OnInit(req *MsgInit) error {
 	id := ID(req.Header.ID)
 	if instance, ok := t.Get(id); ok {
-		fmt.Println("task/init", id, "on", req.Executor)
+		t.log.Info("task init", zap.String("task", string(id)), zap.String("executor", string(req.Executor)))
 		instance.OnInit(req)
 		return nil
 	}
@@ -52,7 +54,7 @@ func (t *taskmgr) OnInit(req *MsgInit) error {
 func (t *taskmgr) OnComplete(req *MsgComplete) error {
 	id := ID(req.Header.ID)
 	if instance, ok := t.Get(id); ok {
-		fmt.Println("task/complete", id, string(req.Result))
+		t.log.Info("task complete", zap.String("task", string(id)), zap.String("result", string(req.Result)))
 		instance.OnComplete(req)
 		return nil
 	}
@@ -62,7 +64,7 @@ func (t *taskmgr) OnComplete(req *MsgComplete) error {
 func (t *taskmgr) OnFailure(req *MsgFailure) error {
 	id := ID(req.Header.ID)
 	if instance, ok := t.Get(id); ok {
-		fmt.Println("task/fail", id, req.Error)
+		t.log.Info("task failure", zap.String("task", string(id)), zap.Error(req.Error))
 		instance.OnFailure(req)
 		return nil
 	}

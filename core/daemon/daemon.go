@@ -1,13 +1,13 @@
 package daemon
 
 import (
-	"context"
 	"github.com/backtick-se/gowait/core"
 	"github.com/backtick-se/gowait/core/cluster"
 	"github.com/backtick-se/gowait/core/task"
 	"github.com/backtick-se/gowait/util"
 	"github.com/backtick-se/gowait/util/events"
 
+	"context"
 	"fmt"
 	"time"
 )
@@ -15,17 +15,19 @@ import (
 type daemon struct {
 	tasks   task.Manager
 	queue   task.TaskQueue
-	info    cluster.Info
 	workers Workers
-	events  events.Pub[*cluster.Event]
+
+	info   cluster.Info
+	events events.Pub[*cluster.Event]
 }
 
 func NewDaemon(workers Workers, taskmgr task.Manager, queue task.TaskQueue) cluster.T {
 	return &daemon{
-		events:  events.New[*cluster.Event](),
 		workers: workers,
 		tasks:   taskmgr,
 		queue:   queue,
+
+		events: events.New[*cluster.Event](),
 		info: cluster.Info{
 			ID:   util.RandomString(8),
 			Name: "test-daemon",
@@ -65,6 +67,10 @@ func (t *daemon) Create(ctx context.Context, spec *task.Spec) (task.T, error) {
 	}
 
 	// request an idle worker
+	// todo: mitigate race condition
+	//   the worker is not marked as busy.
+	//   subsequent calls to request before aquire will return the same executor.
+	//   fix: introduce a Reserved state with a timeout
 	if _, err := t.workers.Request(ctx, spec.Image); err != nil {
 		return nil, err
 	}
@@ -84,11 +90,12 @@ func (t *daemon) Destroy(ctx context.Context, id task.ID) error {
 		return nil
 
 	case task.StatusExec:
+		// todo: introduce a different error for aborts
 		instance.Fail(task.ErrCanceled)
 		// kill the executor that is running the task
 		return t.workers.Remove(ctx, instance.State().Executor)
 
 	default:
-		return fmt.Errorf("task %s is in state %s", id, instance.State().Status)
+		return fmt.Errorf("%w: cant destroy task %s in state %s", ErrInvalidState, id, instance.State().Status)
 	}
 }

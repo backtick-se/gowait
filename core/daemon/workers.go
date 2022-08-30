@@ -1,13 +1,14 @@
 package daemon
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/backtick-se/gowait/core"
 	"github.com/backtick-se/gowait/core/cluster"
 	"github.com/backtick-se/gowait/core/executor"
 	"github.com/backtick-se/gowait/core/task"
+
+	"context"
+
+	"go.uber.org/zap"
 )
 
 type Workers interface {
@@ -22,14 +23,16 @@ type workers struct {
 	queue   task.TaskQueue
 	byId    map[task.ID]Worker
 	byImage map[string][]Worker
+	log     *zap.Logger
 }
 
-func NewWorkers(driver cluster.Driver, queue task.TaskQueue) Workers {
+func NewWorkers(driver cluster.Driver, queue task.TaskQueue, log *zap.Logger) Workers {
 	return &workers{
 		driver:  driver,
 		queue:   queue,
 		byId:    make(map[task.ID]Worker),
 		byImage: make(map[string][]Worker),
+		log:     log,
 	}
 }
 
@@ -50,12 +53,16 @@ func (w *workers) Remove(ctx context.Context, id task.ID) error {
 		}
 	}
 
+	w.log.Info("removed executor", zap.String("executor", string(id)))
+
 	// todo: handle not found errors
 	return w.driver.Kill(ctx, id)
 }
 
 func (w *workers) Request(ctx context.Context, image string) (Worker, error) {
-	fmt.Println("requested executor for", image)
+	log := w.log.With(zap.String("image", image))
+	log.Info("requested executor")
+
 	workers, ok := w.byImage[image]
 	if !ok {
 		workers = []Worker{}
@@ -63,16 +70,18 @@ func (w *workers) Request(ctx context.Context, image string) (Worker, error) {
 
 	for _, worker := range workers {
 		if worker.Image() == image && worker.Status() == executor.StatusIdle {
-			fmt.Println("found existing executor", worker.ID())
+			log.Info("found existing executor", zap.String("executor", string(worker.ID())))
 			return worker, nil
 		}
 	}
 
+	// create new executor
 	worker, err := w.spawn(ctx, image)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("spawned new executor", worker.ID())
+
+	w.log.Info("spawned new executor", zap.String("executor", string(worker.ID())))
 	workers = append(workers, worker)
 	w.byImage[image] = workers
 	return worker, nil
@@ -85,7 +94,7 @@ func (w *workers) get(id task.ID) (Worker, bool) {
 
 func (w *workers) spawn(ctx context.Context, image string) (Worker, error) {
 	id := task.GenerateID("executor")
-	worker := NewWorker(w.driver, id, image)
+	worker := NewWorker(w.driver, id, image, w.log)
 
 	if err := worker.Start(ctx); err != nil {
 		return nil, err
@@ -108,7 +117,6 @@ func (w *workers) spawn(ctx context.Context, image string) (Worker, error) {
 func (t *workers) ExecInit(ctx context.Context, req *executor.MsgInit) error {
 	id := task.ID(req.Header.ID)
 	if worker, ok := t.get(id); ok {
-		fmt.Println("executor init:", id)
 		worker.OnInit()
 	}
 	return nil
@@ -125,10 +133,7 @@ func (t *workers) ExecAquire(ctx context.Context, req *executor.MsgAquire) (*tas
 		if err != nil {
 			return nil, err
 		}
-		// todo: keep track of which instance is running what task
-		// instance.Assign(worker)
 
-		fmt.Println("executor/aquire", *instance.State())
 		worker.OnAquire(instance)
 		return instance.State(), nil
 	}

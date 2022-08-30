@@ -4,6 +4,7 @@ import (
 	"github.com/backtick-se/gowait/core/cluster"
 	"github.com/backtick-se/gowait/core/executor"
 	"github.com/backtick-se/gowait/core/task"
+	"go.uber.org/zap"
 
 	"context"
 	"errors"
@@ -28,12 +29,13 @@ type Worker interface {
 
 // executor instance
 type worker struct {
-	id     task.ID
 	driver cluster.Driver
+	log    *zap.Logger
+
+	id     task.ID
 	image  string
 	status executor.Status
-
-	task task.Instance
+	task   task.Instance
 
 	on_init   chan struct{}
 	on_stop   chan struct{}
@@ -41,10 +43,12 @@ type worker struct {
 	err       chan error
 }
 
-func NewWorker(driver cluster.Driver, id task.ID, image string) Worker {
+func NewWorker(driver cluster.Driver, id task.ID, image string, log *zap.Logger) Worker {
 	t := &worker{
-		id:     id,
 		driver: driver,
+		log:    log.With(zap.String("executor", string(id))),
+
+		id:     id,
 		image:  image,
 		status: executor.StatusWait,
 
@@ -118,7 +122,7 @@ func (w *worker) state_wait() (stateFn, error) {
 func (w *worker) state_idle() (stateFn, error) {
 	w.task = nil
 	w.status = executor.StatusIdle
-	fmt.Println("executor", w.id, "idle")
+	w.log.Info("executor idle")
 
 	w.ack()
 
@@ -147,7 +151,7 @@ func (w *worker) state_exec() (stateFn, error) {
 	done := w.task.Start()
 
 	w.ack()
-	fmt.Println("executor", w.id, "running", w.task.ID())
+	w.log.Info("executor aquire", zap.String("task", string(w.task.ID())))
 
 	for {
 		select {
@@ -160,12 +164,12 @@ func (w *worker) state_exec() (stateFn, error) {
 
 		case <-time.After(10 * time.Second):
 			// periodic liveness check
-			fmt.Println("poke", w.id)
+			w.log.Debug("executor poke", zap.String("task", string(w.task.ID())))
 			ctx := context.Background()
 			if err := w.driver.Poke(ctx, w.id); err != nil {
 				// crash detected.
 				// maybe we want to handle crashes differently? e.g. re-try task
-				fmt.Println("executor", w.id, "failed liveness check:", err)
+				w.log.Error("executor failed liveness check", zap.String("task", string(w.task.ID())), zap.Error(err))
 				w.task.Fail(err)
 				return nil, err
 			}
@@ -183,13 +187,13 @@ func (w *worker) state_stop() (stateFn, error) {
 	w.task = nil
 	w.status = executor.StatusStop
 	w.ack()
-	fmt.Println("executor", w.id, "stopped")
+	w.log.Info("executor stop")
 
 	return nil, nil
 }
 
-func (i *worker) cleanup() {
-	fmt.Println("cleanup executor", i.id)
+func (w *worker) cleanup() {
+	w.log.Debug("executor cleanup")
 
 	// wait a sec for any logs to arrive
 	// todo: avoid race condition here
@@ -197,8 +201,8 @@ func (i *worker) cleanup() {
 
 	// delete executor pod
 	ctx := context.Background()
-	if err := i.driver.Kill(ctx, i.id); err != nil {
+	if err := w.driver.Kill(ctx, w.id); err != nil {
 		// log error
-		fmt.Println("failed to kill", i, ":", err)
+		w.log.Debug("executor cleanup failed", zap.Error(err))
 	}
 }

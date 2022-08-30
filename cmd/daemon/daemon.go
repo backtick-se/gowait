@@ -31,7 +31,6 @@ func main() {
 		fmt.Println("unknown driver:", *driverPtr)
 		os.Exit(1)
 	}
-	fmt.Println("driver:", *driverPtr)
 
 	cowaitd := daemon.App(
 		driver,
@@ -41,7 +40,8 @@ func main() {
 		fx.Invoke(grpc.RegisterExecutorServer),
 		fx.Invoke(daemon.NewUplinkManager),
 		fx.Invoke(createTask),
-		// fx.NopLogger,
+
+		fx.NopLogger,
 	)
 	cowaitd.Run()
 }
@@ -60,8 +60,6 @@ func createTask(lc fx.Lifecycle, cluster cluster.T) {
 				})
 				if err != nil {
 					fmt.Println("failed to spawn executor", name, ":", err)
-				} else {
-					fmt.Println("spawned executor", name)
 				}
 			}
 
@@ -69,7 +67,6 @@ func createTask(lc fx.Lifecycle, cluster cluster.T) {
 
 			go func() {
 				time.Sleep(20 * time.Second)
-				fmt.Println("queueing second task!")
 				queueTask("hello.my_task")
 			}()
 

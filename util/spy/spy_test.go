@@ -1,7 +1,7 @@
 package spy_test
 
 import (
-	. "github.com/backtick-se/gowait-cloud/util/spy"
+	. "github.com/backtick-se/gowait/util/spy"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 

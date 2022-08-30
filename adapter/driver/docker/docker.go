@@ -3,6 +3,7 @@ package docker
 import (
 	"github.com/backtick-se/gowait/core/cluster"
 	"github.com/backtick-se/gowait/core/task"
+	"go.uber.org/zap"
 
 	"context"
 	"fmt"
@@ -14,21 +15,28 @@ import (
 )
 
 type dock struct {
+	log    *zap.Logger
 	client *client.Client
 }
 
-func New() (cluster.Driver, error) {
+func New(log *zap.Logger) (cluster.Driver, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
 	}
+
+	log = log.With(zap.String("driver", "docker"))
+	log.Info("using docker driver")
+
 	return &dock{
+		log:    log,
 		client: cli,
 	}, nil
 }
 
 // Kill implements cluster.Driver
 func (d *dock) Kill(ctx context.Context, id task.ID) error {
+	d.log.Debug("kill container", zap.String("container_id", string(id)))
 	return d.client.ContainerRemove(ctx, string(id), types.ContainerRemoveOptions{
 		Force: true,
 	})
@@ -36,8 +44,10 @@ func (d *dock) Kill(ctx context.Context, id task.ID) error {
 
 // Poke implements cluster.Driver
 func (d *dock) Poke(ctx context.Context, id task.ID) error {
+	d.log.Debug("poke container", zap.String("container_id", string(id)))
 	r, err := d.client.ContainerInspect(ctx, string(id))
 	if err != nil {
+		d.log.Error("failed to inspect container", zap.String("container_id", string(id)), zap.Error(err))
 		// todo: we need to differentiate between container errors and API errors
 		return err
 	}
@@ -49,6 +59,7 @@ func (d *dock) Poke(ctx context.Context, id task.ID) error {
 
 // Spawn implements cluster.Driver
 func (d *dock) Spawn(ctx context.Context, id task.ID, image string) error {
+	d.log.Debug("create container", zap.String("container_id", string(id)))
 	cfg := container.Config{
 		Image: image,
 		Env: []string{
@@ -71,5 +82,6 @@ func (d *dock) Spawn(ctx context.Context, id task.ID, image string) error {
 		return err
 	}
 
+	d.log.Debug("start container", zap.String("container_id", string(id)))
 	return d.client.ContainerStart(ctx, r.ID, types.ContainerStartOptions{})
 }
