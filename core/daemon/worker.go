@@ -99,7 +99,7 @@ func (i *worker) process_next(instance task.Instance) {
 	i.status = executor.StatusExec
 
 	// launch a goroutine to handle instance events
-	go instance.Exec(done)
+	instance.Start(done)
 
 	// wait for execution to complete
 	for {
@@ -107,9 +107,11 @@ func (i *worker) process_next(instance task.Instance) {
 		case <-done:
 			i.status = executor.StatusIdle
 			return
+
 		case <-i.on_stop:
 			i.status = executor.StatusStop
 			return
+
 		case <-time.After(10 * time.Second):
 			// periodic liveness check
 			fmt.Println("poke", i.id)

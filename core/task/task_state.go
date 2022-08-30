@@ -17,6 +17,15 @@ type Run struct {
 	Err       error
 }
 
+func NewRun(spec *Spec) *Run {
+	return &Run{
+		ID:        GenerateID(spec.Image),
+		Spec:      spec,
+		Status:    StatusWait,
+		Scheduled: time.Now(),
+	}
+}
+
 func (i *Run) init(executor ID) {
 	i.Status = StatusExec
 	i.Started = time.Now()

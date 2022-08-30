@@ -3,7 +3,6 @@ package task
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -13,7 +12,8 @@ type Instance interface {
 	T
 	Handler
 
-	Exec(done chan struct{})
+	Start(done chan struct{})
+	Fail(err error) error
 }
 
 type instance struct {
@@ -25,21 +25,18 @@ type instance struct {
 	on_fail     chan *MsgFailure
 	on_complete chan *MsgComplete
 	on_log      chan *MsgLog
+	err         chan error
 }
 
 func NewInstance(spec *Spec) Instance {
 	return &instance{
-		run: &Run{
-			ID:        GenerateID(spec.Image),
-			Spec:      spec,
-			Status:    StatusWait,
-			Scheduled: time.Now(),
-		},
+		run:         NewRun(spec),
 		logs:        make(map[string][]string),
 		on_init:     make(chan *MsgInit),
 		on_fail:     make(chan *MsgFailure),
 		on_complete: make(chan *MsgComplete),
 		on_log:      make(chan *MsgLog),
+		err:         make(chan error),
 	}
 }
 
@@ -51,18 +48,34 @@ func (t *instance) Logs(file string) ([]string, error) {
 	return t.logs[file], nil
 }
 
-func (i *instance) Exec(done chan struct{}) {
+func (i *instance) Start(done chan struct{}) {
 	if i.active {
 		panic("task routine is already running")
 	}
+	go i.proc(done)
+	<-i.err
+}
+
+func (i *instance) Fail(err error) error {
+	return i.OnFailure(&MsgFailure{
+		Header: Header{
+			ID:   string(i.run.ID),
+			Time: time.Now(),
+		},
+		Error: err,
+	})
+}
+
+func (i *instance) proc(done chan struct{}) {
 	i.active = true
+	i.err <- nil
+
 	defer close(i.on_init)
 	defer close(i.on_complete)
 	defer close(i.on_fail)
 	defer close(i.on_log)
 	defer func() {
 		i.active = false
-		fmt.Println("instance", i.run.ID, "exited")
 		done <- struct{}{}
 		close(done)
 	}()
@@ -74,13 +87,16 @@ func (i *instance) Exec(done chan struct{}) {
 		select {
 		case m := <-i.on_init:
 			i.run.init(m.Executor)
+			i.err <- nil
 
 		case req := <-i.on_complete:
 			i.run.complete(req.Result)
+			i.err <- nil
 			return
 
 		case req := <-i.on_fail:
 			i.run.fail(req.Error)
+			i.err <- nil
 			return
 
 		case req := <-i.on_log:
@@ -89,9 +105,10 @@ func (i *instance) Exec(done chan struct{}) {
 				log = make([]string, 0, 32)
 			}
 			i.logs[req.File] = append(log, req.Data)
+			i.err <- nil
 
 		case <-ctx.Done():
-			i.run.fail(fmt.Errorf("killed by task manager: timeout exceeded"))
+			i.run.fail(ErrTimeout)
 			return
 		}
 	}
@@ -106,7 +123,7 @@ func (i *instance) OnInit(m *MsgInit) error {
 		return ErrInactiveTask
 	}
 	i.on_init <- m
-	return nil
+	return <-i.err
 }
 
 func (i *instance) OnFailure(m *MsgFailure) error {
@@ -114,7 +131,7 @@ func (i *instance) OnFailure(m *MsgFailure) error {
 		return ErrInactiveTask
 	}
 	i.on_fail <- m
-	return nil
+	return <-i.err
 }
 
 func (i *instance) OnComplete(m *MsgComplete) error {
@@ -122,7 +139,7 @@ func (i *instance) OnComplete(m *MsgComplete) error {
 		return ErrInactiveTask
 	}
 	i.on_complete <- m
-	return nil
+	return <-i.err
 }
 
 func (i *instance) OnLog(m *MsgLog) error {
@@ -130,5 +147,5 @@ func (i *instance) OnLog(m *MsgLog) error {
 		return ErrInactiveTask
 	}
 	i.on_log <- m
-	return nil
+	return <-i.err
 }

@@ -19,15 +19,15 @@ type Workers interface {
 
 type workers struct {
 	driver  cluster.Driver
-	tasks   task.Manager
+	queue   task.TaskQueue
 	byId    map[task.ID]Worker
 	byImage map[string][]Worker
 }
 
-func NewWorkers(driver cluster.Driver, tasks task.Manager) Workers {
+func NewWorkers(driver cluster.Driver, queue task.TaskQueue) Workers {
 	return &workers{
 		driver:  driver,
-		tasks:   tasks,
+		queue:   queue,
 		byId:    make(map[task.ID]Worker),
 		byImage: make(map[string][]Worker),
 	}
@@ -122,7 +122,7 @@ func (t *workers) ExecAquire(ctx context.Context, req *executor.MsgAquire) (*tas
 		// this will block until a new task is available.
 		// its up to the caller to abort the call if the wait is too long.
 		// this greatly reduces task startup latency
-		instance, err := t.tasks.Aquire(ctx, worker.Image())
+		instance, err := t.queue.Aquire(ctx, worker.Image())
 		if err != nil {
 			return nil, err
 		}

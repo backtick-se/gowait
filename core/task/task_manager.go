@@ -1,16 +1,15 @@
 package task
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/backtick-se/gowait/core"
 )
 
 type Manager interface {
-	TaskQueue
 	Handler
 
+	Add(Instance) error
 	Get(ID) (Instance, bool)
 }
 
@@ -31,13 +30,9 @@ func (t *taskmgr) Get(id ID) (Instance, bool) {
 	return i, ok
 }
 
-func (t *taskmgr) Queue(ctx context.Context, spec *Spec) (Instance, error) {
-	instance, err := t.TaskQueue.Queue(ctx, spec)
-	if err != nil {
-		return nil, err
-	}
+func (t *taskmgr) Add(instance Instance) error {
 	t.byId[instance.ID()] = instance
-	return instance, nil
+	return nil
 }
 
 //

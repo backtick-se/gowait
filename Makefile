@@ -1,4 +1,8 @@
 
+.PHONY: test
+test:
+	ginkgo -r
+
 .PHONY: install
 install:
 	go mod download

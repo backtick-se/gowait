@@ -5,7 +5,7 @@ import (
 )
 
 type TaskQueue interface {
-	Queue(ctx context.Context, spec *Spec) (Instance, error)
+	Queue(ctx context.Context, instance Instance) error
 	Aquire(ctx context.Context, image string) (Instance, error)
 }
 
@@ -48,14 +48,13 @@ func (m *queue) Aquire(ctx context.Context, image string) (Instance, error) {
 	}
 }
 
-func (m *queue) Queue(ctx context.Context, spec *Spec) (Instance, error) {
-	instance := NewInstance(spec)
-	queue := m.getQueue(spec.Image)
+func (m *queue) Queue(ctx context.Context, instance Instance) error {
+	queue := m.getQueue(instance.Spec().Image)
 
 	select {
 	case queue <- instance:
-		return instance, nil
+		return nil
 	case <-ctx.Done():
-		return nil, context.Canceled
+		return context.Canceled
 	}
 }
