@@ -18,6 +18,7 @@ def main() -> int:
         try:
             trace = traceback.format_exc()
             client.failure(f'{type.__name__}: {value}')
+            client.close()
         except Exception as e:
             print('failed to report exception:')
             print(e)
@@ -34,6 +35,9 @@ def main() -> int:
 
     except Exception as e:
         client.failure(taskdef.id, str(e))
+
+    finally:
+        client.close()
 
 
 if __name__ == '__main__':

@@ -2,23 +2,24 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 )
+
+var ErrInactiveTask = errors.New("task is inactive")
 
 type Instance interface {
 	T
 	Handler
 
-	Executor() ID
-
 	Exec(done chan struct{})
 }
 
 type instance struct {
-	run      *Run
-	logs     map[string][]string
-	executor ID
+	run    *Run
+	logs   map[string][]string
+	active bool
 
 	on_init     chan *MsgInit
 	on_fail     chan *MsgFailure
@@ -26,10 +27,10 @@ type instance struct {
 	on_log      chan *MsgLog
 }
 
-func newInstance(spec *Spec) Instance {
+func NewInstance(spec *Spec) Instance {
 	return &instance{
 		run: &Run{
-			ID:        GenerateID("task"),
+			ID:        GenerateID(spec.Image),
 			Spec:      spec,
 			Status:    StatusWait,
 			Scheduled: time.Now(),
@@ -42,48 +43,44 @@ func newInstance(spec *Spec) Instance {
 	}
 }
 
-func (t *instance) ID() ID       { return t.run.ID }
-func (t *instance) Spec() *Spec  { return t.run.Spec }
-func (t *instance) State() *Run  { return t.run }
-func (t *instance) Executor() ID { return t.executor }
+func (t *instance) ID() ID      { return t.run.ID }
+func (t *instance) Spec() *Spec { return t.run.Spec }
+func (t *instance) State() *Run { return t.run } // maybe return a copy instead
 
 func (t *instance) Logs(file string) ([]string, error) {
 	return t.logs[file], nil
 }
 
-//
-// Instance events
-//
-
-func (i *instance) OnInit(m *MsgInit) error         { i.on_init <- m; return nil }
-func (i *instance) OnFailure(m *MsgFailure) error   { i.on_fail <- m; return nil }
-func (i *instance) OnComplete(m *MsgComplete) error { i.on_complete <- m; return nil }
-func (i *instance) OnLog(m *MsgLog) error           { i.on_log <- m; return nil }
-
 func (i *instance) Exec(done chan struct{}) {
-	ctx := context.Background()
-	defer func() {
-		fmt.Println("instance", i.run.ID, "exited")
-		done <- struct{}{}
-		close(done)
-	}()
+	if i.active {
+		panic("task routine is already running")
+	}
+	i.active = true
 	defer close(i.on_init)
 	defer close(i.on_complete)
 	defer close(i.on_fail)
 	defer close(i.on_log)
+	defer func() {
+		i.active = false
+		fmt.Println("instance", i.run.ID, "exited")
+		done <- struct{}{}
+		close(done)
+	}()
+
+	ctx := context.Background()
+	// todo: timeout
 
 	for {
 		select {
 		case m := <-i.on_init:
-			i.executor = m.Executor
-			i.run.Init()
+			i.run.init(m.Executor)
 
 		case req := <-i.on_complete:
-			i.run.Complete(req.Result)
+			i.run.complete(req.Result)
 			return
 
 		case req := <-i.on_fail:
-			i.run.Fail(req.Error)
+			i.run.fail(req.Error)
 			return
 
 		case req := <-i.on_log:
@@ -94,8 +91,44 @@ func (i *instance) Exec(done chan struct{}) {
 			i.logs[req.File] = append(log, req.Data)
 
 		case <-ctx.Done():
-			i.run.Fail(fmt.Errorf("killed by task manager: timeout exceeded"))
+			i.run.fail(fmt.Errorf("killed by task manager: timeout exceeded"))
 			return
 		}
 	}
+}
+
+//
+// Instance events
+//
+
+func (i *instance) OnInit(m *MsgInit) error {
+	if !i.active {
+		return ErrInactiveTask
+	}
+	i.on_init <- m
+	return nil
+}
+
+func (i *instance) OnFailure(m *MsgFailure) error {
+	if !i.active {
+		return ErrInactiveTask
+	}
+	i.on_fail <- m
+	return nil
+}
+
+func (i *instance) OnComplete(m *MsgComplete) error {
+	if !i.active {
+		return ErrInactiveTask
+	}
+	i.on_complete <- m
+	return nil
+}
+
+func (i *instance) OnLog(m *MsgLog) error {
+	if !i.active {
+		return ErrInactiveTask
+	}
+	i.on_log <- m
+	return nil
 }

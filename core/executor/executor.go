@@ -85,13 +85,11 @@ func (e *executor) aquire() (*task.Run, error) {
 func (e *executor) exec(spec *task.Run) (task.Result, error) {
 	ctx := context.Background()
 
-	fmt.Println("sending init..")
 	if err := e.client.Init(ctx, spec.ID); err != nil {
 		// init failed
 		return nil, err
 	}
 
-	fmt.Println("open log init..")
 	logger, err := e.client.Log(ctx, spec.ID)
 	if err != nil {
 		// logging failed
@@ -106,7 +104,7 @@ func (e *executor) exec(spec *task.Run) (task.Result, error) {
 		ctx = deadline
 	}
 
-	fmt.Println("run exe")
+	logger.Log("system", fmt.Sprintf("running command %s", spec.Command))
 	proc, err := Exec(spec.Command[0], spec.Command[1:]...)
 	if err != nil {
 		return nil, err
@@ -116,7 +114,7 @@ func (e *executor) exec(spec *task.Run) (task.Result, error) {
 	go LineLogger("stderr", proc.Stderr(), logger)
 
 	select {
-	case req := <-e.server.OnInit():
+	case req := <-e.server.AwaitInit():
 		// sdk initialization
 		logger.Log("system", fmt.Sprintf("sdk init: %s\n", req.Version))
 		break
@@ -137,10 +135,10 @@ func (e *executor) exec(spec *task.Run) (task.Result, error) {
 	}
 
 	select {
-	case req := <-e.server.OnComplete():
+	case req := <-e.server.AwaitComplete():
 		return req.Result, nil
 
-	case req := <-e.server.OnFailure():
+	case req := <-e.server.AwaitFailure():
 		return nil, req.Error
 
 	case err := <-proc.Done():

@@ -12,10 +12,7 @@ var Module = fx.Module(
 	fx.Provide(NewWorkers),
 	fx.Provide(task.NewManager),
 
-	fx.Provide(func(workers Workers) executor.Handler {
-		return workers
-	}),
-	fx.Provide(func(taskMgr task.Manager) task.Handler {
-		return taskMgr
-	}),
+	// register Workers & TaskManager as executor/task RPC handlers
+	fx.Provide(func(workers Workers) executor.Handler { return workers }),
+	fx.Provide(func(taskMgr task.Manager) task.Handler { return taskMgr }),
 )

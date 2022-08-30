@@ -10,14 +10,15 @@ import (
 
 type Server interface {
 	Handler
+	task.Handler
 
 	Close() error
 	SetRun(*task.Run)
 
-	OnInit() <-chan *task.MsgInit
-	OnComplete() <-chan *task.MsgComplete
-	OnFailure() <-chan *task.MsgFailure
-	OnLog() <-chan *task.MsgLog
+	AwaitInit() <-chan *task.MsgInit
+	AwaitComplete() <-chan *task.MsgComplete
+	AwaitFailure() <-chan *task.MsgFailure
+	AwaitLog() <-chan *task.MsgLog
 }
 
 type server struct {
@@ -38,14 +39,10 @@ func NewServer(lc fx.Lifecycle) Server {
 	return server
 }
 
-func registerExecutorHandler(server Server) Handler {
-	return server
-}
-
-func (s *server) OnInit() <-chan *task.MsgInit         { return s.on_init }
-func (s *server) OnComplete() <-chan *task.MsgComplete { return s.on_complete }
-func (s *server) OnFailure() <-chan *task.MsgFailure   { return s.on_failure }
-func (s *server) OnLog() <-chan *task.MsgLog           { return s.on_log }
+func (s *server) AwaitInit() <-chan *task.MsgInit         { return s.on_init }
+func (s *server) AwaitComplete() <-chan *task.MsgComplete { return s.on_complete }
+func (s *server) AwaitFailure() <-chan *task.MsgFailure   { return s.on_failure }
+func (s *server) AwaitLog() <-chan *task.MsgLog           { return s.on_log }
 
 func (s *server) SetRun(run *task.Run) {
 	s.run = run
@@ -56,11 +53,6 @@ func (s *server) Close() error {
 	defer close(s.on_complete)
 	defer close(s.on_failure)
 	defer close(s.on_log)
-	return nil
-}
-
-func (t *server) Init(req *task.MsgInit) error {
-	t.on_init <- req
 	return nil
 }
 
@@ -76,17 +68,22 @@ func (t *server) ExecStop(context.Context, *MsgStop) error {
 	return nil
 }
 
-func (t *server) Complete(req *task.MsgComplete) error {
+func (t *server) OnInit(req *task.MsgInit) error {
+	t.on_init <- req
+	return nil
+}
+
+func (t *server) OnComplete(req *task.MsgComplete) error {
 	t.on_complete <- req
 	return nil
 }
 
-func (t *server) Fail(req *task.MsgFailure) error {
+func (t *server) OnFailure(req *task.MsgFailure) error {
 	t.on_failure <- req
 	return nil
 }
 
-func (t *server) Log(req *task.MsgLog) error {
+func (t *server) OnLog(req *task.MsgLog) error {
 	t.on_log <- req
 	return nil
 }

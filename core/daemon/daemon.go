@@ -67,13 +67,25 @@ func (t *daemon) Destroy(ctx context.Context, id task.ID) error {
 	if instance, ok := t.tasks.Get(id); ok {
 		switch instance.State().Status {
 		case task.StatusWait:
-			instance.State().Fail(fmt.Errorf("stopped manually"))
+			instance.OnFailure(&task.MsgFailure{
+				Header: task.Header{
+					ID:   string(id),
+					Time: time.Now(),
+				},
+				Error: fmt.Errorf("cancelled manually"),
+			})
 			return nil
 
 		case task.StatusExec:
-			instance.State().Fail(fmt.Errorf("stopped manually"))
+			instance.OnFailure(&task.MsgFailure{
+				Header: task.Header{
+					ID:   string(id),
+					Time: time.Now(),
+				},
+				Error: fmt.Errorf("aborted manually"),
+			})
 			// kill the executor that is running the task
-			return t.workers.Remove(ctx, instance.Executor())
+			return t.workers.Remove(ctx, instance.State().Executor)
 
 		default:
 			return fmt.Errorf("task %s is in state %s", id, instance.State().Status)

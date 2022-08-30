@@ -1,6 +1,10 @@
 package task
 
-import "github.com/backtick-se/gowait/util"
+import (
+	"github.com/backtick-se/gowait/util"
+
+	"github.com/gosimple/slug"
+)
 
 type ID string
 type Status string
@@ -15,7 +19,8 @@ const (
 )
 
 func GenerateID(name string) ID {
-	return ID(name + "-" + util.RandomString(6))
+	slugified := slug.Make(name)
+	return ID(slugified + "-" + util.RandomString(6))
 }
 
 type Result []byte

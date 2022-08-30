@@ -17,18 +17,19 @@ type Run struct {
 	Err       error
 }
 
-func (i *Run) Init() {
+func (i *Run) init(executor ID) {
 	i.Status = StatusExec
 	i.Started = time.Now()
+	i.Executor = executor
 }
 
-func (i *Run) Complete(result Result) {
+func (i *Run) complete(result Result) {
 	i.Result = result
 	i.Status = StatusDone
 	i.Completed = time.Now()
 }
 
-func (i *Run) Fail(err error) {
+func (i *Run) fail(err error) {
 	i.Err = err
 	i.Status = StatusFail
 	i.Completed = time.Now()

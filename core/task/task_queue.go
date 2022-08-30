@@ -49,7 +49,7 @@ func (m *queue) Aquire(ctx context.Context, image string) (Instance, error) {
 }
 
 func (m *queue) Queue(ctx context.Context, spec *Spec) (Instance, error) {
-	instance := newInstance(spec)
+	instance := NewInstance(spec)
 	queue := m.getQueue(spec.Image)
 
 	select {

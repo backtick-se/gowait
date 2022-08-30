@@ -22,7 +22,10 @@ class Client:
             time=Timestamp(),
         )
 
-    def executor_init(self, image: str):
+    def close(self) -> None:
+        self._client.close()
+
+    def executor_init(self, image: str) -> None:
         self._client.ExecInit(ExecInitReq(
             header=self._header(self.executor_id),
             image=image,
